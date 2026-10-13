@@ -6,7 +6,8 @@ import type { Attachment } from "./Composer";
 
 const settings = { redactEngine: "patterns", redactCategories: {} } as unknown as Settings;
 const cur = redactEngineSig(settings);
-const att = (over: Partial<Attachment>): Attachment => ({ name: "f", cid: "1", redactPreview: 0, ...over }) as Attachment;
+const att = (over: Partial<Attachment>): Attachment =>
+  ({ name: "f", cid: "1", redactPreview: 0, redactSeeded: true, ...over }) as Attachment;
 const reps = [{ real: "A", fake: "B", tone: "coral" }];
 
 describe("reusableDocReplacements", () => {
@@ -70,6 +71,14 @@ describe("reusableDocReplacements", () => {
     expect(reusableDocReplacements(fresh, undefined, settings, undefined, ["name"])).toEqual({
       "cv.pdf": reps,
     });
+  });
+
+  it("SECURITY: withholds a map NOT minted under a secret seed (public, dictionary-invertible fakes)", () => {
+    const list = [
+      att({ name: "seeded.pdf", replacements: reps, redactEngineSig: cur }),
+      att({ name: "public.pdf", replacements: reps, redactEngineSig: cur, redactSeeded: undefined }),
+    ] as Attachment[];
+    expect(Object.keys(reusableDocReplacements(list, undefined, settings, undefined))).toEqual(["seeded.pdf"]);
   });
 
   it("the org signature is order-independent (a profile refresh must not invalidate)", () => {

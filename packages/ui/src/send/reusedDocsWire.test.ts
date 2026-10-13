@@ -102,3 +102,28 @@ describe("appendReusedDocsWire — a reused value keeps ITS category, not its co
     expect((out.matches[0] as { category: string }).category).toBe("name");
   });
 });
+
+describe("appendReusedDocsWire — the same substitution as every later replay", () => {
+  it("masks a conversation value in ANOTHER casing inside the reused document", () => {
+    const vault = { "Paul Martin": "Jean Dupont" };
+    const out = appendReusedDocsWire(
+      { text: "", matches: [] },
+      [{ header: "H\n", reps: [], text: "Courrier pour JEAN DUPONT." }],
+      vault,
+      undefined,
+    );
+    expect(out.text).not.toMatch(/dupont/i);
+  });
+
+  it("token mode: a name FRAGMENT in the reused document leaves as its token", () => {
+    const vault = { "[PERSON1]": "Louis Terral" };
+    const out = appendReusedDocsWire(
+      { text: "", matches: [] },
+      [{ header: "H\n", reps: [], text: "Terral a signé." }],
+      vault,
+      undefined,
+      "token",
+    );
+    expect(out.text).not.toContain("Terral");
+  });
+});

@@ -200,3 +200,34 @@ describe("the progressive preview's partial map", () => {
     expect(byKey.k[0].replacements?.map((r) => r.real)).toContain(NAME);
   });
 });
+
+describe("drop-time masking mints its fakes under a SECRET seed", () => {
+  it("no conversation seed yet: a CSPRNG seed (salt + key) reaches the engine, and the map is stamped seeded", async () => {
+    const seen: unknown[] = [];
+    const redactAsync: RedactFn = (text, signal, vault, cats, seed) => {
+      seen.push(seed);
+      return engineWithNer(text, signal, vault, cats, seed);
+    };
+    const { state } = harness(file(`Signé par ${NAME}.`), redactAsync);
+    await until(() => state.redacting === false);
+    const seed = seen[0] as { salt?: number; key?: string };
+    expect(seed.salt).toBeGreaterThan(0);
+    expect(seed.key).toMatch(/^[0-9a-f]{64}$/);
+    expect(state.redactSeeded).toBe(true);
+  });
+
+  it("the conversation's own salt and key, when it has them, are the ones used", async () => {
+    const seen: unknown[] = [];
+    const redactAsync: RedactFn = (text, signal, vault, cats, seed) => {
+      seen.push(seed);
+      return engineWithNer(text, signal, vault, cats, seed);
+    };
+    const byKey: Record<string, readonly Attachment[]> = { k2: [file(`Signé par ${NAME}.`)] };
+    const store: StagedStore = { get: (k) => byKey[k] ?? [], set: (k, v) => void (byKey[k] = v) };
+    const convSeed = { salt: 77, key: "ab".repeat(32), mode: "fake" as const };
+    redactAttachment(byKey.k2[0], { settings: undefined, redactAsync, store, stagedKey: "k2", queue: createJobQueue(), t, convSeed });
+    await until(() => byKey.k2[0].redacting === false);
+    expect(seen[0]).toEqual(convSeed);
+    expect(byKey.k2[0].redactSeeded).toBe(true);
+  });
+});

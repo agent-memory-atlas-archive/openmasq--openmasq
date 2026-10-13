@@ -51,7 +51,9 @@ export async function runContextCompaction(
   const target = nextCompactionTarget(turns.length, previous);
   if (target === null) return false;
 
-  const wire = wireTurns(turns.slice(0, target), conv.redactionVault ?? {});
+  // The conversation's pinned MODE: a token-mode conversation replays its name fragments as
+  // tokens (`replayForModel`), and the default (fake) mode would ship them as typed.
+  const wire = wireTurns(turns.slice(0, target), conv.redactionVault ?? {}, conv.redactionMode);
   if (!wire.trim()) return false;
 
   // The conversation's OWN model: the summary is read back by that model, and it is the

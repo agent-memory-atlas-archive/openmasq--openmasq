@@ -62,8 +62,9 @@ export function makeSummarizeToolCall(
  * Pre-search REVEAL gate: offer to stop redacting the categories that make a web answer
  * meaningless when faked. THIS SEND ONLY: the choice is not written to the conversation.
  * It changes what the MODEL sees; the query always carries the REAL value (rule 11).
- * The ONLY write is `disabledKinds`, mutated in place so the in-flight tool-result
- * redactor and the loop's client see it right away.
+ * The ONLY write is `webDisabledKinds`, mutated in place so the in-flight WEB tool-result
+ * redactor sees it right away. `disabledKinds` — what every other connector's result, the
+ * library scrub and the loop's client read — is never touched.
  */
 export function makeConfirmWebNav(ctx: TurnContext, r: RedactionSetup): NonNullable<McpAgentParams["confirmWebNav"]> | undefined {
   const { d, opts, conv, convId } = ctx;
@@ -77,7 +78,7 @@ export function makeConfirmWebNav(ctx: TurnContext, r: RedactionSetup): NonNulla
     const picked = await opts.reviewWebNav!(offerable, convId);
     // Re-filtered against `offerable`: the renderer is not a trust boundary (rule 7).
     const reveal = webNavRevealSet(picked, offerable);
-    for (const k of reveal) if (!r.disabledKinds.includes(k)) r.disabledKinds.push(k);
+    for (const k of reveal) if (!r.webDisabledKinds.includes(k)) r.webDisabledKinds.push(k);
   };
 }
 
@@ -90,7 +91,7 @@ export function makeRewireWire(ctx: TurnContext, r: RedactionSetup, red: Redacte
   return (s) => {
     const excl = disabledVaultTokens(r.vault, {
       numbers: redactNumbersOn(ctx.d.settings),
-      disabledKinds: r.disabledKinds,
+      disabledKinds: r.webDisabledKinds,
       kinds: red.turnKinds,
     });
     if (!excl.size) return s;

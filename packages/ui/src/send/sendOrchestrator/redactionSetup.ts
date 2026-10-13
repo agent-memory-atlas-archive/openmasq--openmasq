@@ -44,6 +44,9 @@ export interface RedactionSetup {
   detectLocalFn: DetectLocalFn | undefined;
   /** Frozen at send entry and MUTATED in place by the reveal gate; governs the MODEL's view only (rule 11). */
   disabledKinds: string[];
+  /** `disabledKinds` ⊕ what the pre-search reveal un-masks: its OWN array (the reveal pushes
+   *  here only), read for WEB tool results and the in-flight context rewrite, never by another connector. */
+  webDisabledKinds: string[];
   commercialNotoriety: boolean;
   peopleNotoriety: boolean;
   /** value → kind learned across this conversation before this message. */
@@ -183,6 +186,7 @@ export function setupRedaction(ctx: TurnContext): RedactionSetup {
     completeFn,
     detectLocalFn,
     disabledKinds,
+    webDisabledKinds: [...disabledKinds],
     commercialNotoriety,
     peopleNotoriety,
     convKinds,

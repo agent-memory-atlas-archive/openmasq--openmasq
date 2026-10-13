@@ -5,6 +5,7 @@ import { isEntryVisibleIn } from "../../../state/debug/debugScope";
 import { formatUsd } from "../../../state/billing/usage";
 import { formatTokens } from "../../../state/billing/usage";
 import { summarizePairs } from "../../../send/redactSummary";
+import { scrubWithVaults } from "./exportScrub";
 import { valueShapeFor } from "./valueShape";
 
 export type WireEntry = Extract<DebugEntry, { type: "wire" }>;
@@ -201,7 +202,9 @@ export function toText(entries: readonly DebugEntry[], opts?: { mapping?: boolea
  */
 export function logExportFor(convId?: string | null): string {
   const entries = getDebugLog().filter((e) => isEntryVisibleIn(e, convId));
-  return toText(entries, { mapping: false });
+  // Re-masked with the entries' own vaults: raw errors, refusal lines and file names never
+  // went through the redactor (`exportScrub.ts`).
+  return scrubWithVaults(toText(entries, { mapping: false }), entries);
 }
 
 /** Free-text search over an entry — matches its full serialized form (wire text,

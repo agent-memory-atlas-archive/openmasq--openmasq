@@ -12,7 +12,8 @@
 // Kept beside `tools.ts` (classification + the domain allow-list) so a reviewer sees the
 // whole agent-browser trust boundary as one family (root rule 10).
 
-import { isSearchEngineHost } from "@openmasq/catalog/mcp";
+import { looksEncoded, pathSegments } from "./exfilShapes";
+import { isSearchResultsPage, stripVaultValues, urlReadings, vaultHitIn } from "./urlReadings";
 
 export interface NavExfilFlag {
   param: string;
@@ -25,72 +26,15 @@ export interface NavExfilResult {
   flags: NavExfilFlag[];
 }
 
-const B64ISH = /^[A-Za-z0-9+/=_-]{24,}$/;
-
 /** Params that legitimately carry long FREE TEXT (search boxes): a long plaintext
  *  value here is EXPECTED — but ONLY on a real search engine (see below). Encoded
  *  blobs and values embedding conversation data are still flagged regardless. */
 const SEARCH_PARAMS = new Set(["q", "query", "search", "s", "p", "wd", "text", "kw", "k"]);
 
-
 /** Bare length past which a NON-search value is opaque enough to mention. Kept high
  *  on purpose — a plain long value is the WEAKEST signal (a search phrase, a title,
  *  an address all exceed the old 40); only encoded/vault-embedding values matter. */
 const BULKY_LEN = 120;
-
-/** An absolute path (POSIX `/a/b`, Windows `C:\a\b`) → its segments; anything else stays
- *  ONE segment (compared whole). ⚠️ Keyed on the value's SHAPE, never the param NAME: a
- *  `key === "path"` test would let a hostile server exempt any arg by naming it `path`.
- *  `browserPolicy.test.ts` pins why the split exists and what it must still catch. */
-function pathSegments(v: string): string[] {
-  const isAbsPath = /^\/[^/]/.test(v) || /^[A-Za-z]:[\\/]/.test(v);
-  return isAbsPath ? v.split(/[\\/]+/).filter(Boolean) : [v];
-}
-
-/**
- * A human-readable SLUG, not a blob: `brazil-markets-ibovespa-friday-july-17-2026`,
- * `en/news/2026/07/17/market-report`. Base64 spends `-`/`_`/`/` as DATA (~1 char in 32),
- * never as a separator, so a value that decomposes into WORDS is prose with dashes in it —
- * which is what most of the web's article URLs are.
- *
- * ⚠️ Requiring EVERY chunk to be a plain word or a plain number was too strict, and the
- * failing case is the norm, not the exception: news sites append an opaque article id
- * (`…-en-gironde-20250723_ZFHK4XMBRZDRPD3ZQZ2GQ7VXUE`). ONE alphanumeric chunk then sank
- * the whole slug, the path read as base64, and « Quelle actualité en France ? » opened a
- * confirmation about a Libération link. So the test is now POSITIVE — enough real words —
- * instead of demanding that nothing look like an id. A blob has no words to find: split
- * `/collect/eyJhbGciOiJIUzI1NiJ9…` and you get one, so it is still flagged.
- */
-function looksLikeSlug(v: string): boolean {
-  const chunks = v.split(/[-_/]+/).filter(Boolean);
-  if (chunks.length < 3) return false;
-  return chunks.filter((c) => /^[A-Za-z]{3,}$/.test(c)).length >= 3;
-}
-
-/**
- * A genuine data-SMUGGLING signal in a query value, independent of the param name:
- * an encoded blob (base64, or a doubly URL-encoded payload). Plain human text —
- * however long — is deliberately NOT one of these.
- *
- * ⚠️ `B64ISH` accepts `-`/`_` because base64URL uses them, which makes it match every
- * kebab-case article slug on the web. Two conditions keep those out, and neither costs
- * real detection: base64 over 24+ chars of arbitrary bytes contains BOTH cases with
- * probability ~1 (a miss needs 24 straight chars from one case's half of the alphabet),
- * and it does not decompose into words. A slug has neither property.
- *
- * This matters beyond tidiness: since rule 11 removed the un-redaction gate, this scan IS
- * the line. A warning that fires on ordinary news links is one the user learns to click
- * through, which costs more than the marginal blob it catches. What it must never miss —
- * a value carrying CONVERSATION data — is `analyzeNavExfil`'s vault check, which runs
- * first, is independent of this, and keys on the value, not its shape.
- */
-function looksEncoded(v: string): string | null {
-  const mixedCase = /[a-z]/.test(v) && /[A-Z]/.test(v);
-  if (B64ISH.test(v) && /[0-9]/.test(v) && mixedCase && !looksLikeSlug(v))
-    return "chaîne encodée (base64 ?)";
-  if ((v.match(/%[0-9A-Fa-f]{2}/g) || []).length >= 6) return "blob URL-encodé";
-  return null;
-}
 
 /**
  * Heuristic scan of a navigation URL for data-exfiltration patterns in its query
@@ -125,30 +69,27 @@ export function analyzeNavExfil(
   } catch {
     return { host: "", suspicious: false, flags: [] };
   }
-  // Search engines by EXACT host (`@openmasq/catalog/mcp`): the `SEARCH_PARAMS` exemption
-  // applies ONLY there — exfil to `attacker.example/?q=<secret>` is otherwise
-  // indistinguishable from a search box.
-  const isSearchEngine = isSearchEngineHost(u.hostname);
+  // The `SEARCH_PARAMS` exemption applies ONLY on a search engine's RESULTS page — exact
+  // host AND an allow-listed path (`urlReadings.ts`). The same host's redirectors
+  // (`google.com/url?q=https://evil.tld/?d=<real>`) are not a search box.
+  const isSearchPage = isSearchResultsPage(u);
   const placeSet = new Set(placeValues.map((v) => v.trim().toLowerCase()));
-  const exactPlace = (v: string): boolean => placeSet.has(v.trim().toLowerCase());
+  const exactPlace = (seg: string): boolean => urlReadings(seg).some((r) => placeSet.has(r.trim()));
   const flags: NavExfilFlag[] = [];
+  const CONV = "contient une donnée de la conversation";
   const scan = (key: string, val: string) => {
     if (!val) return;
-    // The ONE exemption: a vault value in a real search box, on a real search engine — that
+    // The ONE exemption: a vault value in a real search box, on a real search page — that
     // IS the search the user asked for (rule 11). Narrow on purpose: `?redirect=<real>` or
     // `evil.com/?q=<real>` is exfil. ⚠️ It REMOVES the vault material from the scan, it does
     // not bless the value: the checks re-run on the RESIDUE, or `?q=<real> <blob>` rides out.
-    const searchBox = isSearchEngine && SEARCH_PARAMS.has(key.toLowerCase());
-    const residue = searchBox
-      ? vaultValues.reduce((s: string, c: string) => (c ? s.split(c).join(" ") : s), val).trim()
-      : val;
+    const searchBox = isSearchPage && SEARCH_PARAMS.has(key.toLowerCase());
+    const residue = searchBox ? stripVaultValues(val, vaultValues) : val;
     // Conversation/vault data leaving in a URL is the strongest signal — flagged on ANY
-    // host, ANY param, regardless of length/encoding (audit H-6). NO place carve-out
-    // here: a query value is PAYLOAD (`evil.com/?q=Amiens` is the exfil shape the card
-    // exists for) — only the PATH scan below treats an exact place as site structure.
-    const vaultHit = vaultValues.find((s) => s.length >= 4 && residue.includes(s));
-    if (vaultHit) {
-      flags.push({ param: key, value: val, reason: "contient une donnée de la conversation" });
+    // host, ANY param, in ANY reading (`+`, %-escapes, case). NO place carve-out here: a
+    // query value is PAYLOAD — only the PATH scan below treats an exact place as structure.
+    if (vaultHitIn(residue, vaultValues)) {
+      flags.push({ param: key, value: val, reason: CONV });
       return;
     }
     const enc = looksEncoded(residue);
@@ -157,8 +98,7 @@ export function analyzeNavExfil(
       return;
     }
     // A merely very long, opaque value is the weakest signal — exempt search-box params
-    // ONLY on a real search engine (a search phrase is legitimately long there). To ANY
-    // other host, a long `q=` is as suspect as any other param.
+    // ONLY on a real search page. To ANY other URL, a long `q=` is as suspect as any param.
     if (!searchBox && val.length >= BULKY_LEN) {
       flags.push({ param: key, value: val, reason: "valeur très longue" });
     }
@@ -170,85 +110,66 @@ export function analyzeNavExfil(
     ["username", u.username],
     ["password", u.password],
   ] as const) {
-    if (!raw) continue;
-    let val = raw;
-    try {
-      val = decodeURIComponent(raw);
-    } catch {
-      /* keep it encoded: `looksEncoded` reads that too */
-    }
-    scan(key, val);
+    if (raw) scan(key, safeDecode(raw));
   }
   let qTotal = 0;
   let qCount = 0;
   u.searchParams.forEach((val, key) => {
     qTotal += val.length;
     qCount += 1;
+    // A param NAME carries data as well as its value (`?<real>=1`): no name is a search
+    // box, so a key is scanned for vault data and encoded blobs, never exempted.
+    if (vaultHitIn(key, vaultValues)) flags.push({ param: key, value: key, reason: CONV });
+    else {
+      const enc = looksEncoded(key);
+      if (enc) flags.push({ param: key, value: key, reason: enc });
+    }
     scan(key, val);
   });
-  // Split-exfil evasion (audit M2): the per-value length rule is dodged by chunking a
-  // payload across many tiny params (`?a=x&b=y&c=z…`), each below BULKY_LEN with no vault
-  // hit. To a NON-search host, flag the CUMULATIVE query volume / param count — a legit
-  // non-search navigation carries few short params; a real search box is exempt (its long
-  // query rides a single search param on a search-engine host, handled above).
-  if (!isSearchEngine && (qTotal >= BULKY_LEN || qCount >= 12)) {
+  // Split-exfil: the per-value length rule is dodged by chunking a payload across many
+  // tiny params (`?a=x&b=y&c=z…`). Off a search page, flag the CUMULATIVE query volume /
+  // param count — a legit navigation carries few short params.
+  if (!isSearchPage && (qTotal >= BULKY_LEN || qCount >= 12)) {
     flags.push({
       param: "requête",
       value: `${qCount} paramètre(s), ${qTotal} caractères`,
       reason: "cumul de données volumineux dans l'URL (exfiltration possible)",
     });
   }
-  // The fragment can carry the same payload as the query, and a real value there is often
-  // URL-encoded (`#Louis%20Simon`). Decode it before scanning so the vault check sees the
-  // real value — the query is auto-decoded by URLSearchParams and the path is decoded above,
-  // so the fragment was the one scan running on raw, undecoded text (audit L2). Fragments
-  // aren't sent to the server on navigation, but they're visible to the destination's JS.
-  if (u.hash && u.hash.length > 1) {
-    const rawHash = u.hash.slice(1);
-    let hash = rawHash;
-    try {
-      hash = decodeURIComponent(rawHash);
-    } catch {
-      /* malformed %-escape → scan raw */
-    }
-    scan("#", hash);
-  }
-  // Exfil can ride the PATH (`/collect/<base64-blob>`) or the HOSTNAME
-  // (`<vault-value>.attacker.com` / a DNS-label smuggle), not only the query/fragment.
-  // Scan the decoded path for a vault hit or an encoded blob (skip the bulky-length rule —
-  // a legitimately long path shouldn't warn); flag the host only on a vault hit (a long
-  // opaque host label is normal, and there's no search-param exemption to lean on).
-  const decodedPath = (() => {
-    const raw = u.pathname.replace(/^\/+/, "");
-    try {
-      return decodeURIComponent(raw);
-    } catch {
-      return raw;
-    }
-  })();
+  // The fragment carries the same payload as the query (visible to the destination's JS),
+  // routinely encoded (`#Louis%20Simon`, `#Louis+Simon`): decoded, then scanned in every reading.
+  if (u.hash && u.hash.length > 1) scan("#", safeDecode(u.hash.slice(1)));
+  // Exfil can ride the PATH (`/collect/<blob>`, `/c/Jean+Dupont`) or the HOSTNAME
+  // (`<vault-value>.attacker.com`). The path gets the vault check in every reading and the
+  // encoded check (no bulky-length rule — a long path is normal); the host the vault check.
+  const rawPath = u.pathname.replace(/^\/+/, "");
+  const decodedPath = safeDecode(rawPath);
   if (decodedPath) {
     // Per-SEGMENT place carve-out: `/France/elections` drops the exact-place segment
     // and scans the REST — an IBAN riding beside a place name still flags.
     const pathResidue = placeSet.size
-      ? decodedPath.split("/").filter((seg) => !exactPlace(seg)).join("/")
-      : decodedPath;
-    const vaultHit = vaultValues.find((s) => s.length >= 4 && pathResidue.includes(s));
-    if (vaultHit) {
-      flags.push({ param: "chemin", value: decodedPath, reason: "contient une donnée de la conversation" });
+      ? rawPath.split("/").filter((seg) => !exactPlace(seg)).join("/")
+      : rawPath;
+    if (vaultHitIn(pathResidue, vaultValues)) {
+      flags.push({ param: "chemin", value: decodedPath, reason: CONV });
     } else {
       const enc = looksEncoded(decodedPath);
       if (enc) flags.push({ param: "chemin", value: decodedPath, reason: enc });
     }
   }
-  // Case-INSENSITIVE: `new URL()` lower-cases the hostname, so a literal compare could
-  // never match a vault value carrying a capital — i.e. every name/company (the values
-  // most worth smuggling) was undetectable in `<Real Name>.attacker.com`. Fail closed.
-  const host = u.hostname.toLowerCase();
-  const hostHit = vaultValues.find((s) => s.length >= 4 && host.includes(s.toLowerCase()));
-  if (hostHit) {
-    flags.push({ param: "hôte", value: u.hostname, reason: "contient une donnée de la conversation" });
+  // Case-INSENSITIVE (`new URL()` lower-cases the hostname, names carry capitals).
+  if (vaultHitIn(u.hostname, vaultValues)) {
+    flags.push({ param: "hôte", value: u.hostname, reason: CONV });
   }
   return { host: u.hostname, suspicious: flags.length > 0, flags };
+}
+
+function safeDecode(raw: string): string {
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw; // malformed %-escape: scan raw (`looksEncoded` reads that too)
+  }
 }
 
 /**

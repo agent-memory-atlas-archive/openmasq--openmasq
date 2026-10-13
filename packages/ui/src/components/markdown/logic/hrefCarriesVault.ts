@@ -40,21 +40,7 @@
  * a leaked identity, and the click still works either way.
  */
 
-/** Every reading of `href` a receiving server would end up decoding to the same thing. */
-function readings(href: string): string[] {
-  const out = [href];
-  const plus = href.replace(/\+/g, " "); // `application/x-www-form-urlencoded` spaces
-  if (plus !== href) out.push(plus);
-  for (const s of [...out]) {
-    try {
-      const decoded = decodeURIComponent(s);
-      if (decoded !== s) out.push(decoded);
-    } catch {
-      /* a malformed %-escape decodes to nothing — the raw reading above still counts */
-    }
-  }
-  return out.map((s) => s.toLowerCase());
-}
+import { urlReadings } from "../../../state/browserPolicy/urlReadings";
 
 /**
  * True when `href` contains any of the vault's REAL values. Absent href/vault ⇒ false
@@ -65,7 +51,7 @@ export function hrefCarriesVaultValue(
   vault?: Record<string, string>,
 ): boolean {
   if (!href || !vault) return false;
-  const forms = readings(href);
+  const forms = urlReadings(href);
   // `Object.values` = the ORIGINALS (the vault is placeholder→original), which is what a
   // fetch would leak. The keys are the fakes the model already has; they leak nothing.
   for (const value of Object.values(vault)) {

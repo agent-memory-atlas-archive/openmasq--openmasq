@@ -20,7 +20,7 @@ import type {
 import type { McpHost } from "./mcp";
 import type { BrowserHost } from "./browser";
 import type { DbHost, FilesHost } from "./files";
-import type { EmbeddingsHost, MemoryIndexHost } from "./embeddings";
+import type { MemoryIndexHost } from "./embeddings";
 import type { CloudFsHost } from "./cloudFs";
 import type { LocalFsHost } from "./localFs";
 import type { AuthHost, SyncHost, OrgHost, FeedbackHost } from "./account";
@@ -76,8 +76,6 @@ export interface Host {
   env?: EnvHost;
   /** Optional file text extraction for attachments. */
   files?: FilesHost;
-  /** Optional embeddings store (local libSQL vectors on desktop). */
-  embeddings?: EmbeddingsHost;
   /** Optional MÉMOIRE semantic index (on-device embeddings; see `files.ts`). */
   memoryIndex?: MemoryIndexHost;
   /** Optional durable storage (Turso). When absent, localStorage is used. */

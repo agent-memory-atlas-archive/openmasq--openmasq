@@ -3,7 +3,8 @@ import type { Settings } from "../../types";
 import { raceRedactionWork, type RedactFn } from "../../send/redactionEngine";
 import type { Attachment } from "./Composer";
 import { pdfReplacements } from "../../containers/modals/viewers/pdf/pdfReplacements";
-import type { PartialMask } from "@openmasq/redact/pdf-redact";
+import type { ConvSeed, PartialMask } from "@openmasq/redact/pdf-redact";
+import { dropSeed, isSeeded } from "./dropSeed";
 import { redactEngineSig } from "./redactEngineSig";
 import { describeRedactFailure } from "../../send/redaction";
 import { pushDebug } from "../../state/debug/debug";
@@ -36,6 +37,8 @@ export interface RedactAttachmentDeps {
    *  `attachmentVault.ts`: this is what gives ONE fake to the same person present
    *  in TWO attachments. Absent ⇒ the working vault starts empty. */
   convVault?: Record<string, string>;
+  /** That conversation's salt, key and pinned mode — the run masks under `dropSeed`. */
+  convSeed?: ConvSeed;
   /** The UI language of the failure text shown on the chip. */
   t: Messages;
 }
@@ -94,6 +97,8 @@ function runMasking(a: Attachment, deps: RedactAttachmentDeps, queueSignal: Abor
   if (ctrl.signal.aborted) return Promise.resolve();
   // Which engine redacted the file (same as the send) — org-mandated categories included.
   const docEngine = redactEngineSig(settings, deps.orgForcedCategories, convCategories);
+  // The SECRET seed the fakes are minted under (`dropSeed.ts`) — the same the read used.
+  const seed = dropSeed(deps.stagedKey, deps.convSeed);
   // Deadline scaled to the text (same constants as the estimate): past it the run is
   // abandoned and the chip FAILS (redactError → « Réessayer »), never sendable unmasked.
   const deadline = maskTimeoutMs(a.text.length);
@@ -126,6 +131,7 @@ function runMasking(a: Attachment, deps: RedactAttachmentDeps, queueSignal: Abor
         signal: ctrl.signal,
         onProgress,
         convCategories,
+        convSeed: seed,
         // ⚠️ The CONVERSATION's vault, shared by all its attachments: without it, two
         // documents from the same folder gave two fakes to the same person (`attachmentVault.ts`).
         vault: convId ? attachmentVault(convId, convVault) : undefined,
@@ -146,6 +152,7 @@ function runMasking(a: Attachment, deps: RedactAttachmentDeps, queueSignal: Abor
         redactPreview: replacements.length,
         // Stamp the engine used (only on success) so a later engine change is detectable.
         redactEngineSig: modelError ? undefined : docEngine,
+        redactSeeded: isSeeded(seed),
         redactError: modelError ? fail(modelError) : undefined,
       });
       // Monitor the drop-time file redaction in the Debug Log (Outils tab): count + the

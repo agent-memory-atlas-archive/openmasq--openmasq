@@ -24,7 +24,9 @@ export interface ForcedValue {
  *    documents, so the term was dropped from the send's `forced` list too. The Coffre's
  *    contract is "always redacted, every send, every conversation", so this must re-detect
  *    (the file then lands in `modelText`, the forced list keeps it, and `pseudonymize`
- *    applies it). Matched case-insensitively, like the engine's own `isKept`.
+ *    applies it). Matched case-insensitively, like the engine's own `isKept`;
+ *  - the map was not minted under a SECRET seed (`redactSeeded`, `dropSeed.ts`): reused,
+ *    its fakes would put the public, dictionary-invertible mapping on the wire.
  * Pure + unit-tested.
  */
 export function reusableDocReplacements(
@@ -39,7 +41,7 @@ export function reusableDocReplacements(
   const forcedLc = (forced ?? []).map((f) => f.value?.toLowerCase()).filter(Boolean) as string[];
   const out: Record<string, { real: string; fake: string; tone: string; kind?: string }[]> = {};
   for (const a of list) {
-    if (!a.replacements?.length || a.redactEngineSig !== cur) continue;
+    if (!a.replacements?.length || a.redactEngineSig !== cur || !a.redactSeeded) continue;
     const textLc = (a.text ?? "").toLowerCase();
     if (forcedLc.some((v) => textLc.includes(v))) continue; // re-detect: see SECURITY above
     out[a.name] = a.replacements;

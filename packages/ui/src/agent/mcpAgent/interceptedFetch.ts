@@ -14,6 +14,11 @@ import type { LoopCtx } from "./context";
  * `web_fetch_many`, intercepted. Each URL is un-redacted (fake→real, encoded forms) so the
  * fetch hits the REAL page, then every returned string is re-redacted. The SAME URL backstops
  * as `browser_navigate` apply — but a read has no confirm card, so a flagged URL is DROPPED.
+ *
+ * Every URL the MODEL reads back (a section header, a refusal) is ITS OWN raw form, never the
+ * un-redacted one: echoing the dispatched URL next to the fake the model wrote would hand it a
+ * fake→real pair the result redactor can miss (`+`/%-encoded forms). Only fetched page TEXT
+ * (and a `finalUrl` the page redirected to) comes back, through the result redactor.
  */
 export async function handleWebFetchMany(ctx: LoopCtx, call: ToolCall, args: Record<string, unknown>): Promise<Step> {
   const { p } = ctx;
@@ -21,23 +26,25 @@ export async function handleWebFetchMany(ctx: LoopCtx, call: ToolCall, args: Rec
   const reals = p.vault ? Object.values(p.vault) : [];
   const placeValues = p.kinds ? reals.filter((v) => p.kinds?.[v] === "location") : [];
   const accepted: string[] = [];
+  /** Dispatched (real) URL → the model's raw form, for the headers it reads back. */
+  const modelForm = new Map<string, string>();
   const refused: { url: string; reason: string }[] = [];
   for (const raw of rawUrls) {
     const url = ctx.wireArg(raw);
-    const navFake = fakeDerivedNavHost(url, p.vault ?? {});
-    if (navFake) {
-      refused.push({ url, reason: `domaine dérivé d'un pseudonyme (${navFake.host}) — pas le site réel` });
+    if (fakeDerivedNavHost(url, p.vault ?? {})) {
+      refused.push({ url: raw, reason: "domaine dérivé d'un pseudonyme — pas le site réel" });
       continue;
     }
     if (p.browserAllowedDomains?.length && !domainAllowed(p.browserAllowedDomains, url)) {
-      refused.push({ url, reason: "domaine hors de la liste autorisée" });
+      refused.push({ url: raw, reason: "domaine hors de la liste autorisée" });
       continue;
     }
     if (analyzeNavExfil(url, reals, placeValues).suspicious) {
-      refused.push({ url, reason: "URL porteuse de données de conversation (exfiltration bloquée)" });
+      refused.push({ url: raw, reason: "URL porteuse de données de conversation (exfiltration bloquée)" });
       continue;
     }
     accepted.push(url);
+    if (!modelForm.has(url)) modelForm.set(url, raw);
   }
   p.onToolProgress?.(toolStartNarration("web_fetch_many", "web", loopCopy(p.t)));
   let items: WebFetchItem[] = [];
@@ -52,8 +59,10 @@ export async function handleWebFetchMany(ctx: LoopCtx, call: ToolCall, args: Rec
     }
   }
   if (ctx.aborted()) return ctx.finalizeAborted(), "stop";
+  const header = (it: WebFetchItem): string =>
+    it.ok && it.finalUrl && it.finalUrl !== it.url ? it.finalUrl : (modelForm.get(it.url) ?? it.url);
   const sections = [
-    ...items.map((it) => (it.ok ? `## ${it.finalUrl ?? it.url}\n${it.text ?? ""}` : `## ${it.url}\n[échec : ${it.error ?? "inconnu"}]`)),
+    ...items.map((it) => (it.ok ? `## ${header(it)}\n${it.text ?? ""}` : `## ${header(it)}\n[échec : ${it.error ?? "inconnu"}]`)),
     ...refused.map((r) => `## ${r.url}\n[refusé : ${r.reason}]`),
   ];
   let content = sections.join("\n\n---\n\n") || "Aucune URL exploitable fournie.";

@@ -74,6 +74,7 @@ export function useAttachments(p: ChatViewProps) {
     convId: conversation?.id ?? DRAFT_CONV,
     convCategories: conversation?.redactCategories,
     convVault: conversation?.redactionVault,
+    convSeed: { salt: conversation?.redactionSalt, key: conversation?.redactionKey, mode: conversation?.redactionMode },
   };
 
   // A write elsewhere (a run finishing, a read landing) to the conversation on screen.

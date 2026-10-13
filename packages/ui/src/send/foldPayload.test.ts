@@ -106,7 +106,7 @@ describe("buildFoldedPayload", () => {
     // ...carried on reuseParts for deterministic applyVault by the caller...
     expect(r.reuseParts).toHaveLength(1);
     expect(r.reuseParts[0].header).toContain("document-1.txt");
-    expect(r.reuseParts[0].text).toBe("Marc Savary habite Lyon");
+    expect(r.reuseParts[0].text).toMatch(/^Marc Savary habite Lyon\n=== End of attached file [a-z]{12} ===$/);
     expect(r.reuseParts[0].reps).toEqual([{ real: "Marc Savary", fake: "Paul Morvan", tone: "violet" }]);
     // ...and the drop-time fake→real is pre-loaded into the vault preload.
     // The document's reps + the ALIAS pairs (restitution of the file name, 15/08).

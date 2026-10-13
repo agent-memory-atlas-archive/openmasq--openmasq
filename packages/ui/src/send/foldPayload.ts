@@ -39,6 +39,24 @@ export function typedPartOfWire(text: string): string {
   return i < 0 ? text : text.slice(0, i);
 }
 
+/** Closes each folded document. Its per-send NONCE (letters only, so no detector reads it
+ *  as a key or a number) is what a document's own text cannot predict: a forged end
+ *  marker inside a file never matches the real one. */
+const attachmentEnd = (nonce: string) => `\n=== End of attached file ${nonce} ===`;
+
+/** A document's text with every line that LOOKS like our framing defused (any casing or
+ *  spacing): a file cannot open a fake header or close itself early. The model reads a
+ *  near-identical line; the user's file is untouched (this is the wire copy only). */
+export function neutralizeFraming(text: string): string {
+  return text.replace(/={2,}(\s*)(attached file\s*:|end of attached file)/gi, (_m, sp: string, w: string) => `= =${sp}${w}`);
+}
+
+/** 12 CSPRNG letters. */
+export function mintFoldNonce(): string {
+  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(12));
+  return Array.from(bytes, (b) => String.fromCharCode(97 + (b % 26))).join("");
+}
+
 /** The FORMER per-document wire cut. The fold sends every document WHOLE now (the guard
  *  is the context precheck, `contextFit.ts`, before masking); this survives only to word a
  *  turn persisted under that cut (`attachments[].clipped`, never set any more).
@@ -109,6 +127,8 @@ export function buildFoldedPayload(
     imageNames?: string[];
     docReplacements?: Record<string, DocReplacement[]>;
     resendWire?: string;
+    /** The end-marker nonce; minted per send when absent (tests pin it). */
+    nonce?: string;
   },
   /** Model-ONLY instruction prepended to the payload: the "Graphique" run_python
    *  directive, a compétence's prompt, or both. It is part of `modelText`, so the
@@ -116,6 +136,7 @@ export function buildFoldedPayload(
   prefix: string,
 ): FoldedPayload {
   const imageNames = new Set(opts.imageNames ?? []);
+  const end = attachmentEnd(opts.nonce ?? mintFoldNonce());
   // The real filename can itself leak (refs, dates, names PII detection won't catch,
   // e.g. "438-GAZ-20220208.pdf") — the model only ever sees a neutral name.
   const safeName = (name: string, i: number) => {
@@ -172,16 +193,18 @@ export function buildFoldedPayload(
     if (stem !== alias && realStem && realStem !== name) aliasVault[stem] = realStem;
     return `\n\n${ATTACHMENT_HEADER_MARK}${alias} ===\n${ATTACHMENT_INLINE_NOTE}\n`;
   };
-  const detectBlocks = detectDocs.map((d) => `${header(d.name, docNo++)}${d.text}`).join("");
+  // Each document is FRAMED: header, its defused text, the nonce end marker.
+  const body = (t: string) => `${neutralizeFraming(t)}${end}`;
+  const detectBlocks = detectDocs.map((d) => `${header(d.name, docNo++)}${body(d.text)}`).join("");
   const reuseParts: ReusePart[] = reuseDocs.map((d) => ({
     header: header(d.name, docNo++),
     reps: d.reps,
-    text: d.text,
+    text: body(d.text),
   }));
   // Image-sent docs' text — for `modelContent` persistence ONLY (numbered after the
   // folded ones so the headers stay coherent); NEVER added to `modelText`/the wire.
   const imageDocBlocks = imageDocs
-    .map((d) => `${header(d.name, docNo++)}${d.text}`)
+    .map((d) => `${header(d.name, docNo++)}${body(d.text)}`)
     .join("");
 
   // Only the typed text + the docs we must still detect go through the (costly) engine.

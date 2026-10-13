@@ -6,8 +6,10 @@ import { buildSystemContent, buildWireHistory } from "../buildWire";
 import { droppedDocumentNames } from "../documentLoad";
 import { fitHistoryToContext } from "../historyWindow";
 import { makeRedactFn } from "../redactionEngine";
-import { shouldRedactSystemPrompt } from "../redactionOptions";
+import { shouldRedactSystemPrompt, toolForcedList } from "../redactionOptions";
+import { combinedVaultTerms } from "../vaultTerms";
 import type { FailClosed } from "./failClosed";
+import { vaultCoffreForHistory } from "./historyCoffre";
 import { detectImportedTurns } from "./importedTurns";
 import type { RedactedTurn } from "./redactionPasses";
 import type { RedactionSetup } from "./redactionSetup";
@@ -53,6 +55,22 @@ export async function buildHistory(
   // An imported history is detected on its first way back to a model (`importedTurns.ts`).
   const past = await detectImportedTurns(ctx, r, failClosed);
   if (!past) return null;
+  // The FULL Coffre over the replayed history (`historyCoffre.ts`): a term the vault does not
+  // cover yet gets its fake BEFORE the replay, and the pairs are persisted with the vault.
+  try {
+    const coffreKinds = await vaultCoffreForHistory(past, r.vault, toolForcedList(combinedVaultTerms(settings), conv), r.engineCtx);
+    if (Object.keys(coffreKinds).length) {
+      Object.assign(r.extraKinds, coffreKinds);
+      d.patchConversation(ctx.convId, (c) => ({
+        ...c,
+        redactionVault: { ...c.redactionVault, ...r.vault },
+        redactionKinds: { ...c.redactionKinds, ...coffreKinds },
+      }));
+    }
+  } catch (e) {
+    if (stoppedEarly()) return null;
+    failClosed(e instanceof Error ? e.message : String(e));
+  }
   // Last boundary before the dispatch: past this, each path owns its own cancellation.
   if (stoppedEarly()) return null;
 

@@ -148,7 +148,7 @@ export async function runRedactionPasses(
   if (useAiDetect && userWire.modelError) failClosed(`détection locale échouée (${userWire.modelError})`);
 
   // Reused documents: applied DETERMINISTICALLY from their drop-time fakes, never re-detected.
-  userWire = appendReusedDocsWire(userWire, r.folded.reuseParts, vault, r.wireExclude);
+  userWire = appendReusedDocsWire(userWire, r.folded.reuseParts, vault, r.wireExclude, r.redactionMode);
   if (stoppedEarly()) return null;
 
   // Pre-send preview: the user reviews the EXACT wire and can un-redact spans; instant, no model call.

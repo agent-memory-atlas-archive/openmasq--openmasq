@@ -1,6 +1,7 @@
 import { BRAND } from "@openmasq/branding";
 import { captureError } from "../../analytics";
 import { RedactionUnavailableError } from "../../state/errors";
+import { redactionFailReason } from "../sendAnalytics";
 import type { TurnContext } from "./turnSetup";
 
 export type FailClosed = (reason: string) => never;
@@ -17,7 +18,8 @@ export function makeFailClosed(ctx: TurnContext): FailClosed {
   return (reason) => {
     console.warn(`[${BRAND.slug}] cloud redaction unavailable → send BLOCKED (fail-closed):`, reason);
     dbg({ type: "error", scope: "cloud-redaction", message: reason });
-    captureError({ scope: "redaction", code: "fail-closed", message: reason });
+    // Telemetry gets the failure's CATEGORY only: `reason` can quote the text being redacted.
+    captureError({ scope: "redaction", code: "fail-closed", message: redactionFailReason(reason) });
     d.cancelRef.current.delete(convId);
     d.patchConversation(convId, (c) => ({
       ...c,

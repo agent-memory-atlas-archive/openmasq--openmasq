@@ -55,11 +55,41 @@ export function segmentsOf(text: string, matcher: Matcher): Seg[] {
   return segs.length ? segs : [{ text }];
 }
 
+type Merge = { s: { r: number; c: number }; e: { r: number; c: number } };
+
+/**
+ * Merged cells, CLIPPED to the rendered window (`lastRow`/`lastCol`): a merge declared over
+ * a whole sheet (`A1:XFD1048576`) is 17 billion addresses, of which only the window is ever
+ * drawn. Real merges never overlap, so the cells they cover add up to at most the window;
+ * past that budget the remaining merges are drawn as plain cells.
+ */
+export function mergeLayout(merges: Merge[], lastRow: number, lastCol: number) {
+  const covered = new Set<string>();
+  const spans = new Map<string, { rowSpan: number; colSpan: number }>();
+  let budget = (lastRow + 1) * (lastCol + 1);
+  for (const mg of merges) {
+    const outside = mg.s.r > lastRow || mg.s.c > lastCol;
+    const inverted = mg.e.r < mg.s.r || mg.e.c < mg.s.c;
+    if (outside || inverted) continue;
+    const er = Math.min(mg.e.r, lastRow);
+    const ec = Math.min(mg.e.c, lastCol);
+    budget -= (er - mg.s.r + 1) * (ec - mg.s.c + 1);
+    if (budget < 0) break;
+    spans.set(`${mg.s.r}:${mg.s.c}`, { rowSpan: er - mg.s.r + 1, colSpan: ec - mg.s.c + 1 });
+    for (let r = mg.s.r; r <= er; r++)
+      for (let c = mg.s.c; c <= ec; c++) if (r !== mg.s.r || c !== mg.s.c) covered.add(`${r}:${c}`);
+  }
+  return { covered, spans };
+}
+
 export async function parse(bytes: Uint8Array, csv: boolean): Promise<Sheet[]> {
   const XLSX = await import("xlsx");
-  const wb = csv
+  // A workbook is opened through the bounded reader extraction uses (zip caps, hyperlink
+  // ranges, `!ref`); its refusal is the preview's error.
+  const { readWorkbook } = await import("@openmasq/redact/documents.browser");
+  const wb: import("xlsx").WorkBook = csv
     ? XLSX.read(new TextDecoder().decode(bytes), { type: "string" })
-    : XLSX.read(bytes, { type: "array" });
+    : readWorkbook(XLSX, bytes);
 
   return wb.SheetNames.map((name) => {
     const ws = wb.Sheets[name];
@@ -71,13 +101,7 @@ export async function parse(bytes: Uint8Array, csv: boolean): Promise<Sheet[]> {
     const lastRow = Math.min(range.e.r, range.s.r + MAX_ROWS - 1);
 
     const merges = ws["!merges"] ?? [];
-    const covered = new Set<string>();
-    const spans = new Map<string, { rowSpan: number; colSpan: number }>();
-    for (const mg of merges) {
-      spans.set(`${mg.s.r}:${mg.s.c}`, { rowSpan: mg.e.r - mg.s.r + 1, colSpan: mg.e.c - mg.s.c + 1 });
-      for (let r = mg.s.r; r <= mg.e.r; r++)
-        for (let c = mg.s.c; c <= mg.e.c; c++) if (r !== mg.s.r || c !== mg.s.c) covered.add(`${r}:${c}`);
-    }
+    const { covered, spans } = mergeLayout(merges, lastRow, lastCol);
 
     const header: string[] = [];
     const colChars: number[] = [];

@@ -98,3 +98,17 @@ describe("runContextCompaction", () => {
     expect(COMPACT_IDLE_MS).toBeGreaterThanOrEqual(60_000);
   });
 });
+
+describe("runContextCompaction — the conversation's pinned mode", () => {
+  it("a token-mode conversation's name FRAGMENTS reach the summariser as tokens", async () => {
+    const complete = vi.fn(async (_payload: { messages: { content: string }[] }) => RECAP);
+    const conv = conversation(60, {
+      redactionMode: "token",
+      redactionVault: { "[PERSON1]": "Louis Terral" },
+    } as Partial<Conversation>);
+    for (const m of conv.messages) m.content = `${m.content} — Terral a rappelé`;
+    await runContextCompaction(conv, deps({ complete } as never));
+    const sent = complete.mock.calls[0]![0].messages[0]!.content;
+    expect(sent).not.toContain("Terral");
+  });
+});

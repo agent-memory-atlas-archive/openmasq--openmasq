@@ -1,11 +1,12 @@
 import { STREAM_MAX_PAGES, streamedPrefix } from "@openmasq/redact/documents.browser";
-import { createChunkMasker, type ChunkMasker } from "@openmasq/redact/pdf-redact";
+import { createChunkMasker, type ChunkMasker, type ConvSeed } from "@openmasq/redact/pdf-redact";
 import { maskTimeoutMs } from "@openmasq/redact";
 import type { ExtractStream } from "../../host";
 import type { RedactFn } from "../../send/redactionEngine";
 import { maskQueue, type JobQueue } from "../../state/files/maskQueue";
 import type { Settings } from "../../types";
 import { attachmentVault } from "./attachmentVault";
+import { dropSeed } from "./dropSeed";
 import type { ReadingState } from "./Composer";
 import { redactEngineSig } from "./redactEngineSig";
 import { patchStaged, type StagedStore } from "./stagedStore";
@@ -20,6 +21,8 @@ export interface ReadingMaskDeps {
   convId?: string;
   convCategories?: Record<string, boolean>;
   convVault?: Record<string, string>;
+  /** The conversation's salt, key and pinned mode — the masking runs under `dropSeed`. */
+  convSeed?: ConvSeed;
   /** The masking queue — the app's one by default; a test passes its own. */
   queue?: JobQueue;
 }
@@ -82,7 +85,8 @@ export function startReadingMask(d: ReadingMaskDeps): ReadingSession {
   const sig = redactEngineSig(d.settings, d.orgForcedCategories, d.convCategories);
   // The SAME vault the file's run uses: the map must be the run's, not a preview's.
   const vault = d.convId ? attachmentVault(d.convId, d.convVault) : undefined;
-  const masker = d.settings ? createChunkMasker(d.redactAsync, { vault, convCategories: d.convCategories }) : null;
+  const convSeed = dropSeed(d.stagedKey, d.convSeed);
+  const masker = d.settings ? createChunkMasker(d.redactAsync, { vault, convCategories: d.convCategories, convSeed }) : null;
   const texts: (string | undefined)[] = [];
   let state: ReadingState = { total: 0, thumbs: [], read: [] };
   let stopped = false;

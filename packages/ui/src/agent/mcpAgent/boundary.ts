@@ -68,9 +68,9 @@ export function makeRedactionBoundary(p: McpAgentParams, loopStats: LoopStats): 
     ? makeNavClearRedactor({
         full: redactResult,
         secrets: p.secrets ?? [],
-        // The LIVE array (the reveal gate mutates it in place), so the replay honours the
-        // same per-tool clear policy as the full path.
-        disabledKinds: p.disabledKinds ?? [],
+        // The LIVE web array (the reveal gate mutates it in place): clear-mode is web-only,
+        // so the replay honours the same per-tool clear policy as the full path.
+        disabledKinds: p.webDisabledKinds ?? p.disabledKinds ?? [],
         connectorMasking: p.connectorMasking,
         kinds: p.kinds,
         structuralUrlHosts: p.structuralUrlHosts,

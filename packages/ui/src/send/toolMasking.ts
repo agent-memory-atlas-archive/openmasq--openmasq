@@ -5,7 +5,14 @@ import { categoriesForLevel, disabledKindsOf, type ConnectorMasking } from "@ope
 import { findConnector } from "@openmasq/catalog/mcp";
 import { isWebBrowseTool } from "../state/browserPolicy";
 import { toolClearKinds } from "../agent/toolRedactionPolicy";
+import { isSearchTool } from "../agent/mcpAgentClassify";
 import { connectorOfServer } from "../state/conversation/mcpIds";
+
+/** Is this a WEB tool, the only scope a pre-search reveal (`confirmWebNav`) applies to? Name-keyed
+ *  on purpose: the reveal only ever makes the app mask LESS for a web result, never skips a gate. */
+export function isRevealScopedTool(tool?: string): boolean {
+  return !!tool && (tool === "web_fetch_many" || isSearchTool(tool));
+}
 
 /** The category-clear policy for a tool's RESULTS, resolved onto a base `disabledKinds`.
  *  Public web-search connectors keep place/org names + URL/asset path & CDN key-noise in

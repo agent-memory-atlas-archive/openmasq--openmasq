@@ -120,6 +120,7 @@ export function useChatStore() {
     settingsRef,
     orgProfileRef,
     newChatModelRef: models.newChatModelRef,
+    hostRef,
     dropScratch: scratch.dropScratch,
   });
   const { patchConversation, createConversation } = convs;

@@ -49,6 +49,8 @@ export interface McpAgentParams {
   kinds?: Record<string, string>;
   secrets: string[];
   disabledKinds: string[];
+  /** `disabledKinds` ⊕ the pre-search reveal, LIVE: what a WEB tool's clear-mode replay reads. */
+  webDisabledKinds?: string[];
   connectorMasking?: Record<string, import("@openmasq/catalog").ConnectorMasking>;
   /** Domains of CONNECTED integrations: a link to one of them stays in clear. */
   structuralUrlHosts?: string[];

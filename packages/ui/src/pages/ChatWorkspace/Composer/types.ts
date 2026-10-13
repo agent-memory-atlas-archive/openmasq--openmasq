@@ -33,6 +33,9 @@ export type Attachment = ExtractedFile & {
   redactError?: string;
   /** Engine + model that produced `replacements`; a later engine switch offers a re-run. */
   redactEngineSig?: string;
+  /** `replacements` were minted under a SECRET seed (`dropSeed.ts`) — the send reuses no
+   *  other map (`reusableDocReplacements`). */
+  redactSeeded?: boolean;
   /** Pre-computed real→fake map, reused by the preview and the send. */
   replacements?: PdfReplacement[];
   /** REAL values the user chose to un-redact in the preview → SENT IN CLEAR. */

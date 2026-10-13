@@ -1,4 +1,5 @@
 import { BRAND } from "@openmasq/branding";
+import { browserNavUrl } from "../../../state/browserPolicy";
 import { loopCopy } from "../../mcpAgentOutcome";
 import { safeJson } from "../../mcpAgentUtil";
 import { MAX_CONSECUTIVE_DEAD } from "../budget";
@@ -45,6 +46,17 @@ function refuse(
   return "next";
 }
 
+/** The navigation's host in the MODEL's own form (its raw args), never the un-redacted one:
+ *  a refusal is read by the model, and a real host beside the fake it wrote is a fake→real pair. */
+function modelNavHost(c: ConnectorCall): string {
+  const raw = browserNavUrl(c.call.name, c.args);
+  try {
+    return new URL(raw).hostname;
+  } catch {
+    return raw;
+  }
+}
+
 /**
  * A call that will NOT be dispatched, in the loop's order of precedence. `null` = nothing
  * refused it: dispatch (or, with missing args, fall through to the common tail).
@@ -54,7 +66,7 @@ export function refusalFor(ctx: LoopCtx, c: ConnectorCall, d: CallDecision): Ste
   if (d.missing.length) return null;
   if (d.navFake) {
     const content =
-      `Navigation REFUSÉE : le domaine « ${d.navFake.host} » semble construit à partir du ` +
+      `Navigation REFUSÉE : le domaine « ${modelNavHost(c)} » semble construit à partir du ` +
       `pseudonyme de redaction « ${d.navFake.fake} » — ce n'est PAS le site réel (les données ` +
       `sensibles sont pseudonymisées avant que tu les voies). Ne devine JAMAIS une URL à partir ` +
       `d'un nom : fais une recherche web avec ce nom (la requête sera envoyée avec la vraie ` +
@@ -63,7 +75,7 @@ export function refusalFor(ctx: LoopCtx, c: ConnectorCall, d: CallDecision): Ste
   }
   if (d.navBlocked) {
     const content =
-      `Navigation REFUSÉE : le domaine « ${d.navHost} » n'est pas dans la liste des domaines ` +
+      `Navigation REFUSÉE : le domaine « ${modelNavHost(c)} » n'est pas dans la liste des domaines ` +
       `autorisés du navigateur. Navigue uniquement vers : ${p.browserAllowedDomains!.join(", ")}. ` +
       `N'essaie pas de contourner cette restriction.`;
     return refuse(ctx, c, content, `domaine non autorisé : ${d.navHost}`, "nav_domain", loopCopy(p.t).runtime.loop.refusedDomain(BRAND.name));

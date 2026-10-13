@@ -49,7 +49,8 @@ export function useAttachmentIntake(
   const depsFor = (key: string, logConvId?: string) => ({
     ...redactDeps,
     stagedKey: key,
-    ...(logConvId ? { convId: logConvId } : {}),
+    // Another conversation's file never masks under THIS one's seed (`dropSeed.ts`).
+    ...(logConvId ? { convId: logConvId, ...(key !== redactDeps.stagedKey ? { convSeed: undefined } : {}) } : {}),
   });
 
   /** The masking of a file started while it is read, written where its chip is staged. */

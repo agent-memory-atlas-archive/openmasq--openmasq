@@ -56,6 +56,7 @@ export async function runAgentTurn(
     memorySearchForced: filterNotoriousFromForced(memoryForcedAll(settings.memoire), notoriety),
     // `turnKinds`, not `convKinds`: on a first message only it knows this send's fresh spans.
     engine: { ...r.engineCtx, kinds: red.turnKinds },
+    webDisabledKinds: r.webDisabledKinds,
     wireUserTexts: history.filter((m) => m.role === "user").map((m) => m.content),
     completeFn: r.completeFn,
     detectLocalFn: r.detectLocalFn,
@@ -146,6 +147,7 @@ export async function runAgentTurn(
       // The FULL Coffre: the loop's browser redaction escalates on any Coffre value a page shows.
       secrets: [...r.extraSecrets, ...(settings.coffre ?? []).map((t) => t.value.trim()).filter(Boolean)],
       disabledKinds: r.disabledKinds,
+      webDisabledKinds: r.webDisabledKinds,
       connectorMasking: settings.connectorMasking,
       structuralUrlHosts: r.engineCtx.structuralUrlHosts,
       allowedServerIds: d.orgProfileRef.current?.allowedMcpIds,

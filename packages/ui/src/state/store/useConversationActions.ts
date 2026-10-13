@@ -1,8 +1,9 @@
 import { useCallback, useMemo, useState, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
-import type { OrgProfileInfo } from "../../host";
+import type { Host, OrgProfileInfo } from "../../host";
 import type { Conversation, Settings } from "../../types";
 import { levelOf, notorietyForLevel } from "../../privacy/privacyLevel";
-import { disabledKindsOf, effectiveRedactCategories } from "../../send/redactionOptions";
+import { disabledKindsOf, effectiveRedactCategories, toolForcedList } from "../../send/redactionOptions";
+import { combinedVaultTerms } from "../../send/vaultTerms";
 import { replaceDocumentInContent } from "../conversation/documentEdit";
 import { makeRenameConversation } from "../conversation/renameConversation";
 import { redactEditedText } from "../redaction/editRedaction";
@@ -15,13 +16,15 @@ export interface ConversationActionDeps {
   settingsRef: MutableRefObject<Settings>;
   orgProfileRef: MutableRefObject<OrgProfileInfo | null>;
   newChatModelRef: MutableRefObject<string>;
+  /** The host's detector runs the edit-time pass, same engine as the send. */
+  hostRef: MutableRefObject<Host>;
   /** Drops a deleted conversation's unsent draft + staged files. */
   dropScratch: (id: string) => void;
 }
 
 /** Create / fork / import / delete conversations and patch their content. */
 export function useConversationActions(d: ConversationActionDeps) {
-  const { setConversations, setActiveId, conversationsRef, settingsRef, orgProfileRef, newChatModelRef } = d;
+  const { setConversations, setActiveId, conversationsRef, settingsRef, orgProfileRef, newChatModelRef, hostRef } = d;
 
   const patchConversation = useCallback((id: string, patch: (c: Conversation) => Conversation) => {
     setConversations((prev) => prev.map((c) => (c.id === id ? patch(c) : c)));
@@ -129,6 +132,12 @@ export function useConversationActions(d: ConversationActionDeps) {
           newText,
           disabledKindsOf(effective),
           notorietyForLevel(levelOf(effective, orgProfileRef.current?.forcedCategories)),
+          {
+            detectLocal: hostRef.current.detectLocalPii
+              ? (t) => hostRef.current.detectLocalPii!({ text: t })
+              : undefined,
+            forced: toolForcedList(combinedVaultTerms(settingsRef.current), conv),
+          },
         );
       } catch {
         return false; // fail closed — no save without the redaction pass

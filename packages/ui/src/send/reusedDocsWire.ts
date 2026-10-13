@@ -1,4 +1,4 @@
-import { applyVault, type Vault } from "@openmasq/redact";
+import { replayForModel, type Vault } from "@openmasq/redact";
 import type { ReusePart } from "./foldPayload";
 
 // Coarse tone → a representative category: the FALLBACK for a reused-document rep with
@@ -36,18 +36,22 @@ export interface UserWire {
  * user revealed in the file preview, and (b) the redaction count includes it. The visible
  * highlighting still resolves from the vault (`wireSegments`), not these matches.
  * `exclude` = the disabled-vault-token set (a turned-off category isn't re-applied).
+ * The substitution is `replayForModel`, the one every later replay of this text uses
+ * (case/spacing variants, token-mode fragments): the FIRST send of a reused document
+ * carries exactly what its history replays will.
  */
 export function appendReusedDocsWire(
   userWire: UserWire,
   reuseParts: ReusePart[],
   vault: Vault,
   exclude: Set<string> | undefined,
+  mode?: "fake" | "token",
 ): UserWire {
   if (!reuseParts.length) return userWire;
   let extraText = "";
   const extraMatches: WireMatch[] = [];
   for (const p of reuseParts) {
-    extraText += p.header + applyVault(p.text, vault, exclude);
+    extraText += p.header + replayForModel(p.text, vault, { exclude, mode });
     for (const r of p.reps) {
       if (!r.fake || !r.real) continue;
       const cat = r.kind ?? TONE_CATEGORY[r.tone ?? ""] ?? "secret";

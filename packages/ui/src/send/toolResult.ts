@@ -10,7 +10,7 @@ import {
 import { remoteRedact, remoteContractDowngrade, DEFAULT_REDACT_FN_URL } from "@openmasq/redact/remote";
 import { redactNumbersOn } from "./redactNumbers";
 import { isBrowserTool, isWebBrowseTool } from "../state/browserPolicy";
-import { disabledKindsForTool } from "./toolMasking";
+import { disabledKindsForTool, isRevealScopedTool } from "./toolMasking";
 import { toolResultKeep } from "./toolResultKeep";
 import { clipFileText } from "./foldPayload";
 import { makeScreenInbound } from "./screenInbound";
@@ -31,6 +31,9 @@ export interface RedactToolResultDeps {
    *  nor the BROWSER/SEARCH clear policy, nor a reveal mid-send can
    *  then stop its fake being replayed. `evals/navigation.test.ts`. */
   engine: SendEngineContext;
+  /** The categories a pre-search reveal un-masks, LIVE (the gate mutates it): read for a WEB
+   *  tool's result only (`isRevealScopedTool`) — every other connector keeps `engine.disabledKinds`. */
+  webDisabledKinds?: string[];
   useRemote: boolean;
   useAiDetect: boolean;
   useModel: boolean;
@@ -131,7 +134,11 @@ export function makeRedactToolResult(deps: RedactToolResultDeps): ToolResultReda
   };
 
   const disabledForTool = (tool?: string): string[] =>
-    disabledKindsForTool(engine.disabledKinds, tool, settings.connectorMasking);
+    disabledKindsForTool(
+      deps.webDisabledKinds && isRevealScopedTool(tool) ? deps.webDisabledKinds : engine.disabledKinds,
+      tool,
+      settings.connectorMasking,
+    );
 
   const redactToolResultInner = async (
     rawText: string,

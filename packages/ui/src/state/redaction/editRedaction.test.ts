@@ -49,3 +49,30 @@ describe("redactEditedText — la passe de redaction à la SAUVEGARDE d'une édi
     expect(Object.values(patch.redactionVault ?? {})).not.toContain("jean@exemple.fr");
   });
 });
+
+describe("redactEditedText — même moteur que l'envoi (détecteur + Coffre)", () => {
+  it("un nom que seul le détecteur trouve entre au vault", async () => {
+    const detectLocal = async (t: string) =>
+      t.includes("Marceline Brivet") ? [{ value: "Marceline Brivet", category: "NAME" }] : [];
+    const patch = await redactEditedText(conv(), "Rendez-vous avec Marceline Brivet demain.", [], undefined, {
+      detectLocal,
+    });
+    expect(Object.values(patch.redactionVault ?? {})).toContain("Marceline Brivet");
+  });
+
+  it("un terme du Coffre est masqué à la sauvegarde", async () => {
+    const patch = await redactEditedText(conv(), "Le projet Nightingale avance.", [], undefined, {
+      forced: [{ value: "Nightingale", category: "ORG" }],
+    });
+    expect(Object.values(patch.redactionVault ?? {})).toContain("Nightingale");
+  });
+
+  it("FAIL-CLOSED : un détecteur en panne refuse la sauvegarde (jamais un repli regex)", async () => {
+    const detectLocal = async () => {
+      throw new Error("ner down");
+    };
+    await expect(
+      redactEditedText(conv(), "Rendez-vous avec Marceline Brivet.", [], undefined, { detectLocal }),
+    ).rejects.toThrow();
+  });
+});

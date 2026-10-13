@@ -20,6 +20,7 @@ import type { RedactedTurn } from "./redactionPasses";
 import type { RedactionSetup } from "./redactionSetup";
 import type { TurnContext } from "./turnSetup";
 import { toolForcedList } from "../redactionOptions";
+import { noteOutcome } from "../sendResult";
 
 /** Bounds the per-conversation write ledger (writes are confirm-gated, so rare). */
 const LEDGER_CAP = 200;
@@ -239,6 +240,7 @@ export async function runAgentTurn(
     // A mid-turn Stop also returns `handled`: the turn is NOT settled, so the durable
     // checkpoint must survive for the retry to see its calls sealed as interrupted.
     const settled = !toolController.signal.aborted;
+    if (!settled) noteOutcome(ctx.result, "stopped");
     commitTurnVault(ctx, r, toolKinds, (c) => ({ turnCheckpoint: settled ? undefined : c.turnCheckpoint }));
     d.setIsStreaming(false);
     return true;

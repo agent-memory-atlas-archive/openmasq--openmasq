@@ -6,6 +6,8 @@ import { openTab, track, useAppDispatch, useAppSelector, type Section } from "..
 import { useSectionNav } from "./useSectionNav";
 import { useReplyNotice } from "../../state/effects/useReplyNotice";
 import { useAuth } from "../../state/auth/useAuth";
+import { useAccessStateEvent } from "../../state/auth/useAccessStateEvent";
+import { platformAccessServed } from "../../send/platformAccess";
 import { accountDisplayName, firstNameOf } from "./accountName";
 import { useMcpReconnect } from "../../hooks/useMcpReconnect";
 import { useOpenRouterModels } from "../../hooks/useOpenRouterModels";
@@ -203,6 +205,20 @@ export function useShell({
     dispatch(track({ name: "app_open" }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // A CLI this host cannot probe is left out: its answer would never come.
+  const s = chat.settings;
+  useAccessStateEvent({
+    onboarded: !!s.onboarded,
+    keysKnown: chat.keysKnown,
+    served: platformAccessServed(),
+    keyConfigured: chat.keyConfigured,
+    localReachable: chat.localEndpointReachable,
+    agents: [
+      ...(host.probeClaudeCli ? [{ enabled: !!s.claudeCliEnabled, detected: chat.claudeCliDetected }] : []),
+      ...(host.probeCodexCli ? [{ enabled: !!s.codexCliEnabled, detected: chat.codexCliDetected }] : []),
+      ...(host.probeAntigravityCli ? [{ enabled: !!s.antigravityCliEnabled, detected: chat.antigravityCliDetected }] : []),
+    ],
+  });
 
   return {
     chat,

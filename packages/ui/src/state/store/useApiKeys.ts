@@ -8,8 +8,15 @@ import { SETTINGS_KEY, load } from "../storePersistence";
  */
 export function useApiKeys(host: Host) {
   const [keyConfigured, setKeyConfigured] = useState<Set<string>>(new Set());
+  // `false` until the account's key store has answered once: an empty set read before
+  // that is "not known yet", never "no key". No keychain at all ⇒ known from the start.
+  const [keysKnown, setKeysKnown] = useState(!host.keys);
   const refreshKeys = useCallback(() => {
-    host.keys?.configured().then((ids) => setKeyConfigured(new Set(ids))).catch(() => {});
+    host.keys
+      ?.configured()
+      .then((ids) => setKeyConfigured(new Set(ids)))
+      .catch(() => {})
+      .finally(() => setKeysKnown(true));
   }, [host]);
   const setApiKey = useCallback(
     async (id: string, value: string) => {
@@ -38,5 +45,5 @@ export function useApiKeys(host: Host) {
   });
   const legacyImportedRef = useRef(false);
 
-  return { keyConfigured, refreshKeys, setApiKey, clearApiKey, legacyKeys, legacyImportedRef };
+  return { keyConfigured, keysKnown, refreshKeys, setApiKey, clearApiKey, legacyKeys, legacyImportedRef };
 }

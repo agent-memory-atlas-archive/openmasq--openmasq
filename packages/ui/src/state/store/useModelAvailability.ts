@@ -100,6 +100,7 @@ export function useModelAvailability({
     ].find((id) => id && !orgBlocks(id)) || DEFAULT_MODEL_ID;
 
   return {
+    localEndpointReachable,
     localEndpointReachableRef,
     claudeCliDetected,
     claudeCliReadyRef,

@@ -92,7 +92,7 @@ export function setupRedaction(ctx: TurnContext): RedactionSetup {
     // The technical reason goes to the debug log; the bubble gets the user sentence.
     dbg({ type: "error", scope: "redaction", message: reason });
     const blocked = new RedactionUnavailableError(reason, d.t);
-    void failTurn(blocked.message);
+    void failTurn(blocked.message, undefined, "redaction");
     throw blocked;
   }
   // Salt, key and mode are pinned on the CONVERSATION at its first redaction: a value keeps

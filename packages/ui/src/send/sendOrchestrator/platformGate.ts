@@ -42,7 +42,7 @@ export async function gateAndRoute(ctx: TurnContext): Promise<Routing | null> {
     t: d.t,
   });
   if (preflightFail) {
-    await failTurn(preflightFail.text, preflightFail.action);
+    await failTurn(preflightFail.text, preflightFail.action, preflightFail.code);
     return null;
   }
 
@@ -63,7 +63,7 @@ export async function gateAndRoute(ctx: TurnContext): Promise<Routing | null> {
         personalSub: d.personalSubRef.current,
         t: d.t,
       });
-      await failTurn(fail.text, fail.action);
+      await failTurn(fail.text, fail.action, "platform_token");
       return null;
     }
   }

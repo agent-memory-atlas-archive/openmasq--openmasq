@@ -19,6 +19,7 @@ export type EventTier = "usage" | "diagnostic";
 
 export const EVENT_TIER = {
   app_open: "usage",
+  access_state: "usage",
   section_change: "usage",
   theme_toggle: "usage",
   language_change: "usage",
@@ -31,6 +32,7 @@ export const EVENT_TIER = {
   copy_reply: "usage",
   avis_from_message: "usage",
   send_error: "diagnostic",
+  send_result: "diagnostic",
   change_model: "usage",
   default_model_set: "usage",
   redaction_applied: "usage",
@@ -59,6 +61,7 @@ export const EVENT_TIER = {
   setting_changed: "usage",
   onboarding: "usage",
   onboarding_step: "usage",
+  onboarding_blocked: "usage",
   agent_detected: "usage",
   debug_mode_toggle: "diagnostic",
   analytics_consent: "usage",

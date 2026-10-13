@@ -1,9 +1,10 @@
 // @vitest-environment jsdom
 import { act, useState } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Settings } from "../../types";
 import { DEFAULT_SETTINGS } from "../../state/storePersistence";
 import { mount } from "../../testKit";
+import { configurePlatformAccess } from "../../send/platformAccess";
 import { Onboarding } from "./Onboarding";
 
 const { captureEvent } = vi.hoisted(() => ({ captureEvent: vi.fn() }));
@@ -39,10 +40,11 @@ const events = (name: string) =>
   captureEvent.mock.calls.map(([e]) => e).filter((e) => e.name === name);
 
 beforeEach(() => captureEvent.mockClear());
+afterEach(() => configurePlatformAccess({ served: true }));
 
 describe("onboarding — la télémétrie du premier lancement", () => {
   it("compte chaque écran affiché, pas seulement le dernier", async () => {
-    const m = await mount(<Harness />, { host });
+    const m = await mount(<Harness keys={["openai"]} />, { host });
     await m.click(".ob-next");
     await m.click(".ob-next");
     expect(events("onboarding_step").map((e) => e.step)).toEqual(["1", "2", "3"]);
@@ -81,15 +83,15 @@ describe("onboarding — la télémétrie du premier lancement", () => {
   });
 
   it("porte les mêmes choix sur un abandon, avec l'écran quitté", async () => {
-    const m = await mount(<Harness />, { host });
+    const m = await mount(<Harness keys={["openai"]} />, { host });
     await m.click(".ob-skip");
     expect(events("onboarding")).toEqual([
       {
         name: "onboarding",
         step: "skip:1",
-        access: "none",
+        access: "key",
         agents: "none",
-        key_providers: "none",
+        key_providers: "openai",
         openrouter_oauth: false,
         tuned: false,
       },
@@ -104,5 +106,46 @@ describe("onboarding — la télémétrie du premier lancement", () => {
     await m.click(".ob-next");
     expect(events("onboarding_step").map((e) => e.step)).toEqual(["1", "2", "3", "regler"]);
     expect(events("onboarding")[0]).toMatchObject({ step: "done", access: "key", tuned: true });
+  });
+
+  // A build that serves nothing (the shipped default): without a road, no model answers.
+  it("sans accès, l'étape ne se quitte pas : pas de « Passer », « Suivant » dit ce qui manque", async () => {
+    configurePlatformAccess({ served: false });
+    const m = await mount(<Harness />, { host });
+    await act(async () => {});
+    expect(m.maybe(".ob-skip")).toBeNull();
+    await m.click(".ob-next");
+    await m.click(".ob-next");
+    expect(m.maybe(".ob-access-required")).not.toBeNull();
+    expect(events("onboarding_step").map((e) => e.step)).toEqual(["1", "2"]);
+    expect(events("onboarding_blocked")).toHaveLength(1);
+    expect(events("onboarding")).toEqual([]);
+  });
+
+  it("un agent allumé mais introuvable n'ouvre pas la route", async () => {
+    configurePlatformAccess({ served: false });
+    const m = await mount(<Harness init={{ codexCliEnabled: true }} />, { host });
+    await act(async () => {});
+    await m.click(".ob-next");
+    await m.click(".ob-next");
+    expect(events("onboarding_blocked")).toHaveLength(1);
+  });
+
+  it("sans rien pour ouvrir une route (ni trousseau, ni agent), l'écran ne piège personne", async () => {
+    configurePlatformAccess({ served: false });
+    const m = await mount(<Harness />, { host: {} });
+    await m.click(".ob-next");
+    await m.click(".ob-next");
+    expect(events("onboarding_step").map((e) => e.step)).toEqual(["1", "2", "3"]);
+    expect(m.maybe(".ob-skip")).not.toBeNull();
+  });
+
+  it("un build qui sert un modèle ne bloque pas : le compte est une route", async () => {
+    const m = await mount(<Harness />, { host });
+    await act(async () => {});
+    await m.click(".ob-next");
+    await m.click(".ob-next");
+    expect(events("onboarding_blocked")).toEqual([]);
+    expect(events("onboarding_step").map((e) => e.step)).toEqual(["1", "2", "3"]);
   });
 });

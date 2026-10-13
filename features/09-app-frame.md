@@ -51,15 +51,17 @@ being forced to.
 actually runs rather than a screenshot — and plugging in your key in the first minute if you
 have one.
 
-**What it is worth.** The onboarding **shows**, and configures only what it is asked to: the
-one choice offered (subscription or key) is optional — "Skip" leaves the free model already
-active in a hosted build; without a gateway, a free model still needs an OpenRouter key. It also defuses the two reflexes that would push someone to lower the protection
+**What it is worth.** The onboarding **shows**, and configures only what it is asked to — with
+one exception: a road to a model. In a hosted build the account is that road, and "Skip" stays.
+Without a gateway (the shipped default), no model answers until a key or a subscription CLI
+exists, so the access step cannot be left without one: "Skip" disappears and "Next" says what
+is missing. A CLI switched on but not found on the machine does not count. It also defuses the two reflexes that would push someone to lower the protection
 ("it will mask public figures" — no; "a web search will look for a fake name" — no, it offers
 to reveal first).
 
 - [x] Sign-in by magic link or Google — `packages/ui/src/pages/Login/`
 - [x] Redaction demonstration, replayable afterwards from **Aide** — `packages/ui/src/components/RedactionDemo/`
-- [x] Choice between a subscription CLI (Claude Code, Codex, Antigravity — the same opt-in switches as Réglages → Modèles, listed by `packages/ui/src/hooks/useAgentOptIns.ts`; each row carries the install / sign-in rows of `packages/ui/src/containers/agentSetup/AgentSetupRows.tsx`; **first and « conseillé » whenever the build can offer one**, and choosing the card switches a connected CLI on) ⇄ the built-in subscription ⇄ your own key (OpenRouter or another — the recommendation only when no CLI can be offered), optional — `packages/ui/src/pages/Onboarding/KeyChoice.tsx`
+- [x] Choice between a subscription CLI (Claude Code, Codex, Antigravity — the same opt-in switches as Réglages → Modèles, listed by `packages/ui/src/hooks/useAgentOptIns.ts`; each row carries the install / sign-in rows of `packages/ui/src/containers/agentSetup/AgentSetupRows.tsx`; **first and « conseillé » whenever the build can offer one**, and choosing the card switches a connected CLI on) ⇄ the built-in subscription ⇄ your own key (OpenRouter or another — the recommendation only when no CLI can be offered), required when the build serves nothing (the one gate: `packages/ui/src/state/auth/modelAccess.ts`) — `packages/ui/src/pages/Onboarding/KeyChoice.tsx`
 - [x] A tickable procedure to obtain the chosen provider's key + an alert on paste if the key does not have that provider's shape — `packages/ui/src/pages/Onboarding/KeySteps.tsx`
 - [x] "Get a key for free" (OpenRouter) — OAuth, with no copy-paste; the key is born and stays in the main process — `apps/desktop/src/main/store/openrouterPkce.ts`
 - [x] Fine-tuning the categories from the welcome, without being forced to

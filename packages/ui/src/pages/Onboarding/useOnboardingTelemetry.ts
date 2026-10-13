@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { captureEvent } from "../../analytics";
 import type { AgentOptIn } from "../../hooks/useAgentOptIns";
+import type { ModelAccess } from "../../state/auth/modelAccess";
 
 /**
  * What the onboarding tells PostHog beyond `onboarding { step }` — which only said where
@@ -8,20 +9,24 @@ import type { AgentOptIn } from "../../hooks/useAgentOptIns";
  *  - `onboarding_step`, once per screen shown, so the funnel 1 → 2 → 3 can be drawn;
  *  - `agent_detected`, once per agent when its probe answers: the share of people who
  *    HAVE Claude Code or Codex, whether or not they switch it on here;
- *  - `choices()`, the access the person left with, stamped by the caller on `done` AND on
- *    every skip — an agent wins over a key (it is the one they will use). Ids only: the
- *    key itself never reaches the onboarding.
+ *  - `onboarding_blocked`, each press of « Suivant » with no road to a model: the step
+ *    cannot be left without one, so this is where a person without access stops;
+ *  - `choices()`, the access the person left with (`modelAccess`, the gate's own verdict),
+ *    stamped by the caller on `done` AND on every skip. Ids only: the key itself never
+ *    reaches the onboarding.
  */
 export function useOnboardingTelemetry({
   step,
   rules,
   agents,
+  access,
   keyConfigured,
   onConnectOpenRouter,
 }: {
   step: number;
   rules: boolean;
   agents: AgentOptIn[];
+  access: ModelAccess;
   keyConfigured?: ReadonlySet<string>;
   onConnectOpenRouter?: () => Promise<boolean>;
 }) {
@@ -56,7 +61,7 @@ export function useOnboardingTelemetry({
     const enabled = agents.filter((a) => a.enabled).map((a) => a.cli);
     const keys = [...(keyConfigured ?? [])].sort();
     return {
-      access: enabled.length ? ("agent" as const) : keys.length ? ("key" as const) : ("none" as const),
+      access,
       agents: enabled.join(",") || "none",
       key_providers: keys.join(",") || "none",
       openrouter_oauth: openRouterOAuth,
@@ -64,5 +69,7 @@ export function useOnboardingTelemetry({
     };
   }
 
-  return { choices, connectOpenRouter, markTuned: () => setTuned(true) };
+  const blocked = () => captureEvent({ name: "onboarding_blocked" });
+
+  return { choices, connectOpenRouter, blocked, markTuned: () => setTuned(true) };
 }

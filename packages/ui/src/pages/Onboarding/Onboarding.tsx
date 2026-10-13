@@ -11,11 +11,12 @@ import { KeyChoice } from "./KeyChoice";
 import { useAgentOptIns } from "../../hooks/useAgentOptIns";
 import { useOnboardingTelemetry } from "./useOnboardingTelemetry";
 import { platformAccessServed, subscriptionsSold } from "../../send/platformAccess";
+import { modelAccess } from "../../state/auth/modelAccess";
 
 /* redact — first-run onboarding.
    THREE steps: what the app does (shown, not configured), how you reach the models (the
-   app's account vs your own key — the ONE genuine first-run choice, optional and
-   skippable: the free model works with no action), and you're ready. It used to be a
+   app's account vs your own key — the ONE genuine first-run choice, REQUIRED unless the
+   build serves a model: without a road nothing answers), and you're ready. It used to be a
    single screen of every redaction-category toggle (`privacy/privacyLevel.ts`
    `TOTAL_CATEGORIES`, read from the catalogue) — a settings pane wearing a welcome hat,
    which spent the whole of first-run attention on the one thing that already works by
@@ -70,9 +71,29 @@ export function Onboarding({ settings, onChange, onDone, onSaveKey, onConnectOpe
     onAntigravityCliEnabled: (on) => onChange({ ...settings, antigravityCliEnabled: on }),
   });
 
-  const telemetry = useOnboardingTelemetry({ step, rules, agents, keyConfigured, onConnectOpenRouter });
+  const access = modelAccess({
+    served,
+    agents,
+    keyConfigured: keyConfigured ?? new Set(),
+  });
+  /* No road to a model ⇒ the onboarding cannot be left: a person without one lands in a
+     chat where nothing can answer. « Passer » disappears and « Suivant » on the access step
+     says what is missing. Only where this screen can OPEN a road (a keychain or an agent);
+     a host offering neither (preview) would otherwise trap the person. */
+  const gated = access === "none" && (!!onSaveKey || agents.length > 0);
+  const [blocked, setBlocked] = useState(false);
+  const telemetry = useOnboardingTelemetry({ step, rules, agents, access, keyConfigured, onConnectOpenRouter });
 
+  function next() {
+    if (step === 1 && gated) {
+      setBlocked(true);
+      telemetry.blocked();
+      return;
+    }
+    setStep((s) => s + 1);
+  }
   function finish() {
+    if (gated) return;
     captureEvent({ name: "onboarding", step: "done", ...telemetry.choices() });
     onChange({ ...settings, onboarded: true });
   }
@@ -190,6 +211,11 @@ export function Onboarding({ settings, onChange, onDone, onSaveKey, onConnectOpe
                   keyConfigured={keyConfigured ?? new Set()}
                   agents={agents}
                 />
+                {blocked && gated && (
+                  <p className="ob-access-required" role="alert">
+                    {t.onboarding.access.required}
+                  </p>
+                )}
               </>
             ) : (
               <>
@@ -241,9 +267,11 @@ export function Onboarding({ settings, onChange, onDone, onSaveKey, onConnectOpe
               <ChevLeftIcon size={16} /> {t.onboarding.back}
             </button>
           ) : (
-            <button onClick={skip} className="ob-skip">
-              {t.onboarding.skip}
-            </button>
+            !gated && (
+              <button onClick={skip} className="ob-skip">
+                {t.onboarding.skip}
+              </button>
+            )
           )}
           <div className="flex-spacer" />
           {rules ? (
@@ -251,7 +279,7 @@ export function Onboarding({ settings, onChange, onDone, onSaveKey, onConnectOpe
               {t.onboarding.start} <ArrowRightIcon size={17} />
             </button>
           ) : step < STEPS - 1 ? (
-            <button onClick={() => setStep((s) => s + 1)} className="ob-next">
+            <button onClick={next} className="ob-next">
               {t.onboarding.next} <ArrowRightIcon size={17} />
             </button>
           ) : (

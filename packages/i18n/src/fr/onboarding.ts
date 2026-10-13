@@ -42,6 +42,8 @@ export const onboarding = {
     titleAgents: "Votre abonnement, ou une clé",
     subAgents:
       "Avec Claude Code ou Codex sur cette machine, vos messages passent par votre abonnement. Aucune clé API nécessaire. Sinon, utilisez une clé API ou un modèle local. Dans tous les cas, le masquage s'applique avant chaque envoi.",
+    required:
+      "Ajoutez une clé API ou activez votre abonnement pour continuer : sans accès, aucun modèle ne peut vous répondre.",
   },
 
   ready: {

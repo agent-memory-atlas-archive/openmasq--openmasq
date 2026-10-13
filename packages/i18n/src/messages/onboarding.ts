@@ -46,6 +46,9 @@ export interface OnboardingMessages {
      *  subscription leads, the key follows — whatever the hosted service says. */
     titleAgents: string;
     subAgents: string;
+    /** Shown when « Suivant » is pressed with no path set up: without one, no model can
+     *  answer, so the step cannot be left (or skipped) until one exists. */
+    required: string;
   };
 
   /** Screen 2 — « c'est prêt ». The 2nd sentence makes the 1st verifiable: a free model is

@@ -10,6 +10,7 @@ import type { Conversation, Message } from "../../types";
 import { type AutoRouteResult, isAutoModelId, resolveAutoModel } from "../autoRoute";
 import { buildModelLatencyEvent } from "../modelLatency";
 import { redactRefusedTurn } from "../refusedTurnRedaction";
+import { noteOutcome, outcomeOfPatch, type SendRefusal, type SendResult } from "../sendResult";
 import type { SendMessageDeps, SendOptions } from "./types";
 
 export type Dbg = (e: Parameters<typeof pushDebug>[0]) => string;
@@ -39,8 +40,11 @@ export interface TurnContext {
   sendAbort: AbortController;
   /** True if the user stopped before anything reached the model: resolves the bubble and says to abandon. */
   stoppedEarly: () => boolean;
-  /** A refusal PATCHES the already-visible bubble pair; it never appends its own. */
-  failTurn: (errorText: string, errorAction?: Message["errorAction"]) => Promise<void>;
+  /** A refusal PATCHES the already-visible bubble pair; it never appends its own.
+   *  `refusal` names the gate for `send_result`. */
+  failTurn: (errorText: string, errorAction?: Message["errorAction"], refusal?: SendRefusal) => Promise<void>;
+  /** How the turn ended, fed by every patch that resolves the bubble (`send/sendResult.ts`). */
+  result: SendResult;
   updateAssistant: (patch: Partial<Message>) => void;
   /** Model-dispatch instant and first-token instant, shared by the agentic and plain paths. */
   latency: { t0: number; tFirst: number };
@@ -175,12 +179,15 @@ export function setupTurn(
     updatedAt: Date.now(),
   }));
 
-  const updateAssistant = (patch: Partial<Message>) =>
+  const result: SendResult = { outcome: null };
+  const updateAssistant = (patch: Partial<Message>) => {
+    noteOutcome(result, outcomeOfPatch(patch));
     patchConversation(convId, (c) => ({
       ...c,
       messages: c.messages.map((m) => (m.id === assistantMsg.id ? { ...m, ...patch } : m)),
       updatedAt: Date.now(),
     }));
+  };
 
   // Stop works from the very first second: the pending bubble shows the button at once,
   // while the stream and tool loop only register their own cancellation much later.
@@ -188,6 +195,7 @@ export function setupTurn(
   d.cancelRef.current.set(convId, () => sendAbort.abort());
   const stoppedEarly = (): boolean => {
     if (!sendAbort.signal.aborted) return false;
+    noteOutcome(result, "stopped");
     updateAssistant({ pending: false, error: true, errorText: t.errors.interruptedBeforeSend });
     setIsStreaming(false);
     return true;
@@ -197,7 +205,9 @@ export function setupTurn(
   // relevant), in the same shape as the fail-closed patch and the stream `onError` path.
   // The bubble is REDACTED FIRST (`refusedTurnRedaction.ts`): the redaction pass never runs
   // for a refused send, and masking comes before whatever the model costs, on screen too.
-  const failTurn: TurnContext["failTurn"] = async (errorText, errorAction) => {
+  const failTurn: TurnContext["failTurn"] = async (errorText, errorAction, refusal) => {
+    noteOutcome(result, "refused");
+    result.refusal = refusal;
     dbg({ type: "error", scope: "preflight", message: errorText });
     await redactRefusedTurn({
       host, settings, orgForced: d.orgProfileRef.current?.forcedCategories,
@@ -227,6 +237,7 @@ export function setupTurn(
     sendAbort,
     stoppedEarly,
     failTurn,
+    result,
     updateAssistant,
     latency,
     emitModelLatency,

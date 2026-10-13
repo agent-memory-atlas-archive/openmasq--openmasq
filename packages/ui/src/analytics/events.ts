@@ -10,6 +10,8 @@
 // The ONE section vocabulary (rule 9). Type-only, so this catalogue stays
 // dependency-free at runtime; adding a screen can't leave `section_change` behind.
 import type { Section } from "../types";
+import type { ModelAccess } from "../state/auth/modelAccess";
+import type { SendOutcome, SendRefusal } from "../send/sendResult";
 // Likewise: the language is a catalogue enum, never a free string.
 import type { Locale } from "@openmasq/i18n";
 
@@ -52,6 +54,9 @@ type ConnectorErrorReason = "oauth" | "network" | "unauthorized" | "unknown";
 export type TrackEvent =
   // ── app / navigation ───────────────────────────────────────────────────
   | { name: "app_open" }
+  // The road to a model this install has, ONCE per launch, when keys and CLI probes have
+  // answered. `none` on an unserved build = nothing can answer (`state/auth/modelAccess.ts`).
+  | { name: "access_state"; access: ModelAccess }
   | { name: "section_change"; section: Section }
   | { name: "theme_toggle"; theme: "light" | "dark" }
   // The language CHOSEN in settings — a shipped locale, so an enum, never a raw
@@ -74,6 +79,9 @@ export type TrackEvent =
   // status when the failure was an API response. `requestId` = the platform's opaque,
   // server-minted correlation id; `retries` = attempts the provider client made.
   | { name: "send_error"; provider: string; model: string; reason: SendErrorReason; status?: number; requestId?: string; retries?: number }
+  // How the turn ENDED, once per send, with the road it took (`send/sendResult.ts`): the
+  // success rate per access. `refusal` names the gate when `outcome` is `refused`.
+  | { name: "send_result"; provider: string; model: string; access: Exclude<ModelAccess, "none">; outcome: SendOutcome; refusal?: SendRefusal }
   // ── models ─────────────────────────────────────────────────────────────
   | { name: "change_model"; provider: string; model: string }
   | { name: "default_model_set"; model: string }
@@ -218,7 +226,7 @@ export type TrackEvent =
   | {
       name: "onboarding";
       step: string;
-      access?: "agent" | "key" | "none";
+      access?: ModelAccess;
       agents?: string;
       key_providers?: string;
       openrouter_oauth?: boolean;
@@ -226,6 +234,8 @@ export type TrackEvent =
     }
   // One per screen SHOWN ("1"…"3", "regler") — the funnel `onboarding` alone can't draw.
   | { name: "onboarding_step"; step: string }
+  // « Suivant » pressed on the access step with no road to a model: the step holds them.
+  | { name: "onboarding_blocked" }
   // A subscription CLI probed during the onboarding: is it on this machine at all?
   | { name: "agent_detected"; agent: string; found: boolean }
   | { name: "debug_mode_toggle"; on: boolean }

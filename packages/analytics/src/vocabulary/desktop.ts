@@ -11,6 +11,7 @@
  */
 export const DESKTOP_EVENTS = {
   app_open: [],
+  access_state: ["access"],
   section_change: ["section"],
   theme_toggle: ["theme"],
   language_change: ["locale"],
@@ -54,11 +55,13 @@ export const DESKTOP_EVENTS = {
   run_python_failed: ["reason", "ms", "loopId"],
   tool_gate_blocked: ["kind", "tool", "connector", "provider", "model", "loopId"],
   send_error: ["provider", "model", "reason", "status", "requestId", "retries"],
+  send_result: ["provider", "model", "access", "outcome", "refusal"],
   redaction_timing: ["engine", "model", "ms", "cold", "ok", "reason", "chars"],
   file_attached: ["mime", "sizeBucket", "redactions"],
   setting_changed: ["key"],
   onboarding: ["step", "access", "agents", "key_providers", "openrouter_oauth", "tuned"],
   onboarding_step: ["step"],
+  onboarding_blocked: [],
   agent_detected: ["agent", "found"],
   debug_mode_toggle: ["on"],
   analytics_consent: ["on"],

@@ -186,6 +186,12 @@
   font-size: var(--text-xs);
   color: var(--text-faint);
 }
+/* « Suivant » pressed with no road to a model: the step's one refusal, said under the cards. */
+.ob-access-required {
+  margin-top: 12px;
+  font-size: var(--text-sm);
+  color: var(--red-500);
+}
 /* The escape hatch from the 1-click path (« j'ai déjà une clé », « la créer à la main »).
    A link, not a button: it must not compete with the primary action above. */
 .ob-access-manual {

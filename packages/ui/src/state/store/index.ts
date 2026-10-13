@@ -169,6 +169,8 @@ export function useChatStore() {
     settings,
     setSettings,
     keyConfigured,
+    /** Has the account's key store answered once? Before that, an empty `keyConfigured` says nothing. */
+    keysKnown: keys.keysKnown,
     setApiKey: keys.setApiKey,
     clearApiKey: keys.clearApiKey,
     /** Re-read WHICH ids hold a key: one can be minted outside this store (PKCE flow). */
@@ -178,6 +180,8 @@ export function useChatStore() {
     personalSub: billing.personalSub,
     /** Model id → why it can't send; the send gate refuses for the SAME reason. */
     unavailableModels: models.unavailableModels,
+    /** Did the self-hosted endpoint answer its last probe (`null` = not probed)? */
+    localEndpointReachable: models.localEndpointReachable,
     claudeCliDetected: models.claudeCliDetected,
     codexCliDetected: models.codexCliDetected,
     antigravityCliDetected: models.antigravityCliDetected,

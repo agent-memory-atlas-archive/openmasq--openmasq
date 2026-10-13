@@ -7,12 +7,15 @@ import { includedWith, platformAccessServed, subscriptionsSold } from "./platfor
 import type { OrgProfileInfo, CreditBalance, BillingSubscription } from "../host";
 import type { Message } from "../types";
 import { BRAND } from "@openmasq/branding";
+import type { SendRefusal } from "./sendResult";
 
 /** The outcome of the send PRE-FLIGHT gate: `null` = proceed, else the inline
  *  failure to render on the assistant bubble (text + optional CTA action). Pure so
  *  the security-relevant gate (org suspension, org-blocked model, exhausted credits,
  *  missing key) is unit-testable in isolation from the send closure. */
 export interface PreflightFailure {
+  /** WHICH gate refused — the bounded `send_result.refusal`, never the text. */
+  code: SendRefusal;
   text: string;
   action?: Message["errorAction"];
 }
@@ -67,13 +70,13 @@ export function preflightError(p: PreflightInput): PreflightFailure | null {
   // disabled — the picker hides it, but a conversation pinned to a now-blocked model
   // must FAIL CLOSED (shown inline so the reason sticks).
   if (p.orgProfile?.status === "suspended") {
-    return { text: t.runtime.send.suspended };
+    return { code: "suspended", text: t.runtime.send.suspended };
   }
   // ALLOW-list: the model must appear in what the organization has opened up. A model
   // absent from the list is refused — including a model that joined the catalog after
   // the policy was written, which the old deny-list would have let through.
   if (p.orgProfile && !(p.orgProfile.allowedModelIds ?? []).includes(p.model.id)) {
-    return { text: new ModelBlockedByOrgError(p.model.id, p.model.label, t).message };
+    return { code: "org_blocked", text: new ModelBlockedByOrgError(p.model.id, p.model.label, t).message };
   }
   // Is the model usable at all? Same decision the pickers grey out with.
   const reason = modelUnavailableReason({
@@ -99,6 +102,7 @@ export function preflightError(p: PreflightInput): PreflightFailure | null {
   // action card: take a subscription, or provide your own key.
   if (reason === "free_mode_only") {
     return {
+      code: reason,
       // With nothing to sell (`subscriptionsSold`, the default), the only way out is the key.
       // The SAME sentence the picker's tooltip shows (`availability`, rule 9).
       text: subscriptionsSold()
@@ -122,9 +126,10 @@ export function preflightError(p: PreflightInput): PreflightFailure | null {
     if (!p.orgProfile && p.hasBilling) {
       const paying = (p.personalSub?.tier ?? "free") !== "free";
       if (paying) {
-        return { text: t.runtime.send.paidUnavailable };
+        return { code: reason, text: t.runtime.send.paidUnavailable };
       }
       return {
+        code: reason,
         text: new CreditsExhaustedError(true, t).message,
         action: { kind: "credit_options", provider: p.provider, label },
       };
@@ -136,6 +141,7 @@ export function preflightError(p: PreflightInput): PreflightFailure | null {
     // provider's key modal then regenerates in place, existing plumbing; the subscription
     // option stays the admin's call, so no upsell card here.
     return {
+      code: reason,
       text: new CreditsExhaustedError(personalCreditsBlocked, t).message,
       action: { kind: "missing_key", provider: p.provider, label },
     };
@@ -147,6 +153,7 @@ export function preflightError(p: PreflightInput): PreflightFailure | null {
     // regenerates in place. (Platform providers need no user key — the platform's backend
     // holds it.)
     return {
+      code: reason,
       // Same rule as the picker's chip: the « abonnement » way out is named only if
       // this build has a hosted service (`platformAccess.ts`).
       text:
@@ -160,7 +167,7 @@ export function preflightError(p: PreflightInput): PreflightFailure | null {
     // Conversation pinned on a CLI provider (`claude-cli`/`codex-cli`/
     // `antigravity-cli`) while
     // the CLI has disappeared or the setting was switched off: the repair path, named.
-    return { text: t.availability.cliUnavailable(label) };
+    return { code: reason, text: t.availability.cliUnavailable(label) };
   }
 
   if (reason === "cli_signed_out") {
@@ -168,6 +175,7 @@ export function preflightError(p: PreflightInput): PreflightFailure | null {
     // sign-in the failed turn would offer (none for a CLI the app cannot sign in).
     const cli = subscriptionCliOfProvider(p.provider);
     return {
+      code: reason,
       text: t.availability.cliSignedOutTitle(label),
       ...(cli && SUBSCRIPTION_CLI_IN_APP_LOGIN[cli]
         ? { action: { kind: "cli_signin" as const, provider: p.provider, label } }
@@ -179,13 +187,13 @@ export function preflightError(p: PreflightInput): PreflightFailure | null {
     // Self-hosted model with no endpoint set. Sending would silently fall back to a
     // default localhost port the user never chose, so fail closed with the real reason.
     // The exact PATH stays: it's a setting you don't stumble on by chance.
-    return { text: t.availability.noEndpointTitle };
+    return { code: reason, text: t.availability.noEndpointTitle };
   }
 
   if (reason === "endpoint_unreachable") {
     // Endpoint set but the local server didn't answer the reachability probe — almost
     // always "not started". Blocked here too so the picker's grey and the gate agree.
-    return { text: t.availability.endpointUnreachableTitle };
+    return { code: reason, text: t.availability.endpointUnreachableTitle };
   }
 
   return null;

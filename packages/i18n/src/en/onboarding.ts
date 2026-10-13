@@ -42,6 +42,7 @@ export const onboarding = {
     titleAgents: "Your subscription, or a key",
     subAgents:
       "With Claude Code or Codex on this machine, your messages go through your subscription. No API key needed. Otherwise, use an API key or a local model. Either way, masking runs before every message is sent.",
+    required: "Add an API key or switch on your subscription to continue: without access, no model can answer you.",
   },
 
   ready: {

@@ -73,6 +73,7 @@ const BENIGN: Record<string, string> = {
   OPENMASQ_AGENT_BROWSER: "set BY main when it spawns the agent process",
   OPENMASQ_AGENT_CDP_PIPE: "set BY main when it spawns the agent process",
   OPENMASQ_AGENT_USERDATA: "set BY main when it spawns the agent process",
+  OPENMASQ_AGENT_NONCE: "set BY main per spawn; a TIGHTENING (the child refuses without the stdin match)",
   OPENMASQ_AGENT_NO_STEALTH: "UA/stealth toggle inside the agent browser; grants no access",
   OPENMASQ_SANDBOX_NO_NET: "tightening: removes network from the jail",
   OPENMASQ_DISABLE_DB: "runs without persistence; opens nothing",

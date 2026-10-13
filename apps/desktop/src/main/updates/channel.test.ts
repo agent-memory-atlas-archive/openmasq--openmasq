@@ -22,7 +22,7 @@ vi.mock("./config", () => ({
   updateConfig: (patch: Record<string, unknown>) => Object.assign(cfg, patch),
 }));
 
-import { classifyChannelChange, requestChannelChange } from "./channel";
+import { classifyChannelChange, requestChannelChange, requestPinnedSwitch } from "./channel";
 
 const classify = (wanted: unknown, current = "desktop-production"): ReturnType<typeof classifyChannelChange> =>
   classifyChannelChange({ wanted, current, baked: "desktop-production" });
@@ -109,5 +109,30 @@ describe("requestChannelChange (gate + effect)", () => {
     const res = await requestChannelChange("desktop-production");
     expect(res).toEqual({ ok: true, channel: "desktop-production" });
     expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+});
+
+describe("requestPinnedSwitch (updates:switch — an exact build)", () => {
+  it("requires the permission even when the target IS the current/baked channel", async () => {
+    answerPermission(false);
+    const r = await requestPinnedSwitch("desktop-production");
+    expect(r).toMatchObject({ ok: false, reason: "not_allowed" });
+    expect(applyFeed).not.toHaveBeenCalled();
+  });
+
+  it("fails closed when the permission cannot be read", async () => {
+    answerPermission("boom");
+    expect(await requestPinnedSwitch("desktop-production")).toMatchObject({ ok: false });
+  });
+
+  it("lets a privileged device switch, through the channel gate", async () => {
+    answerPermission(true);
+    expect(await requestPinnedSwitch("desktop-staging")).toEqual({ ok: true, channel: "desktop-staging" });
+    expect(cfg.channel).toBe("desktop-staging");
+  });
+
+  it("still refuses an unknown channel for a privileged device", async () => {
+    answerPermission(true);
+    expect(await requestPinnedSwitch("evil.example.com")).toMatchObject({ ok: false, reason: "unknown_channel" });
   });
 });

@@ -1,21 +1,17 @@
 import { app } from "electron";
-import { realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { resolve, sep } from "path";
 import { BRAND } from "@openmasq/branding";
+import { isWithin, isWithinDenied, realPathOrNull } from "../security/pathScope";
 
 // ── files:read confinement ───────────────────────────────────────────────────
 // The renderer may only read a path the USER granted this session, or one inside our own
 // userData / temp dir, never an arbitrary path (an XSS would exfiltrate the keys, the vault,
 // ~/.ssh). Module-level state so the grant and the later check share the SAME Set.
+// Paths are compared in their ON-DISK casing and the secret deny is case-folded where the
+// volume ignores case (`../security/pathScope.ts`): `<userData>/KEYS.ENC` IS `keys.enc`.
 const readGrants = new Set<string>();
-const normPath = (p: string): string => {
-  try {
-    return realpathSync(p);
-  } catch {
-    return resolve(p);
-  }
-};
+const normPath = (p: string): string => realPathOrNull(p) ?? resolve(p);
 
 /** Grant reading a path this session — the user just picked it via the native dialog
  *  (or an E2E fixture env). A later {@link assertReadAllowed} for it then passes. */
@@ -25,16 +21,14 @@ export function grantRead(p: string): void {
 
 let userDataRoot: string | null = null;
 let tmpRoot: string | null = null;
-let secretRead: { files: Set<string>; dirs: string[] } | null = null;
+let secretRead: { files: string[]; dirs: string[] } | null = null;
 // The at-rest SECRETS inside userData are denied unconditionally, even though userData is a
 // read root (dev-plaintext keys, the DB key, the session, the vault DBs).
-function secretReadPaths(): { files: Set<string>; dirs: string[] } {
+function secretReadPaths(): { files: string[]; dirs: string[] } {
   if (secretRead) return secretRead;
   const ud = app.getPath("userData");
   secretRead = {
-    files: new Set(
-      ["keys.enc", "db-key.enc", "auth.enc", "sync-pass.enc", "mcp.json"].map((f) => normPath(resolve(ud, f))),
-    ),
+    files: ["keys.enc", "db-key.enc", "auth.enc", "sync-pass.enc", "mcp.json"].map((f) => normPath(resolve(ud, f))),
     dirs: [
       normPath(resolve(ud, "accounts")), // vault DBs (openmasq-<uid>.db) + mcp-<uid>.json
       normPath(resolve(ud, "broker")), // CDP pipe→ws broker secret
@@ -47,10 +41,12 @@ function secretReadPaths(): { files: Set<string>; dirs: string[] } {
 function isReadAllowed(p: string): boolean {
   const n = normPath(p);
   const secret = secretReadPaths();
-  if (secret.files.has(n) || secret.dirs.some((d) => n === d || n.startsWith(d + sep))) return false;
+  // A secret FILE is matched like a dir: a path beneath a file cannot exist, so this only
+  // ever adds the folded exact match.
+  if ([...secret.files, ...secret.dirs].some((d) => isWithinDenied(d, n))) return false;
   if (readGrants.has(n)) return true;
   userDataRoot ??= normPath(app.getPath("userData"));
-  if (n === userDataRoot || n.startsWith(userDataRoot + sep)) return true;
+  if (isWithin(userDataRoot, n)) return true;
   // OS tmpdir: ONLY the app's OWN temp files (the brand slug prefix), never another app's
   // dumped secrets. A user-picked temp file goes through `readGrants` above.
   tmpRoot ??= normPath(tmpdir());

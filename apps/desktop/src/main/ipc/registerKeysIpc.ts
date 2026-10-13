@@ -2,6 +2,7 @@ import { setKeysUser, configuredKeys, setKey, clearKey, importKeys } from "../st
 import { isByoKeysBlocked, byoKeysBlockedError } from "../store/keysPolicy";
 import { beginOpenRouterConnect } from "../store/openrouterPkce";
 import { handle, str, obj, nullable } from "./handle";
+import { assertSessionAccount } from "../store/sessionAccount";
 
 /**
  * Register the WRITE-ONLY provider-API-key IPC. The keys are encrypted at rest in the
@@ -17,8 +18,12 @@ import { handle, str, obj, nullable } from "./handle";
 export function registerKeysIpc(): void {
   // Re-scope the encrypted key store to the signed-in account (privacy isolation, mirrors
   // db:set-user / mcp:set-user) — so account B can never use account A's provider keys.
-  // `null` is meaningful here (signed out), so nullable rather than optional.
-  handle("keys:set-user", [nullable(str)], (_e, uid) => setKeysUser(uid));
+  // `null` is meaningful here (signed out), so nullable rather than optional. A non-null
+  // uid must be the account of the session main holds (`../store/sessionAccount.ts`).
+  handle("keys:set-user", [nullable(str)], (_e, uid) => {
+    assertSessionAccount("keys:set-user", uid);
+    return setKeysUser(uid);
+  });
   handle("keys:configured", [], () => configuredKeys());
   // ⛔ Managed account: no personal key gets written. The UI already hides the
   // grid, but a renderer XSS would reach this IPC first — rule 7 wants the

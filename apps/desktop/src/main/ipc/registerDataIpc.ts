@@ -7,21 +7,19 @@ import {
   dbSaveSettings,
   dbSaveDebugLog,
   dbLoadDebugLog,
-  storeEmbedding,
-  searchEmbeddings,
   dbSaveEgressLog,
   dbLoadEgressLog,
 } from "../db";
 import { attachEgressSink, listEgress, type EgressRecord } from "../net/egressLog";
-import { embed, type EmbedConfig } from "../embeddings";
 import { probeEndpoint } from "../net/localEndpoint";
 import { memoryIndexSync, memoryIndexEdges, memoryIndexQuery, type MemoryIndexCard } from "../embed";
 import { handle, str, obj, arr, optional, num, nullable } from "./handle";
+import { assertSessionAccount } from "../store/sessionAccount";
 
 /**
- * Register the persistence + embeddings IPC — the local Turso/libSQL DB CRUD and the
- * vector index/search. Pure data plane: no read-gate / secret / spawn boundary (those
- * stay in index.ts), just thin wrappers over `../db` + `../embeddings`.
+ * Register the persistence IPC — the local Turso/libSQL DB CRUD and the on-device memory
+ * index. Pure data plane: no read-gate / secret / spawn boundary (those stay in index.ts),
+ * just thin wrappers over `../db` + `../embed`.
  * (`mcp:set-user` is deliberately NOT here — it re-scopes MCP, not the DB.)
  *
  * Arguments are shape-checked at the boundary (`./handle`) — the annotations below are
@@ -32,8 +30,10 @@ export function registerDataIpc(): void {
   handle("db:configured", [], () => isDbConfigured());
   // Point the local DB at the signed-in account's file (per-account isolation). The
   // renderer calls this before `db:load` on sign-in / account switch. E2E disables it.
-  // `null` is meaningful (signed out), so nullable rather than optional.
+  // `null` is meaningful (signed out), so nullable rather than optional. A non-null uid
+  // must be the account of the session main holds (`../store/sessionAccount.ts`).
   handle("db:set-user", [nullable(str)], async (_e, userId) => {
+    assertSessionAccount("db:set-user", userId);
     if (process.env.OPENMASQ_DISABLE_DB) return;
     await setDbUser(userId);
     // The egress journal is per-account for the same reason the DB is: it describes which
@@ -69,45 +69,16 @@ export function registerDataIpc(): void {
   // `egress:record` and deliberately no `egress:clear`.
   handle("egress:list", [optional(num)], (_e, limit) => listEgress({ limit: limit ?? 500 }));
 
-  // Embeddings: generate (OpenAI-compatible endpoint) + store / search via the
-  // local libSQL native vector column.
-  handle("embeddings:index", [obj], async (_e, raw) => {
-    const payload = raw as {
-      text: string;
-      messageId?: string;
-      conversationId?: string;
-      config: EmbedConfig;
-    };
-    const [vector] = await embed([payload.text], payload.config);
-    await storeEmbedding({
-      content: payload.text,
-      messageId: payload.messageId,
-      conversationId: payload.conversationId,
-      model: payload.config.model,
-      vector,
-    });
-  });
-  handle("embeddings:search", [obj], async (_e, raw) => {
-    const payload = raw as {
-      query: string;
-      k?: number;
-      conversationId?: string;
-      config: EmbedConfig;
-    };
-    const [vector] = await embed([payload.query], payload.config);
-    return searchEmbeddings(vector, payload.k ?? 5, payload.conversationId);
-  });
-
-  // Reachability probe of a self-hosted (openai-compat / Ollama) endpoint — same SSRF
-  // allow-list as embeddings, best-effort, for the model picker's joignable/injoignable
+  // Reachability probe of a self-hosted (openai-compat / Ollama) endpoint — SSRF-gated
+  // (`../net/localEndpoint.ts`), best-effort, for the model picker's joignable/injoignable
   // status. Never throws (returns false on any failure).
   handle("chat:probe-endpoint", [str], (_e, baseUrl) => probeEndpoint(baseUrl));
 
   // MÉMOIRE semantic index — ON-DEVICE embeddings only (`../embed`, bundled e5-small in
-  // a utilityProcess), NEVER the remote `embed()` above: a memory card is real PII.
+  // a utilityProcess), never a network embeddings API: a memory card is real PII.
   handle("memory:index-sync", [arr], (_e, cards) => memoryIndexSync(cards as MemoryIndexCard[]));
   handle("memory:index-edges", [optional(num)], (_e, k) => memoryIndexEdges(k));
   // The semantic recall of `memory_search`: the query is real text — embedded
-  // on-device, never routed to the remote embeddings endpoint, never logged.
+  // on-device, never routed to a network embeddings API, never logged.
   handle("memory:index-query", [str, optional(num)], (_e, text, k) => memoryIndexQuery(text, k));
 }

@@ -33,6 +33,7 @@ import {
   setAgentTabsReporter,
   setAgentShortcutReporter,
 } from "./mcp/browser";
+import { authenticateAgentLaunch } from "./mcp/browser/agentLaunch";
 import { setupAutoUpdates } from "./updates";
 import { installErrorReporting, reportMainError, reportMainEvent } from "./runtime/errorReport";
 import { installMediaPermissions } from "./runtime/permissions";
@@ -47,6 +48,8 @@ import { applyProfilePath } from "./profile";
 import { registerEnvIpc } from "./ipc/registerEnvIpc"; import { installCustomStackCspFor } from "./customStackCsp";  import { AUTH_SCHEME, installDeepLinkHandlers, deliverAuthUrl } from "./deepLinks";
 import { createWindow } from "./window";
 import { registerChatHandlers } from "./ipc/registerChatIpc";
+import { resolvedEnvPayload } from "./ipc/envSwitch";
+import { readEnvPointerFull } from "./environment";
 import { registerAppHandlers } from "./ipc/registerAppIpc";
 import { registerMcpHandlers } from "./ipc/registerMcpIpc";
 import { installMainNotifiers } from "./mainNotifiers";
@@ -57,9 +60,16 @@ import { devOnly } from "./security/devOnly";
 // This SAME binary re-spawned with OPENMASQ_AGENT_BROWSER=1 runs ONLY the agent browser
 // (own userData, own CDP endpoint, no app UI, no lock). See mcp/browser/agentMain.ts.
 const AGENT_BROWSER_MODE = isAgentBrowserProcess();
+// The env flag alone is presettable from outside the app: the mode runs only when the
+// launch nonce on stdin matches (`mcp/browser/agentLaunch.ts`), checked ONCE, here, before
+// any remote-debugging switch exists. A mismatch exits: never a CDP-exposing browser.
+if (AGENT_BROWSER_MODE && !authenticateAgentLaunch()) {
+  process.stderr.write("[agent] refused: not launched by the app\n");
+  process.exit(1);
+}
 // Crash reporting BEFORE the modes split: one init covers the three (the `process` tag
 // says which one crashed).
-const SENTRY_MODE = isAgentBrowserProcess() ? "agent-browser" : isPlaywrightMcpProcess() ? "playwright-mcp" : "app";
+const SENTRY_MODE = AGENT_BROWSER_MODE ? "agent-browser" : isPlaywrightMcpProcess() ? "playwright-mcp" : "app";
 initSentryMain(SENTRY_MODE, app.isPackaged);
 if (AGENT_BROWSER_MODE) {
   runAgentBrowserMain();
@@ -113,7 +123,11 @@ app.whenReady().then(async () => {
   initConfirmationMode(app.getPath("userData"));
   // The local DB is opened PER-ACCOUNT (`db:set-user`), NOT here, so a shared machine
   // never surfaces one account's chats to another.
-  const chatStreamsBusy = registerChatHandlers();
+  // The gateway is resolved HERE, from the same environment table the renderer reads: the
+  // platform path's baseUrl is pinned to its origin (`net/providerEndpoint.ts`).
+  const chatStreamsBusy = registerChatHandlers(
+    PROFILE ? resolvedEnvPayload(PROFILE.env, readEnvPointerFull(PROFILE.baseUserData).custom).redactFn : undefined,
+  );
   registerDataIpc();
   // Confirmation POSTURE: one trust boundary, one module.
   registerPostureIpc();

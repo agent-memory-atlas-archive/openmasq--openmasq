@@ -1,4 +1,5 @@
 import { readFile, stat } from "node:fs/promises";
+import { MAX_FILE_BYTES, safeUnzip } from "@openmasq/redact";
 import { applyDocxEdit, docxToText } from "./docxText";
 import type { Grant } from "./grant";
 
@@ -21,13 +22,19 @@ const BODY_PART = "word/document.xml";
  *  make the worker chew memory on a crafted file. */
 const MAX_BODY = 8_000_000;
 
-/** Read + inflate the body part of a .docx. */
-async function readBody(path: string): Promise<{ zip: Record<string, Uint8Array>; xml: string }> {
-  const { unzipSync, strFromU8 } = await import("fflate");
-  const zip = unzipSync(await readFile(path));
+/** Read + inflate the body part of a .docx — and, for an edit, every other part (they are
+ *  re-zipped as is). Through `safeUnzip`: the zip-bomb gate's own directory, each member
+ *  capped at its declared size, and the body refused on that DECLARED size before a byte of
+ *  it is inflated. The file itself is bounded by `MAX_FILE_BYTES` on its `stat`. */
+async function readBody(path: string, all = false): Promise<{ zip: Record<string, Uint8Array>; xml: string }> {
+  const { strFromU8 } = await import("fflate");
+  if ((await stat(path)).size > MAX_FILE_BYTES) throw new Error("document trop volumineux");
+  const zip = safeUnzip(new Uint8Array(await readFile(path)), (m) => {
+    if (m.name === BODY_PART && m.originalSize > MAX_BODY) throw new Error("document trop volumineux");
+    return all || m.name === BODY_PART;
+  });
   const part = zip[BODY_PART];
   if (!part) throw new Error("ce fichier n'est pas un document Word lisible (word/document.xml absent)");
-  if (part.byteLength > MAX_BODY) throw new Error("document trop volumineux");
   return { zip, xml: strFromU8(part) };
 }
 
@@ -64,7 +71,7 @@ export const DOCX_OPS: Record<string, DocxOp> = {
   async edit_document(g, a, write) {
     const p = g.resolve(str(a, "path"));
     const { zipSync, strToU8 } = await import("fflate");
-    const { zip, xml } = await readBody(p);
+    const { zip, xml } = await readBody(p, true);
     const { xml: next, paragraph } = applyDocxEdit(xml, str(a, "oldText"), str(a, "newText"));
 
     // Re-zip: every part is passed through as the SAME bytes we read, except the body.

@@ -13,6 +13,8 @@
  * 5 MB page is useless and expensive). Pure + unit-tested.
  */
 
+import { findElement, removeComments, removeElements, replaceAllTags, replaceNamedTags } from "./htmlScan";
+
 /** Default cap on the extracted text per page (characters). */
 export const HTML_TEXT_MAX = 20_000;
 
@@ -43,52 +45,55 @@ function safeFromCodePoint(cp: number): string {
 
 /** Block-level tags whose boundaries should become a line break, so the extracted
  *  text keeps paragraph/heading/list/row structure instead of running together. */
-const BLOCK_TAG =
-  /<\/?(?:p|div|section|article|header|footer|main|aside|nav|ul|ol|li|table|thead|tbody|tr|h[1-6]|blockquote|pre|figure|figcaption|br|hr)\b[^>]*>/gi;
+const BLOCK_TAGS: ReadonlySet<string> = new Set([
+  "p", "div", "section", "article", "header", "footer", "main", "aside", "nav", "ul", "ol", "li",
+  "table", "thead", "tbody", "tr", "h1", "h2", "h3", "h4", "h5", "h6", "blockquote", "pre",
+  "figure", "figcaption", "br", "hr",
+]);
+const READING_AREA_TAGS: ReadonlySet<string> = new Set(["main", "article"]);
+
+/** Elements dropped WHOLE, inner text included, in this order. After the non-content
+ *  elements comes the page CHROME whose inner text is never reading content — a `<select>`
+ *  of 60 region `<option>`s or a `<nav>` link farm lands at the TOP of the extract, the most
+ *  expensive spot for the model. `header` is KEPT (it often holds the h1); forms are kept (a
+ *  forum's content can sit in one). */
+const DROPPED_ELEMENTS = [
+  "script", "style", "noscript", "svg", "head",
+  "select", "nav", "footer", "iframe", "template", "button",
+] as const;
+
+/** The page's declared reading area: `<main>`'s content, else a SINGLE `<article>`. */
+function readingArea(html: string): string | undefined {
+  const main = findElement(html, "main");
+  if (main) return html.slice(main.innerStart, main.innerEnd);
+  const first = findElement(html, "article");
+  if (!first || findElement(html, "article", first.end)) return undefined;
+  return html.slice(first.start, first.end);
+}
 
 /**
  * Extract readable text from an HTML document. `max` caps the result (default
  * {@link HTML_TEXT_MAX}); the returned text is trimmed and whitespace-collapsed.
+ * Every scan is linear in the input (`htmlScan.ts`): this runs in MAIN on fetched pages.
  */
 export function htmlToText(html: string, max = HTML_TEXT_MAX): string {
   if (!html) return "";
-  // MAIN-CONTENT first: when the page declares its reading area (`<main>`, else a
-  // SINGLE `<article>`), extract THAT — sidebars/related-links never compete with the
-  // content for the budget. Fallback to the whole page when the candidate yields too
-  // little text (an empty shell `<main>` on a JS-rendered app).
-  const main = /<main\b[^>]*>([\s\S]*?)<\/main>/i.exec(html)?.[1];
-  const articles = html.match(/<article\b[^>]*>[\s\S]*?<\/article>/gi);
-  const candidate = main ?? (articles?.length === 1 ? articles[0] : undefined);
+  // MAIN-CONTENT first: when the page declares its reading area, extract THAT —
+  // sidebars/related-links never compete with the content for the budget. Fallback to the
+  // whole page when the candidate yields too little text (an empty shell `<main>` on a
+  // JS-rendered app).
+  const candidate = readingArea(html);
   if (candidate) {
-    const focused = htmlToText(candidate.replace(/<\/?(?:main|article)\b[^>]*>/gi, " "), max);
+    const focused = htmlToText(replaceNamedTags(candidate, READING_AREA_TAGS, " "), max);
     if (focused.length >= 500) return focused;
   }
-  const stripped = html
-    // Drop non-content elements WHOLE (including their inner text).
-    .replace(/<!--[\s\S]*?-->/g, " ")
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
-    .replace(/<noscript\b[^>]*>[\s\S]*?<\/noscript>/gi, " ")
-    .replace(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi, " ")
-    .replace(/<head\b[^>]*>[\s\S]*?<\/head>/gi, " ")
-    // Page CHROME whose inner text is never reading content — a `<select>` of 60
-    // region `<option>`s or a `<nav>` link farm lands at the TOP of the extract,
-    // the most expensive spot for the model (measured: the DDG results page
-    // used to open with 60 lines of countries before the first result). `header` is KEPT
-    // (it often holds the h1); forms are kept (a forum's content can sit in one).
-    .replace(/<select\b[^>]*>[\s\S]*?<\/select>/gi, " ")
-    .replace(/<nav\b[^>]*>[\s\S]*?<\/nav>/gi, " ")
-    .replace(/<footer\b[^>]*>[\s\S]*?<\/footer>/gi, " ")
-    .replace(/<iframe\b[^>]*>[\s\S]*?<\/iframe>/gi, " ")
-    .replace(/<template\b[^>]*>[\s\S]*?<\/template>/gi, " ")
-    .replace(/<button\b[^>]*>[\s\S]*?<\/button>/gi, " ")
-    // Block boundaries → newlines (before the generic tag strip below).
-    .replace(BLOCK_TAG, "\n")
-    // Every remaining tag → nothing.
-    .replace(/<[^>]+>/g, " ");
+  let stripped = removeComments(html);
+  for (const name of DROPPED_ELEMENTS) stripped = removeElements(stripped, name);
+  // Block boundaries → newlines, then every remaining tag → nothing.
+  stripped = replaceAllTags(replaceNamedTags(stripped, BLOCK_TAGS, "\n"), " ");
   const text = decodeEntities(stripped)
     // Collapse spaces/tabs, then trim blank lines, keeping single newlines as breaks.
-    .replace(/[ \t\f\v ]+/g, " ")
+    .replace(/[ \t\f\v\u00a0]+/g, " ")
     .replace(/ *\n */g, "\n")
     // Adjacent block elements each emit a break (open + close) — collapse any run of
     // newlines to a single one so the extract reads as one line per block.

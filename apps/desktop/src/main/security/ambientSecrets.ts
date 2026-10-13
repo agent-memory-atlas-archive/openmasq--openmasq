@@ -48,6 +48,45 @@ function shellInitFiles(home: string): string[] {
   ];
 }
 
+/**
+ * Developer-tool and desktop-app SESSION stores: an OAuth/refresh token, an API token or a
+ * session cookie the tool keeps in plain files. Each entry is a tool's own state directory
+ * (or one secret-bearing file of it), never a folder a user keeps documents in. VS Code is
+ * narrowed to `User/globalStorage` (extension secrets + auth state): the rest of its config
+ * is the user's settings, legitimately edited.
+ */
+function toolSessionDirs(home: string): string[] {
+  const h = (...p: string[]): string => join(home, ...p);
+  const roam = (...p: string[]): string => join(roamingAppData(home), ...p);
+  const appSupport = (...p: string[]): string => h("Library", "Application Support", ...p);
+  return [
+    // Coding agents: OAuth tokens, transcripts, MCP server env.
+    h(".claude"), h(".codex"), h(".gemini"),
+    // CLI tokens.
+    h(".config", "rclone"), h(".vercel"), h(".supabase"),
+    h(".local", "share", "com.vercel.cli"), appSupport("com.vercel.cli"),
+    // GNOME keyring files (Linux).
+    h(".local", "share", "keyrings"),
+    // VS Code secret state, per OS.
+    h(".config", "Code", "User", "globalStorage"),
+    appSupport("Code", "User", "globalStorage"),
+    roam("Code", "User", "globalStorage"),
+    // Chat apps: their Local Storage holds the session token.
+    appSupport("Slack"), h("Library", "Containers", "com.tinyspeck.slackmacgap"),
+    h(".config", "Slack"), roam("Slack"),
+    appSupport("discord"), h(".config", "discord"), roam("discord"),
+  ];
+}
+
+function toolSessionFiles(home: string): string[] {
+  const h = (...p: string[]): string => join(home, ...p);
+  return [
+    h(".claude.json"), // the agent's account + MCP server config (env tokens)
+    h(".cargo", "credentials.toml"), h(".cargo", "credentials"),
+    h(".m2", "settings.xml"), h(".gradle", "gradle.properties"),
+  ];
+}
+
 /** The autostart / shell-init set, flat — the named view of what the two lists below fold in. */
 export function autostartAndShellInitPaths(): string[] {
   const home = app.getPath("home");
@@ -97,6 +136,7 @@ export function ambientSecretDirs(): string[] {
     roam("Opera Software"),
     // Cloud/CLI stores that do NOT use the XDG dotfile layout on Windows.
     roam("gcloud"), roam("GitHub CLI"),
+    ...toolSessionDirs(home),
     // ── PERSISTENCE ────────────────────────────────────────────────────────────
     // Not credentials — what runs at the next login. See `autostartAndShellInitPaths`.
     ...autostartDirs(home),
@@ -114,6 +154,7 @@ export function ambientSecretFiles(): string[] {
     h(".bash_history"), h(".zsh_history"), h(".python_history"),
     // PSReadLine records EVERY line typed into PowerShell, pasted secrets included.
     roam("Microsoft", "Windows", "PowerShell", "PSReadLine", "ConsoleHost_history.txt"),
+    ...toolSessionFiles(home),
     // ── PERSISTENCE ────────────────────────────────────────────────────────────
     // Not credentials — what runs in the next shell. See `autostartAndShellInitPaths`.
     ...shellInitFiles(home),

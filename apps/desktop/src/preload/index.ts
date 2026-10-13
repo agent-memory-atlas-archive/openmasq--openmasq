@@ -6,7 +6,7 @@ import { contextBridge } from "electron";
 import { chat } from "./api/chat";
 import { mcp } from "./api/mcp";
 import { browser } from "./api/browser";
-import { db, embeddings, memoryIndex, files } from "./api/data";
+import { db, memoryIndex, files } from "./api/data";
 import { cloudFs } from "./api/cloudfs";
 import { localFs } from "./api/localfs";
 import { keys, sync, authStore } from "./api/secrets";
@@ -34,7 +34,6 @@ const api = {
   mcp,
   browser,
   db,
-  embeddings,
   memoryIndex,
   files,
   localFs,

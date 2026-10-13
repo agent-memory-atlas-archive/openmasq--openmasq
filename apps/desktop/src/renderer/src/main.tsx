@@ -133,10 +133,6 @@ const host: Host = {
     conversationsForFile: (hash) => window.openmasq.db.conversationsForFile(hash),
     openFile: (id) => window.openmasq.db.openFile(id),
   },
-  embeddings: {
-    index: (payload) => window.openmasq.embeddings.index(payload),
-    search: (payload) => window.openmasq.embeddings.search(payload),
-  },
   memoryIndex: {
     sync: (cards) => window.openmasq.memoryIndex.sync(cards),
     edges: (k) => window.openmasq.memoryIndex.edges(k),

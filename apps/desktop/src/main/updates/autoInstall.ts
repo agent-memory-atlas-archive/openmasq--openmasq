@@ -4,6 +4,7 @@ import electronUpdater from "electron-updater";
 import { quitAndInstallSafely } from "./install";
 import { trackInstallDeferred, type InstallDeferReason } from "./track";
 import { logUpdate } from "./log";
+import { trustedOnce } from "../ipc/senderGate";
 
 const { autoUpdater } = electronUpdater;
 
@@ -67,7 +68,7 @@ function askRendererBusy(win: BrowserWindow): Promise<boolean | null> {
       ipcMain.removeAllListeners(channel);
       resolve(null);
     }, QUIESCENCE_TIMEOUT_MS);
-    ipcMain.once(channel, (_e, busy: unknown) => {
+    trustedOnce(channel, (_e, busy: unknown) => {
       clearTimeout(timer);
       resolve(typeof busy === "boolean" ? busy : null);
     });

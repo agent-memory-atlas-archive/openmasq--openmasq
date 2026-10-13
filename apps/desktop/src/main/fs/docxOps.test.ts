@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { mkdtempSync, writeFileSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { zipSync, unzipSync, strToU8, strFromU8 } from "fflate";
+import { deflateSync, zipSync, unzipSync, strToU8, strFromU8 } from "fflate";
 import { makeGrant } from "./grant";
 import { DOCX_OPS } from "./docxOps";
 
@@ -97,5 +97,50 @@ describe("edit_document — le reste du paquet est intact", () => {
     ).rejects.toThrow(/introuvable/);
     // A refusal doesn't touch the file.
     expect([...readFileSync(file)]).toEqual([...before]);
+  });
+});
+
+/** A one-member .docx whose headers DECLARE `declared` bytes for a deflated `real` body. */
+function docxDeclaring(real: Uint8Array, declared: number): Uint8Array {
+  const name = strToU8("word/document.xml");
+  const data = deflateSync(real);
+  const local = new Uint8Array(30 + name.length);
+  const lv = new DataView(local.buffer);
+  lv.setUint32(0, 0x04034b50, true);
+  lv.setUint16(8, 8, true);
+  lv.setUint32(18, data.length, true);
+  lv.setUint32(22, declared, true);
+  lv.setUint16(26, name.length, true);
+  local.set(name, 30);
+  const cen = new Uint8Array(46 + name.length);
+  const cv = new DataView(cen.buffer);
+  cv.setUint32(0, 0x02014b50, true);
+  cv.setUint16(10, 8, true);
+  cv.setUint32(20, data.length, true);
+  cv.setUint32(24, declared, true);
+  cv.setUint16(28, name.length, true);
+  cen.set(name, 46);
+  const eocd = new Uint8Array(22);
+  const ev = new DataView(eocd.buffer);
+  ev.setUint32(0, 0x06054b50, true);
+  ev.setUint16(8, 1, true);
+  ev.setUint16(10, 1, true);
+  ev.setUint32(12, cen.length, true);
+  ev.setUint32(16, local.length + data.length, true);
+  return new Uint8Array([...local, ...data, ...cen, ...eocd]);
+}
+
+describe("le corps n'est gonflé que dans sa taille déclarée", () => {
+  it("un corps DÉCLARÉ trop gros est refusé avant d'être gonflé", async () => {
+    writeFileSync(file, docxDeclaring(strToU8(BODY), 9_000_000));
+    await expect(DOCX_OPS.read_document(grant, { path: file }, write)).rejects.toThrow(/volumineux/);
+  });
+
+  it("un corps qui gonfle AU-DELÀ de sa taille déclarée est refusé", async () => {
+    writeFileSync(file, docxDeclaring(new Uint8Array(6_000_000), 100));
+    await expect(DOCX_OPS.read_document(grant, { path: file }, write)).rejects.toThrow(/zip-bomb/);
+    await expect(
+      DOCX_OPS.edit_document(grant, { path: file, oldText: "a", newText: "b" }, write),
+    ).rejects.toThrow(/zip-bomb/);
   });
 });

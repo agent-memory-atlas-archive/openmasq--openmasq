@@ -1,4 +1,4 @@
-import { ipcMain } from "electron";
+import { trustedHandle } from "./senderGate";
 import {
   getSyncPass,
   setSyncPass,
@@ -7,6 +7,7 @@ import {
   getDeviceSecret,
   setDeviceSecret,
 } from "../store/syncPass";
+import { assertSessionAccount } from "../store/sessionAccount";
 
 /**
  * The TWO sync secrets, exposed to the renderer — grouped here rather than spread
@@ -28,12 +29,15 @@ export function registerSyncSecretsIpc(): void {
   // Re-scoping per account. The uid comes from the renderer and ends up in a PATH, so it's
   // sanitized on the store side (`accountSecretFile` → `safeUid`): nothing exploitable survives,
   // and an entirely illegal value counts as "logged out" (nothing is written anywhere then).
-  ipcMain.handle("sync:set-user", (_e, uid: unknown) =>
-    setSyncPassUser(typeof uid === "string" ? uid : null),
-  );
-  ipcMain.handle("sync:get-pass", () => getSyncPass());
-  ipcMain.handle("sync:set-pass", (_e, value: string) => setSyncPass(value));
-  ipcMain.handle("sync:clear-pass", () => clearSyncPass());
-  ipcMain.handle("sync:get-device-secret", () => getDeviceSecret());
-  ipcMain.handle("sync:set-device-secret", (_e, value: string) => setDeviceSecret(value));
+  // A non-null uid must be the account of the session main holds (`../store/sessionAccount.ts`).
+  trustedHandle("sync:set-user", (_e, uid: unknown) => {
+    const scoped = typeof uid === "string" ? uid : null;
+    assertSessionAccount("sync:set-user", scoped);
+    return setSyncPassUser(scoped);
+  });
+  trustedHandle("sync:get-pass", () => getSyncPass());
+  trustedHandle("sync:set-pass", (_e, value: string) => setSyncPass(value));
+  trustedHandle("sync:clear-pass", () => clearSyncPass());
+  trustedHandle("sync:get-device-secret", () => getDeviceSecret());
+  trustedHandle("sync:set-device-secret", (_e, value: string) => setDeviceSecret(value));
 }

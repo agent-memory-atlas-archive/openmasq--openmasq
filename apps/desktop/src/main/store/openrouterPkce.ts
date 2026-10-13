@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from "node:crypto";
+import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { createServer, type Server } from "node:http";
 import { safeOpenExternal } from "../net/safeOpen";
 import { setKey } from "./keys";
@@ -13,7 +13,11 @@ import { escapeHtml } from "../pdf/pdfSkeleton";
  *
  * ⚠️ PKCE is the mitigation, not a refinement: the deep-link callback can be intercepted by
  * any app registering the scheme, so an intercepted `code` is assumed and useless without
- * the in-memory, single-use, expiring `verifier`.
+ * the in-memory, single-use, expiring `verifier`. On top of it, a random `state` per flow
+ * (returned unchanged by OpenRouter) must come back on the callback: a code minted for
+ * ANOTHER authorization — someone else's account — is refused before any exchange. The
+ * deep link is honoured only when the flow has NO loopback listener (it is the fallback,
+ * never a second door into a loopback flow).
  *
  * The key belongs to the USER's account: their credits, their own free-model quota (which
  * OpenRouter governs per ACCOUNT).
@@ -50,12 +54,19 @@ export function createPkcePair(): PkcePair {
 }
 
 /** The URL the user's browser opens to authorise. */
-export function authorizeUrl(challenge: string, callbackUrl = CALLBACK_URL): string {
+export function authorizeUrl(challenge: string, callbackUrl = CALLBACK_URL, state?: string): string {
   const u = new URL(AUTHORIZE_URL);
   u.searchParams.set("callback_url", callbackUrl);
   u.searchParams.set("code_challenge", challenge);
   u.searchParams.set("code_challenge_method", "S256");
+  if (state) u.searchParams.set("state", state);
   return u.toString();
+}
+
+/** Constant-time: does the callback carry THIS flow's state? */
+function stateMatches(got: string | null, want: string): boolean {
+  if (!got || got.length !== want.length) return false;
+  return timingSafeEqual(Buffer.from(got), Buffer.from(want));
 }
 
 /** The `code` of a callback deep link, or null. Strict: any app-scheme URL an attacker gets
@@ -72,9 +83,24 @@ export function codeFromCallback(url: string): string | null {
   }
 }
 
+/** The `state` of a callback deep link (already shape-checked by `codeFromCallback`). */
+function stateFromCallback(url: string): string | null {
+  try {
+    return new URL(url).searchParams.get("state");
+  } catch {
+    return null;
+  }
+}
+
 /** The single in-flight flow: two live verifiers would each accept a stray callback.
  *  `server` = this flow's loopback listener (absent on the deep-link fallback). */
-let pending: { verifier: string; at: number; settle: (ok: boolean) => void; server?: Server } | null = null;
+let pending: { verifier: string; state: string; at: number; settle: (ok: boolean) => void; server?: Server } | null = null;
+
+/** Test seam: run the next flows WITHOUT a loopback listener (the deep-link fallback). */
+let loopbackDisabled = false;
+export function _setLoopbackForTest(enabled: boolean): void {
+  loopbackDisabled = !enabled;
+}
 
 /** Drop the pending flow, resolving it as failed if it was still awaited. */
 function abandon(): void {
@@ -118,6 +144,7 @@ export function beginOpenRouterConnect(): Promise<boolean> {
   abandon(); // a new attempt supersedes an abandoned one
   const gen = ++flowSeq;
   const { verifier, challenge } = createPkcePair();
+  const state = randomBytes(16).toString("base64url");
   return new Promise<boolean>((resolve) => {
     let done = false;
     const settle = (ok: boolean) => {
@@ -137,13 +164,13 @@ export function beginOpenRouterConnect(): Promise<boolean> {
         settle(false);
         return;
       }
-      if (!safeOpenExternal(authorizeUrl(challenge, callbackUrl))) {
+      if (!safeOpenExternal(authorizeUrl(challenge, callbackUrl, state))) {
         server?.close();
         settle(false);
         return;
       }
       abandon(); // one-verifier-only: any flow still set is older than us
-      pending = { verifier, at: Date.now(), settle, server };
+      pending = { verifier, state, at: Date.now(), settle, server };
     };
     const server = createServer((req, res) => {
       const u = new URL(req.url ?? "/", `http://${LOOPBACK_HOST}`);
@@ -152,7 +179,8 @@ export function beginOpenRouterConnect(): Promise<boolean> {
         return;
       }
       const code = (u.searchParams.get("code") ?? "").trim();
-      const live = !!code && pending?.verifier === verifier && hasPendingFlow();
+      const live =
+        !!code && pending?.verifier === verifier && stateMatches(u.searchParams.get("state"), state) && hasPendingFlow();
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", Connection: "close" });
       res.end(page(live));
       if (!live) return;
@@ -167,6 +195,10 @@ export function beginOpenRouterConnect(): Promise<boolean> {
       if (pending?.server === server) abandon();
       else launch(CALLBACK_URL);
     });
+    if (loopbackDisabled) {
+      launch(CALLBACK_URL);
+      return;
+    }
     server.listen(0, LOOPBACK_HOST, () => {
       const addr = server.address();
       if (!addr || typeof addr === "string") {
@@ -182,8 +214,10 @@ export function beginOpenRouterConnect(): Promise<boolean> {
 /** Complete the flow from a deep link; true only when a key was stored. The pending flow is
  *  consumed FIRST: a replayed callback must not get a second attempt. */
 export async function completeOpenRouterConnect(url: string): Promise<boolean> {
+  // A loopback flow returns on ITS listener only: a deep link cannot complete — nor cancel — it.
+  if (pending?.server) return false;
   const code = codeFromCallback(url);
-  if (!code || !hasPendingFlow()) {
+  if (!code || !hasPendingFlow() || !stateMatches(stateFromCallback(url), pending!.state)) {
     abandon();
     return false;
   }

@@ -38,8 +38,8 @@ export const db = {
   openFile: (id: string): Promise<boolean> => ipcRenderer.invoke("files:open", id),
 };
 
-/** MÉMOIRE semantic index — ON-DEVICE embeddings (bundled e5-small; never the remote
- *  embeddings endpoint above: a memory card is real PII). */
+/** MÉMOIRE semantic index — ON-DEVICE embeddings (bundled e5-small; a memory card is real
+ *  PII and never reaches a network embeddings API). */
 export const memoryIndex = {
   sync: (
     cards: { id: string; text: string }[],
@@ -49,30 +49,6 @@ export const memoryIndex = {
     ipcRenderer.invoke("memory:index-edges", k),
   query: (text: string, k?: number): Promise<{ id: string; sim: number }[]> =>
     ipcRenderer.invoke("memory:index-query", text, k),
-};
-
-/** Embeddings: generate + store / semantic search (local libSQL vectors). */
-export const embeddings = {
-  index: (payload: {
-    text: string;
-    messageId?: string;
-    conversationId?: string;
-    config: { model: string; baseUrl: string; apiKey?: string };
-  }): Promise<void> => ipcRenderer.invoke("embeddings:index", payload),
-  search: (payload: {
-    query: string;
-    k?: number;
-    conversationId?: string;
-    config: { model: string; baseUrl: string; apiKey?: string };
-  }): Promise<
-    {
-      id: string;
-      messageId: string | null;
-      conversationId: string | null;
-      content: string;
-      distance: number;
-    }[]
-  > => ipcRenderer.invoke("embeddings:search", payload),
 };
 
 /** OCR progress during an extraction: `{name, page, pages}` per page read. */

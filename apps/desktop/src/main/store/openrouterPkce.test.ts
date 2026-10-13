@@ -22,6 +22,7 @@ const {
   createPkcePair,
   hasPendingFlow,
   _resetOpenRouterFlow,
+  _setLoopbackForTest,
   CALLBACK_URL,
 } = await import("./openrouterPkce");
 // These cases read main's FRENCH wording (`../i18n.ts`); the behaviour is language-independent.
@@ -31,6 +32,7 @@ beforeEach(() => {
   opened.length = 0;
   stored.length = 0;
   _resetOpenRouterFlow();
+  _setLoopbackForTest(true);
   vi.unstubAllGlobals();
 });
 
@@ -59,6 +61,15 @@ async function begun(): Promise<{ done: Promise<boolean> }> {
   expect(hasPendingFlow()).toBe(true);
   return { done };
 }
+
+/** The `state` the flow just handed to the browser — OpenRouter returns it unchanged. */
+function launchedState(): string {
+  return new URL(opened[opened.length - 1]).searchParams.get("state")!;
+}
+
+/** Our deep-link callback for `code`, carrying the live flow's state. */
+const deepLink = (code: string, state = launchedState()) =>
+  `${BRAND.protocol}://openrouter/callback?code=${code}&state=${state}`;
 
 /** The callback_url the flow just handed to the browser (from the authorize URL). */
 function launchedCallback(): string {
@@ -114,7 +125,7 @@ describe("boucle locale — le retour recommandé (RFC 8252), sans course de sch
     const { done } = await begun();
     const cb = launchedCallback();
     expect(cb).toMatch(/^http:\/\/127\.0\.0\.1:\d+\/callback$/);
-    const res = await fetch(`${cb}?code=c9`);
+    const res = await fetch(`${cb}?code=c9&state=${launchedState()}`);
     expect(res.status).toBe(200);
     expect(await res.text()).toContain(`revenir dans ${BRAND.name}`);
     await expect(done).resolves.toBe(true);
@@ -143,19 +154,22 @@ describe("boucle locale — le retour recommandé (RFC 8252), sans course de sch
     stubExchange({ key: "k" });
     const { done } = await begun();
     const cb = launchedCallback();
-    await fetch(`${cb}?code=c1`);
+    await fetch(`${cb}?code=c1&state=${launchedState()}`);
     await expect(done).resolves.toBe(true);
-    await expect(fetch(`${cb}?code=c2`)).rejects.toThrow(); // connection refused
+    await expect(fetch(`${cb}?code=c2&state=${launchedState()}`)).rejects.toThrow(); // connection refused
     expect(stored).toHaveLength(1);
   });
 });
 
 describe("the flow is single-use and bound to ITS verifier (jambe deep link)", () => {
+  // The deep link is the FALLBACK leg: these flows run without a loopback listener.
+  beforeEach(() => _setLoopbackForTest(false));
+
   it("stores the key the exchange returns, under `openrouter`", async () => {
     const calls = stubExchange({ key: "sk-or-v1-xyz" });
     const { done } = await begun();
     expect(opened[0]).toContain("code_challenge_method=S256");
-    await expect(completeOpenRouterConnect(`${BRAND.protocol}://openrouter/callback?code=c1`)).resolves.toBe(true);
+    await expect(completeOpenRouterConnect(deepLink("c1"))).resolves.toBe(true);
     await expect(done).resolves.toBe(true);
     expect(stored).toEqual([["openrouter", "sk-or-v1-xyz"]]);
     // The exchange sends the VERIFIER — the half that never went to the browser.
@@ -167,10 +181,10 @@ describe("the flow is single-use and bound to ITS verifier (jambe deep link)", (
   it("a REPLAYED callback finds no flow — the verifier is consumed, not left armed", async () => {
     stubExchange({ key: "sk-or-v1-xyz" });
     const { done } = await begun();
-    await completeOpenRouterConnect(`${BRAND.protocol}://openrouter/callback?code=c1`);
+    await completeOpenRouterConnect(deepLink("c1"));
     await done;
     stored.length = 0;
-    await expect(completeOpenRouterConnect(`${BRAND.protocol}://openrouter/callback?code=c1`)).resolves.toBe(false);
+    await expect(completeOpenRouterConnect(deepLink("c1"))).resolves.toBe(false);
     expect(stored).toEqual([]);
   });
 
@@ -203,7 +217,7 @@ describe("the flow is single-use and bound to ITS verifier (jambe deep link)", (
     vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
     const { done } = await begun();
     vi.advanceTimersByTime(6 * 60_000);
-    await expect(completeOpenRouterConnect(`${BRAND.protocol}://openrouter/callback?code=c1`)).resolves.toBe(false);
+    await expect(completeOpenRouterConnect(deepLink("c1"))).resolves.toBe(false);
     await expect(done).resolves.toBe(false);
     expect(stored).toEqual([]);
     vi.useRealTimers();
@@ -211,10 +225,13 @@ describe("the flow is single-use and bound to ITS verifier (jambe deep link)", (
 });
 
 describe("failures are failures — never a stored non-key", () => {
+  // The deep link is the FALLBACK leg: these flows run without a loopback listener.
+  beforeEach(() => _setLoopbackForTest(false));
+
   it("a non-2xx exchange stores nothing", async () => {
     stubExchange({ error: "bad_code" }, false);
     const { done } = await begun();
-    await expect(completeOpenRouterConnect(`${BRAND.protocol}://openrouter/callback?code=c1`)).resolves.toBe(false);
+    await expect(completeOpenRouterConnect(deepLink("c1"))).resolves.toBe(false);
     await expect(done).resolves.toBe(false);
     expect(stored).toEqual([]);
   });
@@ -222,8 +239,54 @@ describe("failures are failures — never a stored non-key", () => {
   it("a 200 with no key stores nothing (an empty string is not a credential)", async () => {
     stubExchange({ key: "   " });
     const { done } = await begun();
-    await expect(completeOpenRouterConnect(`${BRAND.protocol}://openrouter/callback?code=c1`)).resolves.toBe(false);
+    await expect(completeOpenRouterConnect(deepLink("c1"))).resolves.toBe(false);
     await expect(done).resolves.toBe(false);
+    expect(stored).toEqual([]);
+  });
+});
+
+describe("a callback must belong to THIS authorization (state) and to ITS leg", () => {
+  it("the authorize URL carries a fresh state per flow", async () => {
+    stubExchange({ key: "k" });
+    await begun();
+    const first = launchedState();
+    await begun();
+    expect(first).toMatch(/^[A-Za-z0-9_-]{16,}$/);
+    expect(launchedState()).not.toBe(first);
+  });
+
+  it("loopback: a code WITHOUT the flow's state is refused and exchanges nothing", async () => {
+    const calls = stubExchange({ key: "sk-or-v1-attacker" });
+    const { done } = await begun();
+    const cb = launchedCallback();
+    const res = await fetch(`${cb}?code=attacker&state=forged`);
+    expect(await res.text()).toContain("réessayer");
+    expect(calls).toHaveLength(0);
+    expect(hasPendingFlow()).toBe(true);
+    _resetOpenRouterFlow();
+    await expect(done).resolves.toBe(false);
+  });
+
+  it("loopback flow: a deep link is refused and does NOT consume the flow", async () => {
+    const calls = stubExchange({ key: "sk-or-v1-attacker" });
+    const { done } = await begun();
+    await expect(completeOpenRouterConnect(deepLink("attacker"))).resolves.toBe(false);
+    expect(calls).toHaveLength(0);
+    expect(hasPendingFlow()).toBe(true); // the user's own return still completes it
+    await fetch(`${launchedCallback()}?code=c1&state=${launchedState()}`);
+    await expect(done).resolves.toBe(true);
+  });
+
+  it("deep-link fallback: a wrong or missing state is refused before any exchange", async () => {
+    _setLoopbackForTest(false);
+    const calls = stubExchange({ key: "sk-or-v1-attacker" });
+    const { done } = await begun();
+    expect(launchedCallback()).toBe(CALLBACK_URL);
+    await expect(completeOpenRouterConnect(deepLink("attacker", "forged"))).resolves.toBe(false);
+    await expect(done).resolves.toBe(false);
+    await begun();
+    await expect(completeOpenRouterConnect(`${BRAND.protocol}://openrouter/callback?code=c1`)).resolves.toBe(false);
+    expect(calls).toHaveLength(0);
     expect(stored).toEqual([]);
   });
 });

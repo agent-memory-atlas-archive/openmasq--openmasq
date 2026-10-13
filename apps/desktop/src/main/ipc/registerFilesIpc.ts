@@ -1,5 +1,7 @@
-import { readFile } from "node:fs/promises";
-import { redactFileInPlace } from "@openmasq/redact/inplace";
+import { readFile, stat } from "node:fs/promises";
+import { MAX_FILE_BYTES } from "@openmasq/redact";
+import { mainMessages } from "../i18n";
+import { scrubInPlaceInWorker } from "../ocr/extractJobs";
 import {
   dbSaveFile,
   dbListFiles,
@@ -18,7 +20,6 @@ import { previewLink } from "../net/linkPreview";
 import { withAgentBrowserHidden } from "../mcp/browser";
 import { grantRead, assertReadAllowed } from "./readGate";
 import { registerExtractIpc } from "./filesExtractIpc";
-import { makeDocumentScrub } from "./documentScrub";
 import { handle, str, bool, obj, } from "./handle";
 import { devOnly } from "../security/devOnly";
 
@@ -200,26 +201,30 @@ export function registerFilesIpc(): void {
     // Original bytes come from EITHER inline `data` (re-attach: bytes the renderer
     // already possesses, no new read capability) OR a granted on-disk `path`, which
     // keeps the same read gate as files:read.
+    // Size-checked BEFORE the bytes are materialised (extraction refuses the same files).
     let original: Uint8Array;
     if (typeof p.data === "string") {
+      if ((p.data.length * 3) / 4 > MAX_FILE_BYTES) throw tooLarge();
       original = new Uint8Array(Buffer.from(p.data, "base64"));
     } else {
       if (!p.path) throw new Error("Accès fichier refusé : chemin ou données manquants.");
       assertReadAllowed(p.path);
+      if ((await stat(p.path)).size > MAX_FILE_BYTES) throw tooLarge();
       original = new Uint8Array(await readFile(p.path));
     }
-    const vault = { ...p.vault };
-    // The classifier must agree with the renderer's message pass on ONE map; pinned by
-    // `documentKinds.parity.test.ts`.
-    const { scrub, kinds, spans } = makeDocumentScrub(vault, p.disabledKinds, stringRecord(p.kinds));
-    let scrubbed: Uint8Array | null = null;
-    let redacted = false;
-    try {
-      scrubbed = redactFileInPlace(p.name, original, p.mime, scrub).bytes;
-      redacted = true;
-    } catch {
-      /* blocked format (pdf/image/unknown) → keep the original only */
-    }
+    // The scrub PARSES the file (SheetJS, fflate, the XML rewrite): it runs in the extraction
+    // worker, never in main (`../ocr/inplaceScrub.ts`). The classifier must agree with the
+    // renderer's message pass on ONE map; pinned by `documentKinds.parity.test.ts`.
+    const { scrubbed, vault, kinds, spans } = await scrubInPlaceInWorker({
+      name: p.name,
+      bytes: original,
+      mime: p.mime,
+      vault: { ...p.vault },
+      disabledKinds: p.disabledKinds,
+      kinds: stringRecord(p.kinds),
+    });
+    // null = blocked format (pdf/image/unknown) or a refused file → the original only.
+    const redacted = scrubbed !== null;
     await dbSaveFile({
       id: p.id,
       conversationId: p.conversationId,
@@ -239,6 +244,11 @@ export function registerFilesIpc(): void {
     // `redacted` = were the BYTES rewritten (an empty `spans` on a PDF is NOT "nothing masked").
     return { vault, kinds, spans, redacted }; // merged into the conversation + log
   });
+}
+
+/** The oversize refusal, in main's language — the same words extraction uses. */
+function tooLarge(): Error {
+  return new Error(mainMessages().documents.refused.fileTooLarge(Math.round(MAX_FILE_BYTES / (1024 * 1024))));
 }
 
 /** A plain `string → string` map, or `{}`: the payload's `kinds` is renderer-supplied. */

@@ -6,8 +6,8 @@ import type { Client } from "@libsql/client";
  * migration comment, once.
  */
 
-/** Embedding dimension. Must match your embedding model (OpenAI 3-small = 1536). */
-export const EMBED_DIM = 1536;
+/** The legacy `embeddings` table's dimension: the migration that creates it is immutable. */
+const EMBED_DIM = 1536;
 
 /** The MEMORY's on-device embedding dimension. Separate from EMBED_DIM on purpose:
  *  `memory_embeddings` may only ever be fed by the LOCAL embedder (a memory card is real

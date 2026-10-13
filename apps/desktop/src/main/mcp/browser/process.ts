@@ -5,6 +5,7 @@ import { helperSpawnArgs } from "../../appEntry";
 import { startCdpBroker, probeCdpPipe, type CdpBroker } from "./cdpBroker";
 import { showHaloAt, hideHalo, destroyHalo } from "./haloOverlay";
 import { reportAgentExit } from "./childExit";
+import { AGENT_NONCE_ENV, agentChildEnv, mintAgentNonce, sendAgentNonce } from "./agentLaunch";
 
 // ── Parent-side manager for the isolated agent-browser process ───────────────
 // Spawns the SAME app binary in agent mode (OPENMASQ_AGENT_BROWSER=1 → runAgentBrowserMain),
@@ -193,14 +194,9 @@ function agentUserData(): string {
   return join(app.getPath("userData"), "agent-browser");
 }
 
-function baseEnv(): NodeJS.ProcessEnv {
-  return {
-    ...process.env,
-    OPENMASQ_AGENT_BROWSER: "1",
-    OPENMASQ_AGENT_USERDATA: agentUserData(),
-    // Agent mode never loads the renderer: drop the dev-server URL.
-    ELECTRON_RENDERER_URL: "",
-  };
+// Allow-listed env + the launch nonce the child checks against its stdin (`agentLaunch.ts`).
+function baseEnv(nonce: string): Record<string, string> {
+  return agentChildEnv({ OPENMASQ_AGENT_BROWSER: "1", OPENMASQ_AGENT_USERDATA: agentUserData(), [AGENT_NONCE_ENV]: nonce });
 }
 
 function spawnArgs(): string[] {
@@ -224,11 +220,13 @@ function closeBroker(): void {
 function spawnChildPipe(): Promise<string> {
   return new Promise((resolve, reject) => {
     console.log(`[agent] spawning (pipe): ${process.execPath} ${spawnArgs().join(" ")}`);
+    const nonce = mintAgentNonce();
     const proc = spawn(process.execPath, spawnArgs(), {
-      env: { ...baseEnv(), OPENMASQ_AGENT_CDP_PIPE: "1" },
+      env: { ...baseEnv(nonce), OPENMASQ_AGENT_CDP_PIPE: "1" },
       // 0/1/2 = control/ready line/stderr; 3/4 = the CDP pipe Chromium reads / writes.
       stdio: ["pipe", "pipe", "inherit", "pipe", "pipe"],
     });
+    sendAgentNonce(proc.stdin, nonce);
     child = proc;
     attachPageListener(proc);
     let settled = false;
@@ -279,11 +277,13 @@ function spawnChildPipe(): Promise<string> {
 function spawnChildPort(): Promise<string> {
   return new Promise((resolve, reject) => {
     console.log(`[agent] spawning (port): ${process.execPath} ${spawnArgs().join(" ")}`);
+    const nonce = mintAgentNonce();
     const proc = spawn(process.execPath, spawnArgs(), {
-      env: baseEnv(),
+      env: baseEnv(nonce),
       // The child's stderr reaches the parent terminal so boot failures are visible.
       stdio: ["pipe", "pipe", "inherit"],
     });
+    sendAgentNonce(proc.stdin, nonce);
     child = proc;
     attachPageListener(proc);
 

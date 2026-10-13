@@ -137,8 +137,11 @@ export async function mcpCallTool(call: McpToolCall): Promise<McpToolResult> {
         url = rewritten;
         call.arguments = { ...call.arguments, url };
       }
+      // ⚠️ A refusal NEVER echoes the URL nor its host: main holds the REAL, un-redacted
+      // value, and naming it to the model maps the fake it sent to the real one. The model
+      // knows which URL it asked for.
       if (!isAllowedBrowserUrl(url)) {
-        throw new Error(`Navigation bloquée (schéma non autorisé) : ${url}`);
+        throw new Error("Navigation bloquée (schéma non autorisé).");
       }
       // SSRF floor: a prompt-injected page could steer the model into probing internal
       // services. Skips about:blank (no host).
@@ -151,11 +154,10 @@ export async function mcpCallTool(call: McpToolCall): Promise<McpToolResult> {
           if ((e as NodeJS.ErrnoException)?.code === "EDNS_UNRESOLVED") {
             throw new Error(
               // « injoignable »/« réseau » → classifyToolError: transport (retryable).
-              `Navigation impossible : réseau ou DNS injoignable (${new URL(url).hostname}). ` +
-                `Vérifie la connexion, puis réessaie.`,
+              "Navigation impossible : réseau ou DNS injoignable. Vérifie la connexion, puis réessaie.",
             );
           }
-          throw new Error(`Navigation bloquée (adresse interne/privée) : ${url}`);
+          throw new Error("Navigation bloquée (adresse interne/privée).");
         }
       }
     }

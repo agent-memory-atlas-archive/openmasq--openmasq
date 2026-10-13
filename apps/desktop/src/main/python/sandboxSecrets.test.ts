@@ -33,6 +33,10 @@ describe("python sandbox secret deny-list parity (audit M7)", () => {
     expect(dirs).toContain(join(HOME, ".ssh"));
     expect(dirs).toContain(join(HOME, ".aws"));
     expect(files).toContain(join(HOME, ".netrc"));
+    // coding-agent and CLI token stores are masked in the jail as well
+    expect(dirs).toContain(join(HOME, ".claude"));
+    expect(dirs).toContain(join(HOME, ".codex"));
+    expect(files).toContain(join(HOME, ".cargo", "credentials.toml"));
   });
 
   it("the read carve-outs are all UNDER userData (so the blanket deny stays scoped)", () => {

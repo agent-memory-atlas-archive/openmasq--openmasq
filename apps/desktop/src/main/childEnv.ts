@@ -14,8 +14,9 @@
  * `SystemRoot` dies at DLL init). Everything else — including every possible secret — is dropped.
  *
  * Children that are ALREADY minimal (NER, embed, extraction, Python jail) build their env
- * by hand and don't need it. Re-spawns of OUR OWN binary (agent browser) stay on
- * inheritance: same code, same trust — filtering protects nothing there.
+ * by hand and don't need it. The agent browser (OUR binary, re-spawned) gets this minimum
+ * plus its GUI needs (`mcp/browser/agentLaunch.ts`): it browses the web with the user's
+ * sessions, so it has no use for the shell's secrets either.
  */
 
 /** What a Node/Electron child is allowed to see. Nothing else gets through. */

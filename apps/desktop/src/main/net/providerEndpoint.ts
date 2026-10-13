@@ -16,13 +16,17 @@ import { isLocalOrPrivateEndpoint } from "./providerHostPolicy";
  * In dev the gateway is a localhost URL. A packaged build's baked gateway is public HTTPS,
  * so the private branch is unreachable in any legitimate shipped run: refusing it is free.
  *
+ * ## The platform gateway is PINNED by origin in a packaged build
+ * Main resolves the environment itself (`../ipc/envSwitch.ts`, the same table the renderer
+ * reads), so it knows the gateway: a platform send whose `baseUrl` is not on that ORIGIN is
+ * refused — the session JWT never goes to a host the renderer picked. An unpackaged run keeps
+ * the shape check only: a local-dev `VITE_*` override can point the renderer elsewhere.
+ *
  * ## What this does NOT close (stated, not implied)
- * On the platform path the `baseUrl` is trusted BY SHAPE, not by value: a renderer XSS can
- * still post to an arbitrary PUBLIC host as a platform send. Closing that needs main to know
- * the gateway origin itself (a build-config change). Two sibling channels share the residual
- * and are ACCEPTED for the same reason (an attacker who can call them already has this one):
+ * Two sibling channels let a renderer choose a public host, ACCEPTED:
  * `web:fetch-many` and `embeddings:index`/`:search` let a renderer choose a public host;
- * both go through `safeFetch`, so an internal address is refused. Constraining them would
+ * both go through `safeFetch`, so an internal address is refused, and they carry no stored key
+ * nor the session token. Constraining them would
  * refuse a URL the user typed, or a self-hosted embedder, for no capability the attacker
  * loses. The host check here is a literal/`localhost` classification with no DNS resolution
  * (hot send path, fixed gateway host); `assertPublicUrl` is the tool if that ever matters.
@@ -48,6 +52,16 @@ function isHttpUrl(url: string): boolean {
   }
 }
 
+/** Same scheme+host+port; an absent or unparseable gateway matches NOTHING (fail closed). */
+function sameOrigin(url: string, gateway: string | undefined): boolean {
+  if (!gateway) return false;
+  try {
+    return new URL(url).origin === new URL(gateway).origin;
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Decide the `(baseUrl, apiKey)` a provider call may actually use.
  *
@@ -58,7 +72,7 @@ function isHttpUrl(url: string): boolean {
  */
 export function decideProviderEndpoint(
   call: { provider: string; apiKey?: string; baseUrl?: string },
-  opts: { rendererSuppliedKey: boolean; packaged: boolean },
+  opts: { rendererSuppliedKey: boolean; packaged: boolean; gateway?: string },
 ): EndpointDecision {
   const { provider, apiKey, baseUrl } = call;
   // No override: the provider uses its canonical host. Nothing to decide.
@@ -92,6 +106,9 @@ export function decideProviderEndpoint(
   // the JWT at the provider's real host would read as an auth bug).
   if (opts.packaged && isLocalOrPrivateEndpoint(baseUrl)) {
     throw new Error("Endpoint refusé : adresse interne/privée pour un modèle de plateforme.");
+  }
+  if (opts.packaged && !sameOrigin(baseUrl, opts.gateway)) {
+    throw new Error("Endpoint refusé : ce n'est pas la passerelle de cet environnement.");
   }
   return { baseUrl, apiKey };
 }

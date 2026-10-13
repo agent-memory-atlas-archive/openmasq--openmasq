@@ -4,6 +4,10 @@ import { discoveryRouter } from "./oauth/discovery.js";
 import { oauthRouter } from "./oauth/router.js";
 import { mcpRouter } from "./mcp/endpoint.js";
 import { availablePlatforms } from "./platforms/registry.js";
+import { loopbackOnly } from "./util/loopbackOnly.js";
+
+/** The only interface the broker listens on. */
+const LISTEN_HOST = "127.0.0.1";
 
 /**
  * MCP broker entrypoint. Mounts the OAuth AS (discovery + /oauth), the per-platform
@@ -14,20 +18,18 @@ import { availablePlatforms } from "./platforms/registry.js";
 export function createApp(): express.Express {
   const app = express();
 
-  // Conservative defaults: no sniffing, deny framing, modest JSON limit. CORS is
-  // permissive for the API surface so browser MCP clients can reach it (the broker
-  // never returns upstream credentials, only tool output behind a bearer).
+  // Loopback callers only, by NAME as well as by bind (`util/loopbackOnly.ts`), FIRST so it
+  // covers every route. No CORS header at all: no browser page is a client of the broker —
+  // main calls it from Node, the browser only ever NAVIGATES to it (OAuth), and a
+  // cross-origin page must not read a reply.
+  app.use(loopbackOnly(LISTEN_HOST));
+  // Conservative defaults: no sniffing, deny framing, no referrer.
   app.use((_req, res, next) => {
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("X-Frame-Options", "DENY");
     res.setHeader("Referrer-Policy", "no-referrer");
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type, Mcp-Session-Id");
-    res.setHeader("Access-Control-Expose-Headers", "Mcp-Session-Id, WWW-Authenticate");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
     next();
   });
-  app.options(/.*/, (_req, res) => res.sendStatus(204));
   app.use(express.json({ limit: "256kb" }));
   app.use(express.urlencoded({ extended: false }));
 
@@ -54,7 +56,7 @@ export function createApp(): express.Express {
 const isMain = process.argv[1] && import.meta.url === `file://${process.argv[1]}`;
 if (isMain || process.env.BROKER_FORCE_LISTEN) {
   // Bind loopback only: a local sidecar must never be reachable off-machine.
-  createApp().listen(config.port, "127.0.0.1", () => {
+  createApp().listen(config.port, LISTEN_HOST, () => {
     const ids = availablePlatforms().map((p) => p.id).join(", ");
     console.log(`[broker] listening on ${config.publicUrl}  platforms: ${ids}`);
   });

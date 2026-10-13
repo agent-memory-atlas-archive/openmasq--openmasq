@@ -83,6 +83,23 @@ describe("filesystem grant gate", () => {
     expect(() => g.resolve(join(ghost, "keys.enc"))).toThrow(/protégé|refusé/);
   });
 
+  // APFS (macOS default) and NTFS ignore case: `deny/KEYS.ENC` opens `deny/keys.enc`, so the
+  // deny must match whatever casing the model spells — for an existing file AND a new one.
+  it.runIf(process.platform === "darwin" || process.platform === "win32")(
+    "denies a protected path spelled in another CASE on a case-insensitive volume",
+    () => {
+      const g = makeGrant([base], [deny]);
+      expect(() => g.resolve(join(base, "DENY", "keys.enc"))).toThrow(/protégé/);
+      expect(() => g.resolve(join(deny, "KEYS.ENC"))).toThrow(/protégé/);
+      expect(() => g.resolve(join(base, "Deny", "new-file.txt"))).toThrow(/protégé/);
+      // a deny entry not yet on disk, spelled in its lower case, still folds
+      const g2 = makeGrant([base], [join(base, "later")]);
+      expect(() => g2.resolve(join(base, "LATER", "x"))).toThrow(/protégé/);
+      // the canonical (on-disk) casing comes back for an allowed path
+      expect(g.resolve(join(base, "ROOT", "OK.TXT"))).toBe(join(root, "ok.txt"));
+    },
+  );
+
   it("rejects a non-absolute path and a NUL byte", () => {
     const g = makeGrant([root]);
     expect(() => g.resolve("relative/path")).toThrow(/absolu/);

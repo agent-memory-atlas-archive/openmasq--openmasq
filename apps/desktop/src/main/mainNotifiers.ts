@@ -1,6 +1,6 @@
-import { ipcMain } from "electron";
 import { setLocalFsChangeNotifier } from "./ipc/registerLocalFsIpc";
 import { withMainWindow, getMainWindow } from "./mainWindowRef";
+import { trustedOnce } from "./ipc/senderGate";
 import { setMcpChangeNotifier, setMcpNeedsReconnectNotifier, setMcpOauthUrlNotifier, setMcpAuthChoiceAsker, type McpAuthChoice } from "./mcp";
 
 // Monotonic id correlating an `mcp:auth-choice` request with its reply channel.
@@ -35,13 +35,14 @@ export function installMainNotifiers(): void {
       const done = (choice: McpAuthChoice) => {
         if (settled) return;
         settled = true;
-        ipcMain.removeListener(`mcp:auth-choice-reply:${requestId}`, onReply);
+        disposeReply();
         win.webContents.removeListener("destroyed", onGone);
         resolve(choice);
       };
-      const onReply = (_e: unknown, choice: unknown) => done(choice === "account" ? "account" : "anonymous");
       const onGone = () => done("anonymous");
-      ipcMain.once(`mcp:auth-choice-reply:${requestId}`, onReply);
+      const disposeReply = trustedOnce(`mcp:auth-choice-reply:${requestId}`, (_e, choice: unknown) =>
+        done(choice === "account" ? "account" : "anonymous"),
+      );
       win.webContents.once("destroyed", onGone);
       win.webContents.send("mcp:auth-choice", { requestId, id: req.id, name: req.name });
     })

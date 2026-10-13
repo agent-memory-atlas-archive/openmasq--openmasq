@@ -8,6 +8,7 @@ import { BrowserWindow, clipboard, Menu } from "electron";
 // (only there: on macOS the two implementations agree). `check-bundle.mjs` guards it.
 import { join } from "node:path";
 import { DEVTOOLS_PREF } from "./devtools";
+import { APP_INDEX_HTML, isAppPageUrl } from "./appPage";
 import { mainMessages } from "./i18n";
 import { setMainWindow } from "./mainWindowRef";
 import { stopAgentBrowser, setAppMainFocused } from "./mcp/browser";
@@ -58,16 +59,11 @@ export function createWindow(): void {
     return { action: "deny" };
   });
 
-  // Keep the TOP FRAME on the app's own origin: any other top-frame navigation (an XSS
-  // `location.href=…`, a form post, meta-refresh) would load remote content with
-  // `window.openmasq` (full IPC) still exposed.
-  const isAppOrigin = (u: string): boolean => {
-    // `devOnly`: read raw, this env var would let anyone who sets the launch environment
-    // name an origin the top frame may navigate to.
-    const dev = devOnly(process.env["ELECTRON_RENDERER_URL"]);
-    if (dev && u.startsWith(dev)) return true;
-    return u.startsWith("file://") || u === "about:blank";
-  };
+  // Keep the TOP FRAME on the app's own page: any other top-frame navigation (an XSS
+  // `location.href=…`, a form post, meta-refresh, another local `file://` page) would load
+  // content with `window.openmasq` (full IPC) still exposed. ONE definition of "the app
+  // page", shared with the IPC sender gate (`./appPage.ts`).
+  const isAppOrigin = (u: string): boolean => u === "about:blank" || isAppPageUrl(u);
   const guardTopNav = (e: Electron.Event, url: string): void => {
     if (!isAppOrigin(url)) {
       e.preventDefault();
@@ -119,7 +115,7 @@ export function createWindow(): void {
     mainWindow.webContents.openDevTools({ mode: "detach" });
     mainWindow.loadURL(devUrl);
   } else {
-    const indexHtml = join(__dirname, "../renderer/index.html");
+    const indexHtml = APP_INDEX_HTML;
     // A navigation that fails leaves Chromium's own error page — a blank window with no
     // message anywhere. The app then looks hung, and the only evidence (an error code) is
     // held by a process nobody is listening to. Say it, once, on the one channel a packaged

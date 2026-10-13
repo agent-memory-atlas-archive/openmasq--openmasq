@@ -20,7 +20,6 @@ export {
   dbDeleteFile,
   type DbFile,
 } from "./files";
-export { storeEmbedding, searchEmbeddings } from "./embeddings";
 export {
   upsertMemoryEmbedding,
   memoryEmbeddingStatus,

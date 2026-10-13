@@ -1,4 +1,4 @@
-import { ipcMain } from "electron";
+import { trustedHandle } from "./senderGate";
 import { cloudList, cloudSources } from "../cloudfs";
 
 /**
@@ -22,7 +22,7 @@ const fail = (e: unknown): Envelope => ({
 });
 
 export function registerCloudFsIpc(): void {
-  ipcMain.handle("cloudfs:sources", async (): Promise<Envelope> => {
+  trustedHandle("cloudfs:sources", async (): Promise<Envelope> => {
     try {
       return { ok: true, data: { sources: cloudSources() } };
     } catch (e) {
@@ -30,7 +30,7 @@ export function registerCloudFsIpc(): void {
     }
   });
 
-  ipcMain.handle("cloudfs:list", async (_e, arg: unknown): Promise<Envelope> => {
+  trustedHandle("cloudfs:list", async (_e, arg: unknown): Promise<Envelope> => {
     try {
       const { sourceId, folderId } = (arg ?? {}) as { sourceId?: unknown; folderId?: unknown };
       if (typeof sourceId !== "string") throw new Error("Source manquante.");

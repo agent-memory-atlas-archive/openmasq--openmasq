@@ -1,4 +1,5 @@
-import { app, ipcMain } from "electron";
+import { app } from "electron";
+import { trustedOn } from "./ipc/senderGate";
 import { BRAND } from "@openmasq/branding";
 import { deepLinkTarget } from "./deepLink";
 import { getMainWindow, withMainWindow } from "./mainWindowRef";
@@ -81,7 +82,7 @@ export function installDeepLinkHandlers(): void {
   // The renderer signals it has subscribed; flush anything buffered during boot.
   // One readiness gate covers both channels (the renderer subscribes to auth +
   // billing at boot).
-  ipcMain.on("auth:ready", () => {
+  trustedOn("auth:ready", () => {
     rendererAuthReady = true;
     flushAuthUrl();
     flushBillingUrl();

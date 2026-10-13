@@ -1,4 +1,4 @@
-import { ipcMain } from "electron";
+import { trustedHandle } from "../ipc/senderGate";
 import { ensureRuntime, type Progress } from "./runtime";
 import { runPython, type PythonResult, type SeedFile } from "./sandbox";
 import { mainMessages } from "../i18n";
@@ -45,7 +45,7 @@ let registered = false;
 export function registerPythonIpc(): void {
   if (registered) return;
   registered = true;
-  ipcMain.handle("python:run", async (e, payload: unknown): Promise<PythonResult> => {
+  trustedHandle("python:run", async (e, payload: unknown): Promise<PythonResult> => {
     const emit = (status: string): void => {
       if (!e.sender.isDestroyed()) e.sender.send("python:progress", status);
     };

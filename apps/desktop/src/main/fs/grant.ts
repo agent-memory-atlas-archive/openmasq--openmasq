@@ -1,5 +1,5 @@
-import { realpathSync } from "node:fs";
 import { isAbsolute, resolve, sep, dirname, basename } from "node:path";
+import { isWithin, isWithinDenied, realPathOrNull } from "../security/pathScope";
 
 /**
  * The ONE security gate of the in-process filesystem tool: resolve a model-supplied
@@ -14,7 +14,9 @@ import { isAbsolute, resolve, sep, dirname, basename } from "node:path";
  * validated to contain no `..`), so a symlinked parent can't be used to escape either.
  *
  * `roots`/`deny` are resolved to their real paths ONCE by {@link makeGrant} so a
- * granted root that is itself a symlink is compared by its real target.
+ * granted root that is itself a symlink is compared by its real target. Every real path is
+ * the ON-DISK casing and a deny match is case-folded where the volume ignores case
+ * (`../security/pathScope.ts`): `~/.SSH` IS `~/.ssh` on APFS and NTFS.
  */
 export interface Grant {
   /** Resolve + authorize a path; throws if it escapes the grant or hits a deny path. */
@@ -24,13 +26,7 @@ export interface Grant {
 }
 
 /** Real path of an existing path, or null if it doesn't exist / can't be resolved. */
-function realOrNull(p: string): string | null {
-  try {
-    return realpathSync(p);
-  } catch {
-    return null;
-  }
-}
+const realOrNull = realPathOrNull;
 
 /** Real path of the nearest EXISTING ancestor of `p`, plus the trailing segments that
  *  don't exist yet. Walks up until an existing dir is found (or gives up at the root). */
@@ -47,12 +43,6 @@ function realExistingPrefix(p: string): { base: string; rest: string[] } | null 
     cur = parent;
   }
   return null;
-}
-
-/** True when `child` is `root` or strictly beneath it (path-segment aware, not a raw
- *  string prefix — so `/a/bc` is NOT considered under `/a/b`). */
-function isWithin(root: string, child: string): boolean {
-  return child === root || child.startsWith(root + sep);
 }
 
 export function makeGrant(rawRoots: string[], rawDeny: string[] = []): Grant {
@@ -105,7 +95,7 @@ export function makeGrant(rawRoots: string[], rawDeny: string[] = []): Grant {
           `N'invente pas de chemin : omets « path » pour chercher dans TOUS les dossiers autorisés.`,
       );
     }
-    if (deny.some((d) => isWithin(d, real))) {
+    if (deny.some((d) => isWithinDenied(d, real))) {
       throw new Error(`accès refusé (chemin protégé) : ${target}`);
     }
     return real;

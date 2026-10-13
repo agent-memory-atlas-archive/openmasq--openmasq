@@ -83,3 +83,16 @@ export async function requestChannelChange(
     if (app.isPackaged) applyFeed(next.channel);
     return { ok: true, channel: next.channel };
 }
+
+/** The gate of `updates:switch`: an exact build on a channel. Pinning an exact version is a
+ *  DOWNGRADE primitive whichever channel it lands on — including this install's own or baked
+ *  one, which {@link classifyChannelChange} lets through without asking — so the server-verified
+ *  permission is required UNCONDITIONALLY, before the channel is even persisted. Fail-closed. */
+export async function requestPinnedSwitch(
+    wanted: unknown,
+): Promise<{ ok: boolean; reason?: string; channel: string }> {
+    if (!(await selfPinAllowed())) {
+        return { ok: false, reason: "not_allowed", channel: getConfig().channel };
+    }
+    return requestChannelChange(wanted);
+}

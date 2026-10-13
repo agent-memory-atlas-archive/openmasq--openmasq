@@ -1,7 +1,8 @@
-import { dialog, ipcMain, session, shell, systemPreferences } from "electron";
+import { dialog, session, shell, systemPreferences } from "electron";
 import type { WebContents } from "electron";
 import { BRAND } from "@openmasq/branding";
 import { mainMessages } from "../i18n";
+import { trustedHandle } from "../ipc/senderGate";
 
 // Without a permission handler Electron DENIES `getUserMedia` by default, so the
 // composer's dictation mic (renderer → MediaRecorder) would never get audio. We
@@ -94,5 +95,5 @@ export function installMediaPermissions(): void {
   s.setPermissionCheckHandler((wc, permission) => permission === "media" && isAppWebContents(wc));
   // The renderer calls this right before recording so macOS shows/refreshes the
   // OS mic prompt (a granted Chromium permission alone still fails under TCC).
-  ipcMain.handle("media:ensure-mic", () => ensureMicAccess());
+  trustedHandle("media:ensure-mic", () => ensureMicAccess());
 }

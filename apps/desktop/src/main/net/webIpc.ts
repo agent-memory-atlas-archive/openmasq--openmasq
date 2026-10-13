@@ -1,4 +1,4 @@
-import { ipcMain } from "electron";
+import { trustedHandle } from "../ipc/senderGate";
 import { webFetchMany } from "./webFetchMany";
 import { listEndpointModels } from "./localEndpoint";
 import { fetchOpenRouterModels } from "./openrouterModels";
@@ -11,10 +11,10 @@ import { fetchOpenRouterModels } from "./openrouterModels";
  * text/data Content-Types) and extracts readable text. Fail-closed PER URL — never throws.
  */
 export function registerWebIpc(): void {
-  ipcMain.handle("web:fetch-many", (_e, urls: unknown) => webFetchMany(urls));
+  trustedHandle("web:fetch-many", (_e, urls: unknown) => webFetchMany(urls));
   // Live OpenRouter model catalogue. Returns [] on ANY failure so the renderer's guard
   // keeps the static baseline — a broken catalogue must never surface as an app error.
-  ipcMain.handle("models:list-openrouter", async () => {
+  trustedHandle("models:list-openrouter", async () => {
     try {
       return await fetchOpenRouterModels();
     } catch {
@@ -23,7 +23,7 @@ export function registerWebIpc(): void {
   });
   // The user's OWN server's model list (`/models` of the configured openai-compat
   // endpoint) — ids only, [] on any failure, same host gate as the reachability probe.
-  ipcMain.handle("models:list-local", async (_e, baseUrl: unknown) => {
+  trustedHandle("models:list-local", async (_e, baseUrl: unknown) => {
     if (typeof baseUrl !== "string") return [];
     try {
       return await listEndpointModels(baseUrl);

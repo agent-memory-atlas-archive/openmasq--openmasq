@@ -1,4 +1,4 @@
-import { app, ipcMain, type BrowserWindow } from "electron";
+import { app, type BrowserWindow } from "electron";
 import { DEFAULT_ENV, ENVIRONMENTS, type EnvName } from "../../environments";
 import { CUSTOM_STACK_ALLOWED } from "../../environments/customStack";
 import { CLIENT_HEADER, clientIdentityHeader } from "../../clientIdentity";
@@ -8,6 +8,7 @@ import { registerCustomStackIpc } from "./registerCustomStackIpc";
 import { selfPinAllowed } from "../updates/channel";
 import { relaunchSafely } from "../updates/install";
 import { handle, obj } from "./handle";
+import { trustedOn } from "./senderGate";
 
 /**
  * The "environment" family: WHICH environment this install talks to, and how it
@@ -80,7 +81,7 @@ export function registerEnvIpc(
   // SYNCHRONOUS, and it's deliberate: `renderer/src/appEnv.ts` must know the addresses at
   // module load, before `auth.ts` builds the Supabase client. An asynchronous round
   // trip would arrive too late. A single exchange, at the very start of boot.
-  ipcMain.on("env:resolved-sync", (e) => {
+  trustedOn("env:resolved-sync", (e) => {
     e.returnValue = payload;
   });
 

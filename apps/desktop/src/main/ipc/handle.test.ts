@@ -10,6 +10,15 @@ vi.mock("electron", () => ({
   },
 }));
 
+// The sender gate is pinned in `senderGate.test.ts`; here it is a switch, so the shape
+// checks below run on a trusted sender and one case proves the gate runs FIRST.
+let senderTrusted = true;
+vi.mock("./senderGate", () => ({
+  assertTrustedSender: (channel: string) => {
+    if (!senderTrusted) throw new Error(`IPC ${channel}: sender is not the app window`);
+  },
+}));
+
 const { handle, str, num, bool, obj, arr, any, nullable, optional, IpcArgumentError } =
   await import("./handle");
 
@@ -21,7 +30,20 @@ const { handle, str, num, bool, obj, arr, any, nullable, optional, IpcArgumentEr
 
 const invoke = (channel: string, ...args: unknown[]) => registered.get(channel)!({}, ...args);
 
-beforeEach(() => registered.clear());
+beforeEach(() => {
+  registered.clear();
+  senderTrusted = true;
+});
+
+describe("handle — an untrusted sender never reaches the body", () => {
+  it("refuses before the shape check and the body", () => {
+    const body = vi.fn();
+    handle("t:sender", [str], body);
+    senderTrusted = false;
+    expect(() => invoke("t:sender", "well-formed")).toThrow(/not the app window/);
+    expect(body).not.toHaveBeenCalled();
+  });
+});
 
 describe("handle — a malformed call never reaches the body", () => {
   it("runs the body on a well-formed call", () => {

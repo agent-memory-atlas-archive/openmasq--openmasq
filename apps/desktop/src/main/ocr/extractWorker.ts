@@ -12,6 +12,7 @@ import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { extractText, extractBytes, type ExtractedFile, type ExtractStream, type PageEvent } from "@openmasq/redact/documents";
 import { DEFAULT_LOCALE, getMessages, isLocale } from "@openmasq/i18n";
+import { scrubInPlace } from "./inplaceScrub";
 
 // ⚠️ pdf.js (legacy) under utilityProcess: since `process.versions.electron` is set, it does
 // NOT believe it's in Node and REQUIRES `GlobalWorkerOptions.workerSrc` instead of auto-loading
@@ -54,18 +55,39 @@ interface ParentPort {
   postMessage(msg: Res): void;
 }
 type Req =
+  | { id: number; kind: "inplace"; data: string; name: string; mime: string; vault: Record<string, string>; disabledKinds?: string[]; kinds: Record<string, string> }
   | { id: number; kind: "path"; path: string; locale?: string; stream?: boolean }
   | { id: number; kind: "bytes"; data: string; name: string; mime?: string; locale?: string; stream?: boolean };
 type Res =
+  | { ready: true }
   | { id: number; progress: { done: number; pages: number } }
   | { id: number; page: PageEvent }
   | { id: number; thumb: { n: number; total: number; png: string } }
-  | { id: number; ok: true; file: ExtractedFile }
+  | { id: number; ok: true; file: ExtractedFile | InplaceReply }
   | { id: number; ok: false; error: string };
 const parentPort = (process as unknown as { parentPort: ParentPort }).parentPort;
 
+/** The in-place scrub's answer: the scrubbed bytes travel as base64, like the request's. */
+interface InplaceReply {
+  scrubbed: string | null;
+  vault: Record<string, string>;
+  kinds: Record<string, string>;
+  spans: { value: string; kind: string }[];
+}
+
 parentPort.on("message", (e) => {
   const req = e.data;
+  if (req.kind === "inplace") {
+    try {
+      const { data, ...rest } = req;
+      const r = scrubInPlace({ ...rest, bytes: new Uint8Array(Buffer.from(data, "base64")) });
+      const scrubbed = r.scrubbed ? Buffer.from(r.scrubbed).toString("base64") : null;
+      parentPort.postMessage({ id: req.id, ok: true, file: { ...r, scrubbed } });
+    } catch (err) {
+      parentPort.postMessage({ id: req.id, ok: false, error: err instanceof Error ? err.message : String(err) });
+    }
+    return;
+  }
   void (async () => {
     const onProgress = (done: number, pages: number) => {
       try {
@@ -112,3 +134,7 @@ parentPort.on("message", (e) => {
     }
   })();
 });
+
+// Every module above has loaded: from here on, a death is a JOB's, never a failed birth
+// (`extractClient.ts` falls back in-process only before this message).
+parentPort.postMessage({ ready: true });

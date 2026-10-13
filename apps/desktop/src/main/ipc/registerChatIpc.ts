@@ -1,6 +1,7 @@
 // The `chat:*` channels — streaming and one-shot completions, tool turns — and the key
 // injection every provider call goes through (`withKey`: stored key, endpoint decision, scrub).
-import { app, ipcMain } from "electron";
+import { app } from "electron";
+import { trustedHandle, trustedOn } from "./senderGate";
 import { type StreamChatOptions, streamChat, type CompleteToolsOptions, completeWithTools, supportsStreamingTools, streamWithTools } from "@openmasq/llm";
 import { e2eWireLog } from "./e2eWireLog";
 import { noteFetchHostsFromText } from "../net/fetchAllow";
@@ -11,6 +12,10 @@ import { noteClaudeRateLimit } from "../subscription/account";
 import { subscriptionCliFor, subscriptionTurnEnv } from "../subscription/desktop";
 import { subscriptionToolsRoute } from "../subscription/toolsRoute";
 import { streamSubscriptionTurn } from "../subscription/turn";
+
+/** THIS environment's gateway, resolved by main at startup (`registerChatHandlers`): the
+ *  only origin a packaged platform send may reach (`../net/providerEndpoint.ts`). */
+let platformGateway: string | undefined;
 
 interface ChatStartPayload extends Omit<StreamChatOptions, "signal"> {
   requestId: string;
@@ -42,7 +47,7 @@ function withKey<
   // (`net/providerEndpoint.ts`). Throws on a refused endpoint.
   const decided = decideProviderEndpoint(
     { provider: options.provider, apiKey, baseUrl: (options as { baseUrl?: string; }).baseUrl },
-    { rendererSuppliedKey: !!rendererKey, packaged: app.isPackaged }
+    { rendererSuppliedKey: !!rendererKey, packaged: app.isPackaged, gateway: platformGateway }
   );
   if (decided.warn) console.warn(`[keys] ${decided.warn}`);
   const out: T = {
@@ -57,10 +62,11 @@ function withKey<
 }
 /** Returns an "any in-flight streams?" probe — an update's auto-install
  *  (`updates/autoInstall.ts`) holds off as long as a `chat:*` is streaming. */
-export function registerChatHandlers(): () => boolean {
+export function registerChatHandlers(gateway?: string): () => boolean {
+  platformGateway = gateway;
   const controllers = new Map<string, AbortController>();
 
-  ipcMain.on("chat:start", async (event, payload: ChatStartPayload) => {
+  trustedOn("chat:start", async (event, payload: ChatStartPayload) => {
     const { requestId, ...options } = payload;
     const controller = new AbortController();
     controllers.set(requestId, controller);
@@ -111,13 +117,13 @@ export function registerChatHandlers(): () => boolean {
     }
   });
 
-  ipcMain.on("chat:cancel", (_event, requestId: string) => {
+  trustedOn("chat:cancel", (_event, requestId: string) => {
     controllers.get(requestId)?.abort();
     controllers.delete(requestId);
   });
 
   // One-shot completion (the model-based redaction pass, memory extraction, compaction).
-  ipcMain.handle(
+  trustedHandle(
     "chat:complete",
     async (_event, options: Omit<StreamChatOptions, "signal">) => {
       let out = "";
@@ -138,7 +144,7 @@ export function registerChatHandlers(): () => boolean {
   // cross IPC: each call is correlated by `requestId` so `chat:complete-tools-cancel`
   // aborts the in-flight fetch.
   const toolControllers = new Map<string, AbortController>();
-  ipcMain.handle(
+  trustedHandle(
     "chat:complete-tools",
     async (
       _e,
@@ -158,7 +164,7 @@ export function registerChatHandlers(): () => boolean {
       }
     }
   );
-  ipcMain.on("chat:complete-tools-cancel", (_e, requestId: string) => {
+  trustedOn("chat:complete-tools-cancel", (_e, requestId: string) => {
     toolControllers.get(requestId)?.abort();
     toolControllers.delete(requestId);
   });
@@ -166,7 +172,7 @@ export function registerChatHandlers(): () => boolean {
   // STREAMING agentic tool turn: `chat:tools-chunk:<id>` deltas, then `chat:tools-done:<id>`
   // or `chat:tools-error:<id>`. Same `toolControllers` + cancel channel, so Stop aborts both
   // paths. A provider whose tool turn can't stream falls back to a single done.
-  ipcMain.on(
+  trustedOn(
     "chat:stream-tools",
     async (event, options: Omit<CompleteToolsOptions, "signal"> & { requestId?: string; }) => {
       const { requestId, ...rest } = options;

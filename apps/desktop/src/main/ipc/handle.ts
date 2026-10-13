@@ -1,4 +1,5 @@
 import { ipcMain, type IpcMainInvokeEvent } from "electron";
+import { assertTrustedSender } from "./senderGate";
 
 /**
  * `handle(channel, shape, fn)`: the ONE way this process accepts a renderer call.
@@ -6,7 +7,9 @@ import { ipcMain, type IpcMainInvokeEvent } from "electron";
  * an XSS calls the channel with any value), so the shape is declared as VALUES and a
  * mismatch REJECTS before the body runs. The rejection names channel, index and expected
  * type, NEVER the value (it can be a provider key). A floor, not a schema language: the
- * capability gates decide what a well-formed call may touch. Pinned by `handle.test.ts`.
+ * capability gates decide what a well-formed call may touch. The SENDER is checked first
+ * (`./senderGate.ts`): only the app window's top frame on the app page reaches a body.
+ * Pinned by `handle.test.ts`.
  */
 
 export interface Check<T> {
@@ -62,6 +65,7 @@ export function handle<const A extends readonly Check<unknown>[]>(
   fn: (event: IpcMainInvokeEvent, ...args: Values<A>) => unknown,
 ): void {
   ipcMain.handle(channel, (event, ...raw: unknown[]) => {
+    assertTrustedSender(channel, event);
     for (let i = 0; i < shape.length; i++) {
       if (!shape[i].check(raw[i])) {
         // Refuse BEFORE the privileged body. Logged without the value.

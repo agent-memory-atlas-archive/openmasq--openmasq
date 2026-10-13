@@ -63,3 +63,11 @@ export function authStoreRemove(key: string): void {
   delete map[key];
   write(map);
 }
+
+/** Every stored value whose KEY satisfies `pred` — the session reader in `sessionAccount.ts`
+ *  finds the auth client's session by its key suffix without knowing the project ref. */
+export function authStoreValues(pred: (key: string) => boolean): string[] {
+  return Object.entries(read())
+    .filter(([k]) => pred(k))
+    .map(([, v]) => v);
+}

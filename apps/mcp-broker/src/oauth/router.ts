@@ -4,7 +4,7 @@ import { getPlatform, isAvailable, type Platform } from "../platforms/registry.j
 import type { UpstreamTokenSet } from "../platforms/types.js";
 import { postForm } from "../util/fetchJson.js";
 import { createVerifier, isS256, s256Challenge, verifyPkce } from "./pkce.js";
-import { isAllowedRedirect, redirectUriMatches } from "./redirectUri.js";
+import { isAllowedRedirect, isRegistrableRedirect, redirectUriMatches } from "./redirectUri.js";
 import { store, type UpstreamTokens } from "./store.js";
 import { rateLimit } from "./rateLimit.js";
 
@@ -39,7 +39,12 @@ function toUpstream(t: UpstreamTokenSet): UpstreamTokens {
 // --- Dynamic Client Registration (RFC 7591) -------------------------------
 oauthRouter.post("/register", (req: Request, res: Response) => {
   const uris = req.body?.redirect_uris;
-  if (!Array.isArray(uris) || uris.some((u) => typeof u !== "string") || uris.length === 0) {
+  // Loopback redirects only: the broker's one client is the app on this machine.
+  if (
+    !Array.isArray(uris) ||
+    uris.length === 0 ||
+    uris.some((u) => typeof u !== "string" || !isRegistrableRedirect(u))
+  ) {
     res.status(400).json({ error: "invalid_redirect_uri" });
     return;
   }

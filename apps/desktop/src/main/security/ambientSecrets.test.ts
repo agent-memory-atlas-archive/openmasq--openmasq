@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeAll, afterAll } from "vitest";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, sep } from "node:path";
 
 // A REAL temp home so the fs-grant block can be exercised end-to-end (grant realpaths its
 // roots/deny). userData is a sibling temp dir. Created before the (hoisted) mock reads them.
@@ -118,6 +118,38 @@ describe("ambient credential deny set", () => {
     });
   });
 
+  it("covers the coding-agent, CLI and chat-app session stores", () => {
+    const dirs = ambientSecretDirs();
+    const roam = process.env.APPDATA || join(HOME, "AppData", "Roaming");
+    for (const d of [
+      [".claude"], [".codex"], [".gemini"], [".config", "rclone"], [".vercel"], [".supabase"],
+      [".local", "share", "keyrings"], [".config", "Code", "User", "globalStorage"],
+      ["Library", "Application Support", "Code", "User", "globalStorage"],
+      ["Library", "Application Support", "Slack"], ["Library", "Application Support", "discord"],
+      [".config", "Slack"], [".config", "discord"],
+    ]) {
+      expect(dirs).toContain(join(HOME, ...d));
+    }
+    expect(dirs).toContain(join(roam, "Slack"));
+    expect(dirs).toContain(join(roam, "Code", "User", "globalStorage"));
+    const files = ambientSecretFiles();
+    for (const f of [[".claude.json"], [".cargo", "credentials.toml"], [".m2", "settings.xml"],
+      [".gradle", "gradle.properties"]]) {
+      expect(files).toContain(join(HOME, ...f));
+    }
+  });
+
+  /* The deny set is load-bearing for a grant over `~` — it must never swallow a folder the
+     user keeps documents in, nor the VS Code settings the user edits. */
+  it("blocks no user document folder and only VS Code's secret state", () => {
+    const flat = ambientSecretPaths();
+    for (const d of ["Documents", "Desktop", "Downloads", "Pictures", "Movies", "Music"]) {
+      expect(flat.some((p) => p === join(HOME, d) || join(HOME, d).startsWith(p + sep))).toBe(false);
+    }
+    expect(flat).not.toContain(join(HOME, ".config", "Code"));
+    expect(flat).not.toContain(join(HOME, ".config", "Code", "User"));
+  });
+
   it("the flat list is dirs ∪ files and excludes userData (each caller adds its own)", () => {
     const flat = ambientSecretPaths();
     expect(flat).toEqual([...ambientSecretDirs(), ...ambientSecretFiles()]);
@@ -160,6 +192,19 @@ describe("fs-MCP deny-list (fsMcpDenyPaths) — the closed exfil hole", () => {
     expect(() => g.resolve(join(dpapi, "masterkey"))).toThrow(/protégé|refusé/);
     expect(() => g.resolve(join(chrome, "Cookies"))).toThrow(/protégé|refusé/);
     vi.unstubAllEnvs();
+  });
+
+  it("a grant over HOME BLOCKS a coding agent's token and a chat app's Local Storage", () => {
+    const codex = join(HOME, ".codex");
+    const slack = join(HOME, "Library", "Application Support", "Slack", "Local Storage");
+    mkdirSync(codex, { recursive: true });
+    mkdirSync(slack, { recursive: true });
+    writeFileSync(join(codex, "auth.json"), "TOKEN");
+    writeFileSync(join(slack, "leveldb"), "SESSION");
+    const g = makeGrant([HOME], fsMcpDenyPaths());
+    expect(() => g.resolve(join(codex, "auth.json"))).toThrow(/protégé/);
+    expect(() => g.resolve(join(slack, "leveldb"))).toThrow(/protégé/);
+    expect(() => g.resolve(join(HOME, ".claude", "projects", "x.jsonl"))).toThrow(/protégé/);
   });
 
   it("a grant over the HOME dir BLOCKS ~/.ssh/id_rsa and ~/.netrc, but allows a sibling file", () => {

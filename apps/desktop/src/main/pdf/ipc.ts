@@ -1,4 +1,4 @@
-import { ipcMain } from "electron";
+import { trustedHandle } from "../ipc/senderGate";
 import { renderHtmlToPdf } from "./htmlPdf";
 import { validatePdfRequest } from "./pdfSkeleton";
 
@@ -19,7 +19,7 @@ let registered = false;
 export function registerPdfIpc(): void {
   if (registered) return;
   registered = true;
-  ipcMain.handle("pdf:render-html", async (_e, payload: unknown): Promise<Uint8Array> =>
+  trustedHandle("pdf:render-html", async (_e, payload: unknown): Promise<Uint8Array> =>
     renderHtmlToPdf(validatePdfRequest(payload)),
   );
 }

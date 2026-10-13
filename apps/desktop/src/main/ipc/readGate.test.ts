@@ -50,4 +50,18 @@ describe("read-gate (audit H-1) — files:read confinement", () => {
     grantRead(secret); // a compromised renderer tries to grant then read the vault
     expect(() => assertReadAllowed(secret)).toThrow(/chemin non autorisé/);
   });
+
+  // APFS (macOS default) and NTFS ignore case: the secret deny must hold whatever casing the
+  // renderer spells, or `<userData>/KEYS.ENC` reads the very file `keys.enc` names.
+  it.runIf(process.platform === "darwin" || process.platform === "win32")(
+    "REFUSES a secret spelled in another CASE on a case-insensitive volume",
+    () => {
+      expect(() => assertReadAllowed(join(USERDATA, "KEYS.ENC"))).toThrow(/chemin non autorisé/);
+      expect(() => assertReadAllowed(join(USERDATA, "Accounts", "OPENMASQ-X.DB"))).toThrow(
+        /chemin non autorisé/,
+      );
+      // …while the non-secret file stays readable in any casing.
+      expect(() => assertReadAllowed(join(USERDATA, "NOTE.TXT"))).not.toThrow();
+    },
+  );
 });

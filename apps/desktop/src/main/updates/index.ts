@@ -16,7 +16,7 @@ import {
   UPDATES_CONFIGURED,
   UPDATES_URL,
 } from "./config";
-import { requestChannelChange, selfPinAllowed } from "./channel";
+import { requestChannelChange, requestPinnedSwitch, selfPinAllowed } from "./channel";
 import { mainMessages } from "../i18n";
 import { logUpdate, logUpdateError, updaterLogger, updaterLogPath } from "./log";
 import { reportUpdateFailure } from "./report";
@@ -128,7 +128,9 @@ function registerUpdateIpc(): void {
     if (!app.isPackaged) return { ok: false, reason: "dev" };
     if (!arg?.version) return { ok: false, reason: "no_version" };
     // Pinning is a DOWNGRADE primitive (an older build, vulnerabilities included): the
-    // renderer is not trusted to authorise one. Fail-closed.
+    // renderer is not trusted to authorise one. Fail-closed, and a refusal leaves the
+    // updater unable to downgrade.
+    autoUpdater.allowDowngrade = false;
     if (!(await selfPinAllowed())) return { ok: false, reason: "not_allowed" };
     autoUpdater.allowDowngrade = true;
     applyFeed(getConfig().channel, arg.version);
@@ -161,9 +163,10 @@ function registerUpdateIpc(): void {
     const arg = raw as { channel: string; version: string };
     if (!app.isPackaged) return { ok: false, reason: "dev" };
     if (!arg?.channel || !arg?.version) return { ok: false, reason: "no_target" };
-    // Same gate as set-channel: the channel move alone would already hand this install
-    // the other environment's next build.
-    const moved = await requestChannelChange(arg.channel);
+    // An exact build is a pin: the permission is required even when the channel does not
+    // move (`requestPinnedSwitch`), then the set-channel gate applies.
+    autoUpdater.allowDowngrade = false;
+    const moved = await requestPinnedSwitch(arg.channel);
     if (!moved.ok) return moved;
     autoUpdater.allowDowngrade = true;
     applyFeed(moved.channel, arg.version);

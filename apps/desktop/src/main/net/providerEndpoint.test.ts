@@ -12,7 +12,7 @@ const GATEWAY = brandUrl("gw");
  */
 
 const MAIN = { rendererSuppliedKey: false, packaged: true }; // key injected by withKey
-const RENDERER = { rendererSuppliedKey: true, packaged: true }; // platform JWT / BYO key
+const RENDERER = { rendererSuppliedKey: true, packaged: true, gateway: GATEWAY }; // platform JWT / BYO key
 const DEV = { rendererSuppliedKey: true, packaged: false };
 
 describe("decideProviderEndpoint — a stored key never follows a renderer baseUrl", () => {
@@ -130,4 +130,39 @@ describe("decideProviderEndpoint — scheme floor", () => {
       expect(d.baseUrl).toBeUndefined();
     },
   );
+});
+
+describe("decideProviderEndpoint — a packaged platform send goes to THIS environment's gateway", () => {
+  it("accepts any path on the gateway origin", () => {
+    const d = decideProviderEndpoint(
+      { provider: "anthropic", apiKey: "supabase-jwt", baseUrl: `${GATEWAY}/v1/inference` },
+      RENDERER,
+    );
+    expect(d.apiKey).toBe("supabase-jwt");
+  });
+
+  it("REFUSES a public host the renderer picked (the JWT never leaves for it)", () => {
+    for (const baseUrl of ["https://attacker.example/v1", `${GATEWAY}.attacker.example`, "http://" + new URL(GATEWAY).host]) {
+      expect(() =>
+        decideProviderEndpoint({ provider: "openrouter", apiKey: "supabase-jwt", baseUrl }, RENDERER),
+      ).toThrow(/passerelle/);
+    }
+  });
+
+  it("REFUSES every platform baseUrl when this build has no gateway (fail closed)", () => {
+    expect(() =>
+      decideProviderEndpoint(
+        { provider: "openrouter", apiKey: "supabase-jwt", baseUrl: GATEWAY },
+        { ...RENDERER, gateway: "" },
+      ),
+    ).toThrow(/passerelle/);
+  });
+
+  it("unpackaged keeps the shape check only (a local-dev override may differ)", () => {
+    const d = decideProviderEndpoint(
+      { provider: "openrouter", apiKey: "supabase-jwt", baseUrl: "https://dev-gw.example" },
+      { ...DEV, gateway: GATEWAY },
+    );
+    expect(d.baseUrl).toBe("https://dev-gw.example");
+  });
 });

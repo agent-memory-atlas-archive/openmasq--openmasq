@@ -1,4 +1,4 @@
-import { ipcMain } from "electron";
+import { trustedHandle } from "./senderGate";
 import { getLiveFs } from "../fs/live";
 import { assertLocalFsWriteAllowed, type LocalFsWriteOp } from "../fs/uiGate";
 import { mainMessages } from "../i18n";
@@ -78,32 +78,32 @@ const str = (v: unknown): string => (typeof v === "string" ? v : "");
 export function registerLocalFsIpc(): void {
   // Availability + the granted roots in one call: the UI needs both to decide whether to
   // draw the tab at all, and they can only ever be true together.
-  ipcMain.handle("localfs:roots", async (): Promise<Envelope> => {
+  trustedHandle("localfs:roots", async (): Promise<Envelope> => {
     const conn = getLiveFs();
     if (!conn) return { ok: true, data: { available: false, roots: [] } };
     return { ok: true, data: { available: true, roots: [...conn.roots] } };
   });
 
-  ipcMain.handle("localfs:list", (_e, p: { path: string }) => run("list", { path: str(p?.path) }));
-  ipcMain.handle("localfs:stat", (_e, p: { path: string }) => run("stat", { path: str(p?.path) }));
-  ipcMain.handle("localfs:read", (_e, p: { path: string }) => run("read", { path: str(p?.path) }));
-  ipcMain.handle("localfs:search", (_e, p: { path: string; query: string }) =>
+  trustedHandle("localfs:list", (_e, p: { path: string }) => run("list", { path: str(p?.path) }));
+  trustedHandle("localfs:stat", (_e, p: { path: string }) => run("stat", { path: str(p?.path) }));
+  trustedHandle("localfs:read", (_e, p: { path: string }) => run("read", { path: str(p?.path) }));
+  trustedHandle("localfs:search", (_e, p: { path: string; query: string }) =>
     run("search", { path: str(p?.path), query: str(p?.query) }),
   );
 
   // No `localfs:write` — in-app file editing via the sidebar was removed, so the UI
   // surface exposes no in-place overwrite at all (the model's gated `write_file` is
   // the one write path that remains).
-  ipcMain.handle("localfs:mkdir", (_e, p: { path: string }) =>
+  trustedHandle("localfs:mkdir", (_e, p: { path: string }) =>
     runGated("mkdir", "mkdir", { path: str(p?.path) }),
   );
-  ipcMain.handle("localfs:rename", (_e, p: { source: string; destination: string }) =>
+  trustedHandle("localfs:rename", (_e, p: { source: string; destination: string }) =>
     runGated("rename", "rename", { source: str(p?.source), destination: str(p?.destination) }),
   );
 
   // `trash` and `open` need Electron's `shell`, which a utilityProcess child does not have
   // — they run in main against the SAME gate (`fs/mainOps.ts`), never on a second policy.
-  ipcMain.handle("localfs:trash", async (_e, p: { path: string }): Promise<Envelope> => {
+  trustedHandle("localfs:trash", async (_e, p: { path: string }): Promise<Envelope> => {
     const conn = getLiveFs();
     if (!conn) return { ok: false, error: noConnector() };
     try {
@@ -118,7 +118,7 @@ export function registerLocalFsIpc(): void {
   // Extraction runs in MAIN for the same reason as `trash`/`open`: the pipeline (pdf.js,
   // docTR/Tesseract OCR) lives there, a bare Node utilityProcess can't do it. Same gate,
   // second caller — never a second policy.
-  ipcMain.handle("localfs:extract", async (_e, p: { path: string }): Promise<Envelope> => {
+  trustedHandle("localfs:extract", async (_e, p: { path: string }): Promise<Envelope> => {
     const conn = getLiveFs();
     if (!conn) return { ok: false, error: noConnector() };
     try {
@@ -128,7 +128,7 @@ export function registerLocalFsIpc(): void {
     }
   });
 
-  ipcMain.handle("localfs:open", async (_e, p: { path: string }): Promise<Envelope> => {
+  trustedHandle("localfs:open", async (_e, p: { path: string }): Promise<Envelope> => {
     const conn = getLiveFs();
     if (!conn) return { ok: false, error: noConnector() };
     try {
@@ -142,7 +142,7 @@ export function registerLocalFsIpc(): void {
   // Live refresh — what makes a model's write visible without the user doing anything.
   // The renderer sends the FULL set it wants watched (the browsed folder, the open file's
   // folder); an empty list stops everything. Bounded in the worker.
-  ipcMain.handle("localfs:watch", async (_e, p: { paths: string[] }): Promise<Envelope> => {
+  trustedHandle("localfs:watch", async (_e, p: { paths: string[] }): Promise<Envelope> => {
     const conn = getLiveFs();
     if (!conn) return { ok: false, error: noConnector() };
     conn.setChangeSink((changed) => notifyChanged?.(changed));

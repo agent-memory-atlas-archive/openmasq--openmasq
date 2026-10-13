@@ -125,7 +125,7 @@ let pinAgentFactory: ((addrs: string[]) => unknown) | null | undefined;
 /** An undici dispatcher pinned to ALREADY-VERIFIED public addresses, for every main-side
  *  fetch that must resist DNS-rebinding. `undefined` when undici is unavailable (the caller
  *  falls back to a plain fetch, host still checked). `.close()` when done. */
-export async function pinnedDispatcher(addrs: string[]): Promise<{ close?: () => Promise<void> } | undefined> {
+async function pinnedDispatcher(addrs: string[]): Promise<{ close?: () => Promise<void> } | undefined> {
   if (!addrs.length) return undefined;
   if (pinAgentFactory === undefined) {
     try {

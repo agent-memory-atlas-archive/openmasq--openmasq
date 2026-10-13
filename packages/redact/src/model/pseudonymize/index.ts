@@ -10,7 +10,7 @@ import { keyFromHex } from "../fakes/prf";
 // each split into its own module (hard rule 2); the intricate mutable-state allocation
 // loop lives in ./allocate over an explicit context.
 import type { RedactionMatch, RedactionResult, RedactionType } from "../../types";
-import { keepSet, isKept, capitalize, entityKey } from "../../util";
+import { keepSet, isKept, entityKey } from "../../util";
 import { forwardExclusions } from "./exclusions";
 import { extendEdges } from "./extendEdges";
 import { detectHostedUrlSpans, detectUrlSpans, detectEmailSpans, urlOccurrenceGuard } from "../../engine/urls";
@@ -29,6 +29,8 @@ import { allocateTokens } from "./allocateTokens";
 import { replayForModel } from "./replay";
 import type { PseudonymizeOptions } from "./options";
 import { reconcileMatches } from "./postcondition";
+import { makeResolvers } from "./resolvers";
+import { isStructuredValue, isUngluedKind } from "../../engine/vault/glue";
 
 export type { PseudonymizeOptions };
 
@@ -138,28 +140,8 @@ export async function pseudonymize(
   seedGeoAnchors(geoAnchors, vault, PLACES_BY_COUNTRY);
   const geoFakes = resolveGeoBlocks(deNested, taken, { anchors: geoAnchors, vault });
 
-  // The value's existing canonical fake (a name token, a domain), tried across case
-  // variants so a lowercase alias and a capitalised NAME resolve to the same identity.
-  const resolveFakeCI = (real: string): string | undefined =>
-    reverse.get(real) ??
-    reverse.get(real.toLowerCase()) ??
-    reverse.get(capitalize(real));
-  // A whole-value entity re-mentioned in a different casing must reuse the SAME fake —
-  // scan the reverse map for ANY case-insensitive match (multi-word / whole-value).
-  const resolveEntityFakeCI = (real: string): string | undefined => {
-    const direct = resolveFakeCI(real);
-    if (direct) return direct;
-    const lc = real.toLowerCase();
-    for (const [orig, token] of reverse) if (orig.toLowerCase() === lc) return token;
-    // …and the GLUED form of the same entity (« Karl Studio » vaulted at turn 1,
-    // « karlstudio.fr » returned by a tool at turn 2 must be the same identity). Aligned
-    // with `applyVaultVariants` on one identity definition (`entityKey`).
-    const glue = entityKey(real);
-    if (glue.length >= 4) {
-      for (const [orig, token] of reverse) if (entityKey(orig) === glue) return token;
-    }
-    return undefined;
-  };
+  // The fake a value ALREADY has, across casings, glue and accents (`resolvers.ts`).
+  const { resolveFakeCI, resolveEntityFakeCI } = makeResolvers(reverse);
 
   // What each PATH holds, read like prose (`pathEntities.ts`): its entities join the
   // candidates AHEAD of the paths, a path where nothing identifying was found stays as is.
@@ -234,6 +216,7 @@ export async function pseudonymize(
     kinds: options.kinds,
     keep,
     isKept,
+    unrevealable,
   });
   // A vaulted value must not rewrite the INSIDE of a URL — see `urlOccurrenceGuard`. The
   // kind comes from the caller's map ⊕ THIS pass's own matches (a value vaulted a moment
@@ -246,13 +229,19 @@ export async function pseudonymize(
     : undefined;
   // The substitution itself is `replayForModel` — the ONE function every later replay of
   // this text runs too (history, summary, memory), so a value masked here is masked there.
-  const text = replayForModel(input, vault, { exclude, urlGuard, mode: options.mode });
+  // A value of a STRUCTURED category is substituted even with a letter glued to it.
+  const unglued = (value: string) => {
+    const k = kindOf.get(value);
+    return k !== undefined && isUngluedKind(redactionCategory(k), value);
+  };
+  const text = replayForModel(input, vault, { exclude, urlGuard, mode: options.mode, unglued });
 
   // POSTCONDITION — "reported ⇒ vaulted ⇒ substituted", reconciled at the single exit
   // (`postcondition.ts` says which mismatch is dropped, accepted, or fails CLOSED).
   const uncertainKeys = new Set(
     deNested.filter((c) => c.uncertain).map((c) => entityKey(c.value)),
   );
-  const { applied, error } = reconcileMatches(matches, { vault, exclude, text, uncertainKeys });
+  const structured = (value: string) => isStructuredValue(value) || unglued(value);
+  const { applied, error } = reconcileMatches(matches, { vault, exclude, text, uncertainKeys, structured, urlGuard });
   return { text, matches: applied, modelError: modelError ?? error };
 }

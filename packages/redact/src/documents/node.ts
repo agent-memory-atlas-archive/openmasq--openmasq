@@ -23,6 +23,7 @@ import {
 } from "./core";
 import { fileTooLargeRefusal, MAX_FILE_BYTES, pdfPagesRefusal } from "./safety/guard";
 import { DocumentError } from "./errors";
+import { canonicalZip } from "./safety/unzip";
 import { reconstructPageText } from "./serialize/pdfLayout";
 import { buildTextLayerPage, type TextLayerPage } from "./layers/geometry";
 import { pageNeedsOcr, pageOcrRegions } from "./layers/ocrSkip";
@@ -211,7 +212,8 @@ const nodeDeps: ExtractDeps = {
   docxText: async (bytes) => {
     const mod: any = await import("mammoth");
     const mammoth = mod.default ?? mod;
-    const { value } = await mammoth.extractRawText({ buffer: Buffer.from(bytes) });
+    // JSZip (mammoth's unzipper) inflates without a size bound: it gets the canonical copy.
+    const { value } = await mammoth.extractRawText({ buffer: Buffer.from(canonicalZip(bytes)) });
     return String(value ?? "");
   },
   ocrImage: (bytes) => ocrImage(bytes),

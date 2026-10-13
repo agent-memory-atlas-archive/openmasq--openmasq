@@ -23,8 +23,9 @@
 // a caller with a catalogue words the code in the user's language.
 
 /** Hard ceiling on any single upload. Bytes past this never reach a parser. */
-import { IMAGE_FAMILIES, sniff, type SniffFamily, type Sniffed, u16le, u32le } from "./sniff";
+import { IMAGE_FAMILIES, sniff, type SniffFamily, type Sniffed } from "./sniff";
 import { DocumentError, type DocumentFailure } from "../errors";
+import { readZipDirectory } from "./zipDir";
 
 // Re-exported: the guard stays the one door to sniffing (split out for the LOC cap).
 export { sniff, type SniffFamily, type Sniffed };
@@ -38,12 +39,7 @@ export const MAX_IMAGE_PIXELS = 40_000_000; // ~40 MP → ~160 MB decoded
  *  format's own maximum) at scale 2 asks for 3.3 GP, ~13 GB of canvas, and the process
  *  dies before OCR reads a character. {@link rasterScale} is how a caller stays under it. */
 export const MAX_RASTER_PIXELS = 40_000_000; // ~40 MP → ~160 MB of canvas
-/** Total UNCOMPRESSED size a ZIP (docx/pptx/xlsx/ods) may declare. */
-export const MAX_ZIP_TOTAL_BYTES = 300 * 1024 * 1024; // 300 MiB
-/** Overall compression ratio (uncompressed / compressed) above which a ZIP is a bomb. */
-export const MAX_ZIP_RATIO = 250;
-/** Entry-count cap — a "flat" bomb hides size behind millions of tiny members. */
-export const MAX_ZIP_ENTRIES = 10_000;
+export { MAX_ZIP_TOTAL_BYTES, MAX_ZIP_RATIO, MAX_ZIP_ENTRIES } from "./zipDir";
 /** Page cap for PDF TEXT extraction (OCR is capped separately, lower). A PDF past it is
  *  REFUSED whole ({@link pdfPagesRefusal}), never read up to the cap: a silently missing
  *  tail is a document the person believes masked and sent in full. Set well above what
@@ -117,9 +113,9 @@ function allowedFamilies(ext: string): ReadonlySet<SniffFamily> | null {
 /**
  * Inspect a ZIP's END-OF-CENTRAL-DIRECTORY + central directory to sum the
  * DECLARED uncompressed sizes WITHOUT decompressing. A classic zip bomb (Office
- * files are ZIPs) advertises its true, absurd expanded size here. Returns a
- * reject reason, or null when the ZIP looks benign OR can't be read (a malformed
- * archive isn't necessarily a bomb — the real parser will reject it safely).
+ * files are ZIPs) advertises its true, absurd expanded size here. The directory is
+ * read the way the inflater reads it (`zipDir.ts`), and a structure the two readings
+ * could disagree on is a refusal, never a silent stop.
  *
  * Exported (and re-exported from the package barrel) because the upload path is not the
  * only door onto an inflater: the renderer's OOXML VIEWER opens a docx/pptx zip of its
@@ -131,54 +127,11 @@ export function checkZipBomb(b: Uint8Array): string | null {
   return zipBombRefusal(b)?.message ?? null;
 }
 
-/** {@link checkZipBomb} with its code: the same decision, one implementation. */
+/** {@link checkZipBomb} with its code: the same decision, one implementation. A ZIP whose
+ *  end-of-central-directory cannot be found passes here — every inflater refuses it on its
+ *  own, and `unzip.ts` (the only door the parsers use) throws on it. */
 function zipBombRefusal(b: Uint8Array): DocumentFailure | null {
-  // Find the End Of Central Directory record (sig 0x06054b50), scanning back
-  // from the tail (it sits within the last 64KiB + 22-byte fixed record).
-  const min = Math.max(0, b.length - (0xffff + 22));
-  let eocd = -1;
-  for (let i = b.length - 22; i >= min; i--) {
-    if (b[i] === 0x50 && b[i + 1] === 0x4b && b[i + 2] === 0x05 && b[i + 3] === 0x06) {
-      eocd = i;
-      break;
-    }
-  }
-  if (eocd < 0) return null; // not a well-formed ZIP → let the parser deal with it
-  const entries = u16le(b, eocd + 10);
-  if (entries > MAX_ZIP_ENTRIES)
-    return { code: "zip_entries", params: { entries }, message: `Suspicious compressed file (${entries} entries) — refused.` };
-  let cd = u32le(b, eocd + 16); // central-directory offset
-  let totalUncompressed = 0;
-  let totalCompressed = 0;
-  for (let n = 0; n < entries; n++) {
-    if (
-      cd + 46 > b.length ||
-      !(b[cd] === 0x50 && b[cd + 1] === 0x4b && b[cd + 2] === 0x01 && b[cd + 3] === 0x02)
-    )
-      break; // truncated/odd → stop, don't reject
-    const comp = u32le(b, cd + 20);
-    const uncomp = u32le(b, cd + 24);
-    totalCompressed += comp;
-    totalUncompressed += uncomp;
-    if (totalUncompressed > MAX_ZIP_TOTAL_BYTES) {
-      return {
-        code: "zip_too_large",
-        message: `Compressed file too large once decompressed — refused (zip-bomb protection).`,
-      };
-    }
-    const nameLen = u16le(b, cd + 28);
-    const extraLen = u16le(b, cd + 30);
-    const commentLen = u16le(b, cd + 32);
-    cd += 46 + nameLen + extraLen + commentLen;
-  }
-  if (
-    totalCompressed > 0 &&
-    totalUncompressed / totalCompressed > MAX_ZIP_RATIO &&
-    totalUncompressed > 10 * 1024 * 1024
-  ) {
-    return { code: "zip_ratio", message: `Abnormal compression ratio — file refused (zip-bomb protection).` };
-  }
-  return null;
+  return readZipDirectory(b).failure;
 }
 
 /**

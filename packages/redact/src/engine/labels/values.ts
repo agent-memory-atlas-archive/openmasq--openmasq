@@ -72,17 +72,19 @@ const LEAD_HONORIFIC =
 /**
  * Beyond the comma, three boundaries end a NAME value, each impossible in a person's name:
  * an opening PARENTHESIS, a SPACE-SURROUNDED DASH (the simple hyphen lives in names), and a
- * token carrying an `@` or 2+ digits. Without them the whole line is ONE NAME value whose
+ * token carrying an `@` or a digit. Without them the whole line is ONE NAME value whose
  * fake rewrites only name words, so the phone/date/email nested in it travels IN CLEAR
- * inside the fake. What gets cut falls back under its OWN detectors. Pinned in
- * `contextFields.test.ts` + `../__cases__/labelledNeighbour.test.ts`.
+ * inside the fake. What gets cut falls back under its OWN detectors. A value that STARTS
+ * with such a token (« Contact: jean.dupont@acme.fr merci ») holds no name at all: nothing
+ * is kept, and the e-mail is the EMAIL detector's. Pinned in `contextFields.test.ts` +
+ * `../__cases__/labelledNeighbour.test.ts`.
  */
-const NAME_FIELD_END = /[(（[]|\s[-–—]\s|\S*@|\d{2}/u;
+const NAME_FIELD_END = /[(（[]|\s[-–—]\s|\S*@|\S*\d/u;
 
 function trimNameValue(v: string): string {
   const head = v.split(",")[0];
   const cut = head.search(NAME_FIELD_END);
-  const kept = cut > 0 ? head.slice(0, cut) : head;
+  const kept = cut > 0 ? head.slice(0, cut) : cut === 0 && /^\S*[@\d]/u.test(head) ? "" : head;
   // The cut leaves a dangling separator (« REBOUR (» → « REBOUR »).
   return kept
     .replace(LEAD_HONORIFIC, "")

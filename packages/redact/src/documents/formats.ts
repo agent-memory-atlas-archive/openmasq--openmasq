@@ -65,7 +65,9 @@ export async function sheetText(bytes: Uint8Array): Promise<string> {
   const { gridToAnnotatedText } = await import("./serialize/tabular");
   // SheetJS is isomorphic → shared here (dynamic import keeps it out of ../index).
   const XLSX: any = await import("xlsx");
-  const wb = XLSX.read(bytes, { type: "array" });
+  const { readWorkbook } = await import("./safety/sheet");
+  // Every `!ref` walked below is bounded by `readWorkbook` (`defval` fills the whole range).
+  const wb = readWorkbook(XLSX, bytes);
   const names: string[] = wb.SheetNames ?? [];
   return names
     .map((sheetName) => {
@@ -81,13 +83,16 @@ export async function sheetText(bytes: Uint8Array): Promise<string> {
     .join("\n\n");
 }
 
+const SLIDE_PART = /^ppt\/slides\/slide\d+\.xml$/;
+
 /** PPTX text: unzip (fflate is isomorphic), read each slide's XML in order and
  *  concatenate the `<a:t>` run text. Pure — no Node/DOM. */
 export async function pptxText(bytes: Uint8Array): Promise<string> {
-  const { unzipSync, strFromU8 } = await import("fflate");
-  const zip = unzipSync(bytes);
+  const { strFromU8 } = await import("fflate");
+  const { safeUnzip } = await import("./safety/unzip");
+  const zip = safeUnzip(bytes, (m) => SLIDE_PART.test(m.name));
   const slides = Object.keys(zip)
-    .filter((k) => /^ppt\/slides\/slide\d+\.xml$/.test(k))
+    .filter((k) => SLIDE_PART.test(k))
     .sort((a, b) => (a.match(/\d+/)?.[0] as any) - (b.match(/\d+/)?.[0] as any));
   return slides
     .map((k) => {

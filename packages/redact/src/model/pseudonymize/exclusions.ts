@@ -3,7 +3,8 @@
  * rewrites the input. Three reasons, and they are not the same reason:
  *
  *   1. the user turned the category off (or numbers)      — `disabledVaultTokens`
- *   2. the value is allow-listed (`keep`)                  — tool routing needs it verbatim
+ *   2. the value is allow-listed (`keep`)                  — tool routing needs it verbatim,
+ *      unless its category is org-mandated (`unrevealable`)
  *   3. the entry is a PATH SEGMENT                         — reverses, but never aliases
  *
  * The third is the subtle one. A path's distinctive segments are vaulted beside the path
@@ -32,6 +33,8 @@ export interface ExclusionOptions {
   /** value → kind of what is known (the caller's `kinds` ⊕ this pass's matches). A segment
    *  that is ALSO an entity of its own (a company folder) keeps its forward alias. */
   kindOf?: ReadonlyMap<string, string>;
+  /** Categories the ORG mandates (`unrevealableCategories`): `keep` never releases them. */
+  unrevealable?: ReadonlySet<string>;
 }
 
 export function forwardExclusions(vault: Vault, o: ExclusionOptions): Set<string> {
@@ -41,8 +44,14 @@ export function forwardExclusions(vault: Vault, o: ExclusionOptions): Set<string
     kinds: o.kinds,
   });
   if (o.keep.size) {
+    // A kept value of an org-MANDATED category stays substituted, as the candidate filter
+    // already decides for a fresh detection. A value of no known kind follows `keep`.
+    const mandated = (value: string) => {
+      const kind = o.kindOf?.get(value);
+      return !!o.unrevealable?.size && kind !== undefined && o.unrevealable.has(redactionCategory(kind));
+    };
     for (const [token, value] of Object.entries(vault)) {
-      if (o.isKept(value, o.keep)) exclude.add(token);
+      if (o.isKept(value, o.keep) && !mandated(value)) exclude.add(token);
     }
   }
   for (const token of pathSegmentAliases(vault)) {

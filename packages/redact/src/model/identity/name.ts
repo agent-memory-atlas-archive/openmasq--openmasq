@@ -7,7 +7,7 @@ import { isStopword, isGenericTerm } from "../detect";
 import { isCountry } from "../../engine/geo/countries";
 import { isParticle } from "../../engine/persons";
 import { capitalize } from "../../util";
-import { seedFrom } from "../fakes/primitives";
+import { rehash, seedFrom } from "../fakes/primitives";
 
 /** Civility/qualifier tokens that TRAIL a name in form and travel layouts ("MARTINEZ/CAROLINE
  *  MME"). Like a particle, such a token must never get its own fake or alias — the alias
@@ -35,6 +35,18 @@ const isWordToken = (t: string) => /^[\p{L}\p{M}][\p{L}\p{M}'’-]+$/u.test(t);
  */
 const isFakeableToken = (t: string) =>
   isWordToken(t) && !isParticle(t) && !TITLE_PARTS.has(t.replace(/[.'’]/g, "").toLowerCase());
+
+/** Every letter and digit of `t` redrawn from `seed` (case and punctuation kept): a function
+ *  of the seed and the position only, never of the real character. */
+function redrawToken(t: string, seed: number): string {
+  let k = 0;
+  return t.replace(/[\p{L}\p{N}]/gu, (c) => {
+    const r = rehash(seed ^ Math.imul(++k, 0x9e3779b1));
+    if (/\p{N}/u.test(c)) return String(r % 10);
+    const l = String.fromCharCode(97 + (r % 26));
+    return /\p{Lu}/u.test(c) ? l.toUpperCase() : l;
+  });
+}
 
 const isNamePart = (t: string) =>
   isWordToken(t) &&
@@ -114,8 +126,14 @@ export function buildFakeName(
         if (cand !== part) return cand;
       }
     }
-    // Verbatim ONLY for what is not the user's data (`isFakeableToken`).
-    if (!isFakeableToken(part)) return part;
+    // Verbatim ONLY for what is not the user's data (`isFakeableToken`) — and never a token
+    // that is not a WORD yet carries letters (« dupont@acme », « Dupont2 »): that is the
+    // user's data in another shape, redrawn character by character (`redrawToken`). A bare
+    // number (« 2024 ») or a lone connective letter (« Maria y Gonzalez ») stays.
+    if (!isFakeableToken(part)) {
+      const verbatim = isWordToken(part) || isParticle(part) || [...part].length < 2 || !/\p{L}/u.test(part);
+      return verbatim ? part : redrawToken(part, h + i * 7);
+    }
     const canon = resolveFake(part); // reuse the person's canonical fake for this word…
     if (canon) {
       usedHere.add(canon.toLowerCase());

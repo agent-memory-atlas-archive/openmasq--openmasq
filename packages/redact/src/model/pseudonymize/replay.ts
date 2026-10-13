@@ -17,6 +17,9 @@ export interface ReplayOptions {
   /** The conversation's pinned mode: token mode has no per-word aliases in the vault, so
    *  a standalone surname of a known person is caught by its own pass. */
   mode?: "fake" | "token";
+  /** Values of a STRUCTURED category substituted even when a letter is glued to them
+   *  (`engine/vault/glue.ts`); digit-bearing values already are without it. */
+  unglued?: (value: string) => boolean;
 }
 
 export function replayForModel(input: string, vault: Vault, o: ReplayOptions = {}): string {
@@ -25,6 +28,6 @@ export function replayForModel(input: string, vault: Vault, o: ReplayOptions = {
   // ⚠️ The variant pass gets NO url guard on purpose: a slugified real value inside a URL is
   // the user's data wearing a URL's clothes. Only the EXACT spelling is spared, which is
   // what the structural parts of a link (host, id, query flag) actually are.
-  const replayed = applyVaultVariants(applyVault(input, vault, o.exclude, o.urlGuard), vault, o.exclude);
+  const replayed = applyVaultVariants(applyVault(input, vault, o.exclude, o.urlGuard, o.unglued), vault, o.exclude);
   return o.mode === "token" ? applyTokenFragments(replayed, vault, o.exclude ?? new Set()) : replayed;
 }

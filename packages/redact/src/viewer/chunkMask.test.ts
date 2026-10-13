@@ -104,3 +104,18 @@ describe("createChunkMasker — masking as the text is read", () => {
     expect(calls).toBeLessThanOrEqual(40);
   });
 });
+
+describe("the conversation's seed reaches every chunk", () => {
+  it("each call of a multi-chunk run gets the SAME salt/key/mode the caller gave", async () => {
+    const seeds: unknown[] = [];
+    const redact: RedactFn = async (text, _s, _v, _c, seed) => {
+      seeds.push(seed);
+      return { text, matches: [] };
+    };
+    const convSeed = { salt: 9, key: "cd".repeat(32), mode: "fake" as const };
+    const filler = "lorem ipsum ".repeat(700);
+    await pdfReplacements(`${filler}\n${filler}`, redact, { convSeed });
+    expect(seeds.length).toBeGreaterThan(1);
+    for (const s of seeds) expect(s).toEqual(convSeed);
+  });
+});

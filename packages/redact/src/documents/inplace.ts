@@ -9,8 +9,11 @@
 // across runs), PPTX (same best-effort across every slide/notes part). PDF /
 // images / unknown binaries are BLOCKED (can't be redacted faithfully in the
 // browser) — callers should refuse the upload.
-import * as XLSX from "xlsx";
-import { unzipSync, zipSync, strToU8, strFromU8 } from "fflate";
+import { zipSync, strToU8, strFromU8 } from "fflate";
+import { DocumentError } from "./errors";
+import { guardUploadRefusal } from "./safety/guard";
+import { safeUnzip } from "./safety/unzip";
+import { redactSheet } from "./inplaceSheet";
 
 /** Scrub plain text → redacted text + the value→placeholder pairs applied (the
  *  pairs let us replace values inside structured XML like DOCX). Injected so the
@@ -47,7 +50,8 @@ function extOf(name: string): string {
 /**
  * Redact a file's text content while keeping its format. Returns the rewritten
  * bytes. Throws {@link BlockedUploadError} for formats that can't be redacted in
- * place (PDF/images/unknown) so the caller can refuse the upload.
+ * place (PDF/images/unknown) so the caller can refuse the upload, and `DocumentError` for
+ * bytes the pre-parse gate or the bounded readers refuse.
  */
 export function redactFileInPlace(
   name: string,
@@ -56,6 +60,10 @@ export function redactFileInPlace(
   scrub: Scrub,
 ): RedactedFile {
   const ext = extOf(name);
+  // The same pre-parse gate as extraction (size, type contradiction, zip bomb): what was
+  // refused there is never handed to a parser here either.
+  const unsafe = guardUploadRefusal(bytes, ext);
+  if (unsafe) throw new DocumentError(unsafe.code, unsafe.message, unsafe.params);
   if (TEXT_EXT.has(ext) || ext === "") {
     const { text } = scrub(strFromU8(bytes));
     return { name, type: type || "text/plain", bytes: strToU8(text) };
@@ -64,71 +72,6 @@ export function redactFileInPlace(
   if (ext === ".docx") return redactDocx(name, bytes, type, scrub);
   if (ext === ".pptx") return redactPptx(name, bytes, type, scrub);
   throw new BlockedUploadError(ext.slice(1) || "file");
-}
-
-/** Scrub a free-text string field, passing anything else through untouched. */
-function scrubStr(scrub: Scrub, v: unknown): unknown {
-  return typeof v === "string" && v ? scrub(v).text : v;
-}
-
-function redactSheet(name: string, bytes: Uint8Array, type: string, scrub: Scrub): RedactedFile {
-  const wb = XLSX.read(bytes, { type: "array" });
-  // Metadata OUTSIDE the cells (audit): document Props (Author / LastAuthor /
-  // Company / Manager…) and defined-name comments round-trip through SheetJS into
-  // the saved "redacted" bytes — the DOCX path scrubs docProps for the same
-  // reason. A defined name's NAME itself is left as-is (renaming breaks every
-  // formula referencing it) — an accepted, documented residual.
-  if (wb.Props) {
-    for (const k of Object.keys(wb.Props)) {
-      (wb.Props as Record<string, unknown>)[k] = scrubStr(scrub, (wb.Props as Record<string, unknown>)[k]);
-    }
-  }
-  for (const n of wb.Workbook?.Names ?? []) {
-    if (typeof n.Comment === "string") n.Comment = scrub(n.Comment).text;
-  }
-  for (const sheet of wb.SheetNames) {
-    const ws = wb.Sheets[sheet];
-    for (const addr of Object.keys(ws)) {
-      if (addr[0] === "!") continue; // skip !ref / !merges metadata
-      const cell = ws[addr];
-      if (!cell) continue;
-      // Cell COMMENTS (threaded/legacy) carry free text + an author name the value
-      // loop below never touches — scrub both (a comment can sit on an empty cell).
-      if (Array.isArray(cell.c)) {
-        for (const cm of cell.c) {
-          if (typeof cm.t === "string") cm.t = scrub(cm.t).text;
-          if (typeof cm.a === "string") cm.a = scrub(cm.a).text;
-        }
-      }
-      if (cell.v == null) continue;
-      if (typeof cell.v === "string" && cell.v) {
-        cell.v = scrub(cell.v).text;
-        if (typeof cell.w === "string") delete cell.w; // drop cached display text
-      } else if (cell.t === "n" || cell.t === "d") {
-        // Audit F1/H2 (in-place): the model reads the FORMATTED string (`cell.w`, raw:false),
-        // so a phone/account/ID stored as a NUMERIC or DATE cell ships redacted to the model
-        // but stays REAL in the saved "redacted" bytes (the string branch never touched it).
-        // Scrub its display form; when a value is masked, downgrade the cell to a text
-        // placeholder so the underlying number/date can't leak.
-        const disp = typeof cell.w === "string" ? cell.w : String(cell.v);
-        const scrubbed = scrub(disp).text;
-        if (scrubbed !== disp) {
-          cell.t = "s";
-          cell.v = scrubbed;
-          delete cell.w; // cached display
-          delete cell.z; // number/date format code (no longer numeric)
-        }
-      }
-    }
-  }
-  const out = XLSX.write(wb, { type: "array", bookType: "xlsx" });
-  return {
-    name,
-    type:
-      type ||
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    bytes: out instanceof Uint8Array ? out : new Uint8Array(out as ArrayBuffer),
-  };
 }
 
 // docProps/core.xml (author = `dc:creator`/`cp:lastModifiedBy`) + app.xml (company/manager)
@@ -156,7 +99,9 @@ function redactOoxml(
   isTextPart: (name: string) => boolean,
   scrub: Scrub,
 ): RedactedFile {
-  const zip = unzipSync(bytes);
+  // Every member is re-zipped, so every member is inflated — each one capped at its
+  // declared size, the whole at `MAX_ZIP_TOTAL_BYTES` (`safety/unzip.ts`).
+  const zip = safeUnzip(bytes);
   const parts = Object.keys(zip).filter(isTextPart);
   if (parts.length) {
     const visible = parts.map((p) => strFromU8(zip[p]).replace(/<[^>]+>/g, " ")).join(" ");

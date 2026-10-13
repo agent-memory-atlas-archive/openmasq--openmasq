@@ -10,7 +10,9 @@
 // fallback (which made the chat show red where the composer showed blue).
 import type { RedactionCategory, RedactionSegment, RedactionTone, Vault } from "../types";
 import { redactionCategory } from "../kinds";
-import { escapeRegExp, isWordGlued } from "../util";
+import { escapeRegExp } from "../util";
+// The forward pass's own glue rule, so a mark is painted exactly where a value was substituted.
+import { isStructuredValue, staysGlued } from "../engine/vault/glue";
 import { redact } from "../engine/redact";
 
 import { CATEGORY_SECTION, SECTION_HUE } from "./sections";
@@ -179,11 +181,11 @@ export function segmentsWith(
   while ((m = re.exec(text))) {
     // A short value ("us"/"ca") that is merely a SUBSTRING inside a real word
     // ("because"/"Canva") is NOT a redaction — skip it (stays part of the text).
-    if (isWordGlued(text, m.index, m[0])) continue;
+    const placeholder = valueToPlaceholder.get(m[0]) ?? "";
+    if (staysGlued(text, m.index, m[0], isStructuredValue(m[0]) && !/^n\d+$/.test(placeholder))) continue;
     if (m.index > i) {
       segments.push({ kind: "text", value: text.slice(i, m.index) });
     }
-    const placeholder = valueToPlaceholder.get(m[0]) ?? "";
     const exact = kinds?.[m[0]];
     const { label, tone } = exact
       ? { label: exact, tone: toneForKind(exact) }
@@ -218,7 +220,7 @@ export function wireSegments(
   let i = 0;
   let m: RegExpExecArray | null;
   while ((m = re.exec(text))) {
-    if (isWordGlued(text, m.index, m[0])) continue;
+    if (staysGlued(text, m.index, m[0], isStructuredValue(m[0]) && !/^n\d+$/.test(m[0]))) continue;
     if (m.index > i) segments.push({ kind: "text", value: text.slice(i, m.index) });
     const key = m[0];
     const exact = kinds?.[vault[key]];

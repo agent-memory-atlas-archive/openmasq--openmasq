@@ -155,6 +155,9 @@ export {
   type Sniffed,
   type SniffFamily,
 } from "./documents/safety/guard";
+// The ONE door into a ZIP for every consumer that inflates one (the desktop's Word tools
+// included): the directory the guard validated, each member capped at its declared size.
+export { safeUnzip, type ZipMemberInfo } from "./documents/safety/unzip";
 // How long a document may be and still be masked IN FULL (the drop-time chip, the
 // pre-OCR refusal), and how long its extraction may run.
 export {

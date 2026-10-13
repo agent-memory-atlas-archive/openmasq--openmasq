@@ -19,6 +19,7 @@ import {
 import { DEFAULT_OCR_MARKERS, type OcrMarkers } from "./ocrMarkers";
 import { pdfPagesRefusal, rasterScale } from "./safety/guard";
 import { reconstructPageText } from "./serialize/pdfLayout";
+import { canonicalZip } from "./safety/unzip";
 
 export { SUPPORTED_EXTENSIONS, OCR_LANGS, OCR_TRAINEDDATA_SHA256, hybridLayerText, spatialFieldLines } from "./core";
 // Send-cut → grid-row mapping for the preview grid (same parser/serializer as extraction).
@@ -28,6 +29,8 @@ export type { ExtractedFile, RedactedDocument, TextLayerPage, OcrLayerPage, Laye
 export { pageOffsets, streamedPrefix, STREAM_MAX_PAGES, THUMB_MAX_WIDTH_PX, PAGE_BREAK } from "./core";
 export type { ExtractStreamEvent, PageEvent } from "./core";
 export type { DocumentErrorCode, DocumentErrorParams } from "./core";
+// The ONE bounded way to open a workbook (the preview grid included): `safety/sheet.ts`.
+export { readWorkbook } from "./safety/sheet";
 
 export interface BrowserExtractConfig {
   /** URL of the bundled pdf.js worker (Vite `?url` / chrome.runtime.getURL). */
@@ -151,7 +154,9 @@ async function ocrPdf(
 async function docxText(bytes: Uint8Array): Promise<string> {
   const mod: any = await import("mammoth");
   const mammoth = mod.default ?? mod;
-  const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+  // JSZip (mammoth's unzipper) inflates without a size bound: it gets the canonical copy.
+  const zip = canonicalZip(bytes);
+  const arrayBuffer = zip.buffer.slice(zip.byteOffset, zip.byteOffset + zip.byteLength);
   const { value } = await mammoth.extractRawText({ arrayBuffer });
   return String(value ?? "");
 }

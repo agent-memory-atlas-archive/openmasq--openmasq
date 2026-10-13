@@ -12,6 +12,7 @@ import {
   variantOccurrences,
 } from "../../util";
 import type { UrlOccurrenceGuard } from "../urls";
+import { isStructuredValue, staysGlued } from "./glue";
 
 /**
  * Reverse a redaction: replace every known token (bracket placeholder, fake
@@ -40,7 +41,11 @@ export function unredact(input: string, vault: Vault): string {
   // a filename or URL ("oslen-group"), which a space-only match never reverses. Any run of
   // whitespace / `-` / `_` between a token's words is one separator, in the pattern and the key.
   const collapse = (s: string) => s.replace(/[\s_-]+/g, " ");
+  // Two tokens differing only by their separators (« Jean-Basile » / « Jean Basile ») that
+  // restore to two DIFFERENT reals make that collapsed key AMBIGUOUS: only an exact key
+  // restores through it, never the separator-tolerant fallback, which would pick one of them.
   const byCollapsed = new Map<string, string>();
+  const ambiguousCollapsed = new Set<string>();
   // CASE-INSENSITIVE fallback map: models UPPER-CASE a fake in formal output, and a
   // case-sensitive reverse leaves the fake or a hybrid. First (longest-first) wins on a
   // collision, which can only be a casing difference of the SAME identity.
@@ -55,7 +60,9 @@ export function unredact(input: string, vault: Vault): string {
   const byFolded = new Map<string, { value: string; risky: boolean; ambiguous?: boolean }>();
   for (const t of tokens) {
     const c = collapse(t);
-    byCollapsed.set(c, vault[t]);
+    const priorC = byCollapsed.get(c);
+    if (priorC === undefined) byCollapsed.set(c, vault[t]);
+    else if (collapse(priorC).toLowerCase() !== collapse(vault[t]).toLowerCase()) ambiguousCollapsed.add(c);
     const cf = foldAccents(c).toLowerCase();
     const priorF = byFolded.get(cf);
     if (!priorF) byFolded.set(cf, { value: vault[t], risky: isRisky(c) });
@@ -93,9 +100,10 @@ export function unredact(input: string, vault: Vault): string {
   // original: exact-case first (keeps the precise mapping), then case-insensitive —
   // EXCEPT a risky token, which requires the exact case (never the `gi` fallback).
   const restored = input.replace(re, (m, offset: number) => {
-    if (isWordGlued(input, offset, m)) return m;
+    // Symmetric with `applyVault`: a STRUCTURED fake glued to a letter is restored (`glue.ts`).
+    if (staysGlued(input, offset, m, isStructuredValue(m) && !/^n\d+$/i.test(m))) return m;
     const c = collapse(m);
-    const exact = byCollapsed.get(c) ?? vault[m];
+    const exact = vault[m] ?? (ambiguousCollapsed.has(c) ? undefined : byCollapsed.get(c));
     if (exact !== undefined) return exact;
     const lower = byLower.get(c.toLowerCase());
     // risky OR ambiguous (a case-only collision between two DIFFERENT reals) ⇒ never
@@ -134,6 +142,7 @@ export function applyVault(
   vault: Vault,
   exclude?: Set<string>,
   urlGuard?: UrlOccurrenceGuard,
+  unglued?: (value: string) => boolean,
 ): string {
   let entries = Object.entries(vault).filter(([, v]) => v.length > 0);
   if (exclude && exclude.size) entries = entries.filter(([t]) => !exclude.has(t));
@@ -145,13 +154,14 @@ export function applyVault(
     entries.map(([, value]) => escapeRegExp(value)).join("|"),
     "g",
   );
-  // Whole-word-aware: never swap a value that is merely a SUBSTRING inside a real
-  // word — replacing a 2-char entity ("us"/"ca") must not corrupt "plus"/"Canva".
-  return input.replace(re, (m, offset: number) =>
-    isWordGlued(input, offset, m) || urlGuard?.(offset, m.length, m)
-      ? m
-      : valueToToken.get(m) ?? m,
-  );
+  // Whole-word-aware: never swap a value that is merely a SUBSTRING inside a real word —
+  // replacing a 2-char entity ("us"/"ca") must not corrupt "plus"/"Canva". A STRUCTURED
+  // value (`glue.ts`) is substituted even with a letter glued to it.
+  return input.replace(re, (m, offset: number) => {
+    const token = valueToToken.get(m);
+    const structured = !!token && !/^n\d+$/.test(token) && (isStructuredValue(m) || !!unglued?.(m));
+    return staysGlued(input, offset, m, structured) || urlGuard?.(offset, m.length, m) ? m : token ?? m;
+  });
 }
 
 /**
@@ -212,9 +222,10 @@ export function replayVault(input: string, vault: Vault, urlGuard?: UrlOccurrenc
  * substitute the spelling VARIANTS of every vaulted value — "KARL_STUDIO" in a filename,
  * "karl-studio" in a slug, an UPPER-CASED heading — with the entry's existing token.
  * `applyVault` is exact by design; alone, it shipped a vaulted company in CLEAR whenever
- * a tool result spelled it with underscores. Guards against prose corruption: variant
- * matching refuses a lone token < 4 chars and any digit-carrying token
- * (`variantOccurrences`), and a SINGLE-word value additionally requires the occurrence
+ * a tool result spelled it with underscores. Matching is LOOSE (`variantOccurrences`):
+ * accents and NFD fold (« helene cortes » is « Hélène Cortes »), a digit-bearing value
+ * varies by its spaces only. Guards against prose corruption: a lone token < 4 chars is
+ * refused, and a SINGLE-word value additionally requires the occurrence
  * to carry an uppercase letter — a "Marie" alias must never swallow "se marie", while
  * "PENNYLANE" still maps. Multi-word values substitute at full tolerance (an ordered
  * multi-token collision in prose IS the entity). Pinned by `vault.test.ts`.
@@ -226,9 +237,11 @@ export function applyVaultVariants(input: string, vault: Vault, exclude?: Set<st
     .sort((a, b) => b[1].length - a[1].length);
   for (const [token, value] of entries) {
     const singleWord = value.split(/[\s._-]+/).filter(Boolean).length <= 1;
-    for (const occ of variantOccurrences(out, value)) {
+    for (const occ of variantOccurrences(out, value, true)) {
       if (occ === value) continue; // the exact spelling was already applyVault'ed
-      if (singleWord && !/\p{Lu}/u.test(occ)) continue; // lowercase prose stays prose
+      // Lowercase prose stays prose — unless the vaulted spelling is itself lowercase (a name
+      // part's lowercase alias): that word is already substituted, its accent variants too.
+      if (singleWord && !/\p{Lu}/u.test(occ) && /\p{Lu}/u.test(value)) continue;
       out = replaceStandalone(out, occ, token);
     }
   }

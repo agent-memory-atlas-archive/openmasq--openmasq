@@ -33,7 +33,17 @@ export type RedactFn = (
   signal?: AbortSignal,
   vault?: Record<string, string>,
   convCategories?: Record<string, boolean>,
+  convSeed?: ConvSeed,
 ) => Promise<RedactionResult>;
+
+/** The conversation's fake-mapping SEED (its salt and key) and pinned wire mode. A masking
+ *  whose map a send REUSES must be seeded: unseeded, the fakes follow the public mapping
+ *  (salt 0, no key), which a table precomputed over the pools reverses. */
+export interface ConvSeed {
+  salt?: number;
+  key?: string;
+  mode?: "fake" | "token";
+}
 
 /** A value longer than this never occurs — so an OVERLAP this wide guarantees any PII
  *  value straddling a chunk boundary is wholly contained in the NEXT chunk. */
@@ -108,7 +118,7 @@ export const DIVERGED = "document text changed during masking";
 
 export function createChunkMasker(
   redact: RedactFn,
-  opts?: { vault?: Record<string, string>; convCategories?: Record<string, boolean> },
+  opts?: { vault?: Record<string, string>; convCategories?: Record<string, boolean>; convSeed?: ConvSeed },
 ): ChunkMasker {
   // ONE vault threaded across every chunk → fakes are atomic AND collision-free.
   const vault: Record<string, string> = opts?.vault ?? {};
@@ -155,7 +165,7 @@ export function createChunkMasker(
       const end = next >= text.length ? (final ? text.length : null) : chunkEnd(text, next, final);
       if (end === null) return;
       if (end > next) {
-        const res = await redact(text.slice(next, end), o.signal, vault, opts?.convCategories);
+        const res = await redact(text.slice(next, end), o.signal, vault, opts?.convCategories, opts?.convSeed);
         if (res.modelError) modelError = res.modelError;
         for (const m of res.matches) {
           if (!m.value || seen.has(m.value)) continue;
@@ -215,10 +225,11 @@ export async function pdfReplacements(
     onProgress?: (done: number, total: number, partial: PartialMask) => void;
     convCategories?: Record<string, boolean>;
     vault?: Record<string, string>;
+    convSeed?: ConvSeed;
   },
 ): Promise<{ replacements: PdfReplacement[]; modelError?: string }> {
   if (!text.trim()) return { replacements: [] };
-  const masker = createChunkMasker(redact, { vault: opts?.vault, convCategories: opts?.convCategories });
+  const masker = createChunkMasker(redact, opts);
   await masker.advance(text, { final: true, signal: opts?.signal, onProgress: opts?.onProgress });
   return masker.result();
 }

@@ -46,10 +46,10 @@ const eq = (b: Uint8Array, off: number, sig: readonly number[]): boolean => {
   return true;
 };
 const u16be = (b: Uint8Array, o: number) => (b[o] << 8) | b[o + 1];
-export const u16le = (b: Uint8Array, o: number) => b[o] | (b[o + 1] << 8);
+const u16le = (b: Uint8Array, o: number) => b[o] | (b[o + 1] << 8);
 const u32be = (b: Uint8Array, o: number) =>
   b[o] * 0x1000000 + (b[o + 1] << 16) + (b[o + 2] << 8) + b[o + 3];
-export const u32le = (b: Uint8Array, o: number) =>
+const u32le = (b: Uint8Array, o: number) =>
   b[o] + (b[o + 1] << 8) + (b[o + 2] << 16) + b[o + 3] * 0x1000000;
 
 /** JPEG width/height: walk the marker segments to the first Start-Of-Frame. */

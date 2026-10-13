@@ -159,12 +159,34 @@ export function entityKey(value: string): string {
  *  case-insensitively, bounded to whole words (unicode-aware). Returns null for a value
  *  not safe to fuzzy-match — a LONE token < 4 chars, or any token carrying a digit —
  *  which would over-match generic short words. Fixed-literal-anchored ⇒ linear time,
- *  no catastrophic backtracking. */
-export function entityVariantRegex(value: string): RegExp | null {
-  const tokens = value.split(/[\s._-]+/).filter(Boolean);
+ *  no catastrophic backtracking. `loose` (the redaction passes) also folds accents and NFD,
+ *  and accepts a digit-bearing value through its spaces only (`digitVariantRegex`). */
+export function entityVariantRegex(value: string, loose = false): RegExp | null {
+  if (loose && /\d/.test(value)) return digitVariantRegex(value);
+  const tokens = (loose ? value.normalize("NFC") : value).split(/[\s._-]+/).filter(Boolean);
   if (!tokens.length || tokens.some((t) => /\d/.test(t))) return null;
   if (tokens.length === 1 && tokens[0].length < 4) return null;
-  const body = tokens.map(escapeRegExp).join("[\\s._-]*");
+  const body = tokens.map((t) => (loose ? foldedSource(t) : escapeRegExp(t))).join("[\\s._-]*");
+  return new RegExp(`(?<![\\p{L}\\p{N}])(?:${body})(?![\\p{L}\\p{N}])`, "giu");
+}
+
+/** LOOSE form of a word: every letter accepts its accented variants and a trailing run of
+ *  combining marks, so « helene », « Hélène » and its NFD spelling are one value. */
+function foldedSource(token: string): string {
+  let out = "";
+  for (const ch of token) {
+    out += /\p{L}/u.test(ch) ? `${accentTolerantSource(escapeRegExp(ch))}\\p{M}*` : escapeRegExp(ch);
+  }
+  return out;
+}
+
+/** LOOSE form of a DIGIT-bearing value: only its SPACES are tolerant (any run of spaces,
+ *  NBSP included, or none — « AB12 3456 CD » / « AB123456CD »). A dot or a hyphen is part of
+ *  its shape (an IP, a date). Needs 2+ space-separated groups and 6+ alphanumerics. */
+function digitVariantRegex(value: string): RegExp | null {
+  const groups = value.trim().split(/\s+/);
+  if (groups.length < 2 || value.replace(/[^\p{L}\p{N}]/gu, "").length < 6) return null;
+  const body = groups.map(escapeRegExp).join("[\\s\\u00A0\\u202F]*");
   return new RegExp(`(?<![\\p{L}\\p{N}])(?:${body})(?![\\p{L}\\p{N}])`, "giu");
 }
 
@@ -172,20 +194,17 @@ export function entityVariantRegex(value: string): RegExp | null {
  * Every DISTINCT substring of `input` equal to `value` ignoring case, returned
  * with the text's REAL casing. So a name/city the model reported in normal case
  * ("Jean Morvan") still matches an UPPERCASE occurrence ("JEAN MORVAN") and we
- * redact the actual text. Falls back to an exact match when lowercasing would
- * shift indices (rare unicode), so the slices never misalign.
+ * redact the actual text. Lowercased with lengths kept (`lowerSameLength`), so the
+ * slices never misalign.
  */
 // The lowercased haystack of the LAST input: every candidate of one pass searches the same
 // text, and re-lowercasing a 200k-character paste per candidate dominated the send.
 let lowerOf: { input: string; hay: string } | null = null;
 
 export function caseInsensitiveOccurrences(input: string, value: string): string[] {
-  if (lowerOf?.input !== input) lowerOf = { input, hay: input.toLowerCase() };
+  if (lowerOf?.input !== input) lowerOf = { input, hay: lowerSameLength(input) };
   const hay = lowerOf.hay;
-  const needle = value.toLowerCase();
-  if (hay.length !== input.length || needle.length !== value.length) {
-    return input.includes(value) ? [value] : [];
-  }
+  const needle = lowerSameLength(value);
   const out: string[] = [];
   const seen = new Set<string>();
   let next = 0;
@@ -206,6 +225,20 @@ export function caseInsensitiveOccurrences(input: string, value: string): string
   return out;
 }
 
+/** `s` lowercased with its LENGTH kept, so an index in it is an index in `s`: a character
+ *  whose lowercase is longer (« İ » → « i̇ ») stays as it is, and only that character loses
+ *  the case-insensitive match — never the rest of the text. */
+function lowerSameLength(s: string): string {
+  const whole = s.toLowerCase();
+  if (whole.length === s.length) return whole;
+  let out = "";
+  for (const ch of s) {
+    const l = ch.toLowerCase();
+    out += l.length === ch.length ? l : ch;
+  }
+  return out;
+}
+
 /** Every DISTINCT whole-word substring of `input` that is a spelling variant of `value`
  *  — casing, spacing, hyphen/underscore, or glued — with the text's REAL characters.
  *  A superset of {@link caseInsensitiveOccurrences}, onto which it FALLS BACK when the
@@ -215,8 +248,8 @@ export function caseInsensitiveOccurrences(input: string, value: string): string
  *  `entityVariantRegex` refuses (a DIGIT, « ACME2024 »; a lone word under 4 letters), and
  *  the Vault promises "always redacted" — « acme2024 » must still be recognised, or the
  *  browser clear mode's fail-closed escalation (`agent/navClearRedact.ts`) is missed. */
-export function variantOccurrences(input: string, value: string): string[] {
-  const re = entityVariantRegex(value);
+export function variantOccurrences(input: string, value: string, loose = false): string[] {
+  const re = entityVariantRegex(value, loose);
   if (!re) return caseInsensitiveOccurrences(input, value);
   const out: string[] = [];
   const seen = new Set<string>();

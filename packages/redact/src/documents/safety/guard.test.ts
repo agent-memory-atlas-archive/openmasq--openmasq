@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { strToU8, zipSync } from "fflate";
 import {
   sniff,
   guardUpload,
@@ -106,7 +107,8 @@ describe("guardUpload — reject decisions", () => {
   });
 
   it("allows a normal small ZIP (docx) below the bomb thresholds", () => {
-    expect(guardUpload(zipDeclaring(50_000, 20_000), ".docx")).toBeNull();
+    const docx = zipSync({ "word/document.xml": strToU8("<w:document>" + "x".repeat(50_000) + "</w:document>") });
+    expect(guardUpload(docx, ".docx")).toBeNull();
   });
 
   it("allows images mislabelled between each other (png bytes as .jpg)", () => {

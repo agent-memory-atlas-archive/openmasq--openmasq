@@ -79,7 +79,7 @@ export function expandVariants(input: string, candidates: Detection[]): Detectio
   const extra: Detection[] = [];
   for (const c of candidates) {
     if (c.forced || !ENTITY_CATS.has(redactionCategory(c.category))) continue;
-    for (const occ of variantOccurrences(input, c.value)) {
+    for (const occ of variantOccurrences(input, c.value, true)) {
       if (occ !== c.value && !seenVals.has(occ)) {
         seenVals.add(occ);
         extra.push({ ...c, value: occ });

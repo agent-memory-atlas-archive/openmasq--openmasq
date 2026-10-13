@@ -27,6 +27,11 @@ export { spatialFieldLines } from "./layers/spatialFields";
 export { delimitedGrid, annotatedCutRow } from "./serialize/tabular";
 export type { TextLayerPage, OcrLayerPage } from "./layers/geometry";
 export type { DocumentErrorCode, DocumentErrorParams } from "./errors";
+
+/** The thrown refusals that keep the file OUT (`blocked`), as the pre-parse gate's do. */
+const REFUSAL_CODES: ReadonlySet<DocumentErrorCode> = new Set<DocumentErrorCode>([
+  "pdf_too_many_pages", "too_long_to_mask", "zip_entries", "zip_too_large", "zip_ratio",
+]);
 export { DEFAULT_OCR_MARKERS, type OcrMarkers } from "./ocrMarkers";
 export * from "./pageStream";
 
@@ -256,8 +261,9 @@ export async function extractFromBytes(
       error: `Unsupported file type: ${ext || "(none)"}`, errorCode: "unsupported_type", errorParams: { ext },
     };
   } catch (e) {
-    // The page-count refusal keeps its code (the caller words it) and `blocked` keeps the file out.
-    if (e instanceof DocumentError && e.code === "pdf_too_many_pages") return { name, kind: ext.slice(1) || "file", text: "", chars: 0, mime, error: e.message, errorCode: e.code, errorParams: e.params, blocked: true };
+    // A refusal (page count, a zip or sheet past its bounds) keeps its code (the caller words
+    // it) and `blocked` keeps the file out.
+    if (e instanceof DocumentError && REFUSAL_CODES.has(e.code)) return { name, kind: ext.slice(1) || "file", text: "", chars: 0, mime, error: e.message, errorCode: e.code, errorParams: e.params, blocked: true };
     return { name, kind: "file", text: "", chars: 0, mime, error: msg(e) };
   }
 }

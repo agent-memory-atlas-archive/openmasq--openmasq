@@ -11,6 +11,7 @@ import { longestValidPrefix } from "./validators";
 import { makeAllocator } from "./allocator";
 import { detectPhones } from "./phones";
 import { detectHostedUrlSpans, detectUrlSpans, occursOutsideUrl } from "./urls";
+import { originalSlice, textSkeleton } from "../textSkeleton";
 
 /**
  * Redact sensitive data from `input`. With a {@link Vault}, placeholders are
@@ -85,6 +86,49 @@ export function redact(
   const inUrlOnly = (v: string): boolean =>
     urlSpans !== null && !occursOutsideUrl(v, input, urlSpans);
   const datesOn = datesEnabled(options.disabledKinds);
+  // 2b) The same rules and phones on the SKELETON (`../textSkeleton.ts`) when the input wears
+  //    a disguise — an invisible character inside a value, fullwidth or other-script digits,
+  //    NFD accents. A hit is the ORIGINAL slice it covers. A DISGUISED hit is substituted
+  //    BEFORE the plain pass (which would claim its undisguised tail and leave the rest in
+  //    clear), a plain one AFTER it, where still in clear (its context was the disguise);
+  //    the gates of the plain pass (category, keep, URL, checksum) apply to both.
+  const sk = textSkeleton(input);
+  const hits: { type: RedactionType; value: string; disguised: boolean }[] = [];
+  if (sk) {
+    for (const rule of RULES) {
+      if (rule.type === "date" && !datesOn) continue;
+      if (disabled.has(redactionCategory(rule.type))) continue;
+      const probe = (rule.pattern as { probe?: RegExp }).probe;
+      if (probe && !probe.test(sk.text)) continue;
+      for (const m of sk.text.matchAll(rule.pattern)) {
+        let val = m[0];
+        if (rule.validate && !rule.validate(val)) val = longestValidPrefix(val, rule.validate) ?? "";
+        if (!val) continue;
+        const at = m.index ?? 0;
+        const value = originalSlice(sk, input, at, at + val.length);
+        hits.push({ type: rule.type, value, disguised: value !== val });
+      }
+    }
+    if (!disabled.has("phone")) {
+      for (const p of detectPhones(sk.text)) {
+        for (let at = sk.text.indexOf(p.value); at >= 0; at = sk.text.indexOf(p.value, at + 1)) {
+          const value = originalSlice(sk, input, at, at + p.value.length);
+          hits.push({ type: "phone", value, disguised: value !== p.value });
+        }
+      }
+    }
+    hits.sort((a, b) => b.value.length - a.value.length);
+  }
+  const applySkeleton = (disguised: boolean) => {
+    for (const h of hits) {
+      if (h.disguised !== disguised || !text.includes(h.value)) continue;
+      const credential = URL_EXEMPT_KINDS.has(redactionCategory(h.type));
+      if (isKept(h.value, keep) || (!credential && inUrlOnly(h.value))) continue;
+      text = text.split(h.value).join(ensure(h.type, h.value));
+    }
+  };
+  applySkeleton(true);
+
   for (const rule of RULES) {
     if (rule.type === "date" && !datesOn) continue;
     const cat = redactionCategory(rule.type);
@@ -120,6 +164,7 @@ export function redact(
     }
   }
 
+  applySkeleton(false);
   return { text, matches };
 }
 

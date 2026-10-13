@@ -1,8 +1,9 @@
 // The Gemini wire (`/v1beta/models/<model>:generateContent`, `:streamGenerateContent`). OUT:
-// `systemInstruction` and every `contents[].parts[]` the model reads — text, and the
-// `functionResponse` a tool returned. A `functionCall` already in the history (the model's
-// own earlier request, executed on real values) is masked too. BACK: text parts restored for
-// the reader, `functionCall.args` for the executor.
+// `systemInstruction` and every `contents[].parts[]` the model reads — text, the
+// `functionResponse` a tool returned, and code execution (the code, and what it printed).
+// A `functionCall` already in the history (the model's own earlier request, executed on real
+// values) is masked too. BACK: text parts restored for the reader, `functionCall.args` for
+// the executor.
 import { isRecord, mapStrings, mapStringsSync } from "../../lib/json.js";
 import type { MaskFn, RestoreFns } from "../openai/wire.js";
 
@@ -28,7 +29,20 @@ async function maskParts(parts: unknown, mask: MaskFn): Promise<unknown> {
         ...p,
         functionCall: { ...p.functionCall, args: await mapStrings(p.functionCall.args, mask) },
       });
-    else out.push(p); // inlineData, fileData: bytes, not text — see README « Limits »
+    else if (isRecord(p.executableCode) && typeof p.executableCode.code === "string")
+      out.push({
+        ...p,
+        executableCode: { ...p.executableCode, code: await mask(p.executableCode.code) },
+      });
+    else if (isRecord(p.codeExecutionResult) && typeof p.codeExecutionResult.output === "string")
+      out.push({
+        ...p,
+        codeExecutionResult: {
+          ...p.codeExecutionResult,
+          output: await mask(p.codeExecutionResult.output),
+        },
+      });
+    else out.push(p); // inlineData, fileData: bytes or a reference — see README « Security »
   }
   return out;
 }

@@ -9,7 +9,13 @@
 //     3. the real MCP server runs, with the credential the agent never saw
 //     4. mask(result)  real ──▶ fake         (the shared vault grows)
 //   agent ◀──result carrying fakes───────────┘
-import { mapStrings, RedactingMcpClient, type McpTool, type McpToolResult } from "@openmasq/mcp";
+import {
+  mapStrings,
+  RedactingMcpClient,
+  redactError,
+  type McpTool,
+  type McpToolResult,
+} from "@openmasq/mcp";
 import type { RedactionMatch, Vault } from "@openmasq/redact";
 import type { Masker } from "../../lib/masker.js";
 import type { ConfirmFn } from "./gate.js";
@@ -63,49 +69,68 @@ export function createBridge(deps: BridgeDeps): McpBridge {
     listTools: () => deps.upstream.tools(),
 
     async callTool(name, args, session) {
-      const tools = await deps.upstream.tools();
-      const matches: RedactionMatch[] = [];
-
-      // Restore first, so the human confirms what the server will actually receive — not a
-      // masked shadow of it. `unredactArgs` is idempotent, so the client's own arg leg
-      // below is a no-op on an already-restored string.
-      const realArgs = (await mapStrings(
-        args as Record<string, never>,
-        (text, vault) => deps.masker.restoreArgs(text, vault),
-        session.vault,
-      )) as Record<string, unknown>;
-
-      // The server's own policy, when it has one: its results through ITS masker, its writes
-      // behind ITS gate. Everything else — vault, key, restore — is the session's.
-      const scoped = deps.perServer?.(splitToolName(name).serverId) ?? {};
-      const masker = scoped.masker ?? deps.masker;
-      const stop = await gateTool(
-        name,
-        tools,
-        scoped.writes ?? deps.policy,
-        deps.confirm,
-        realArgs,
-      );
-      if (stop) return { result: refusal(stop), matches, refused: true };
-
-      const client = new RedactingMcpClient({
-        connections: deps.upstream.connections(),
-        vault: session.vault,
-        // The proxy's OWN engine, under the session's key: a value masked here and a value
-        // masked in a chat message must land on the same fake, or the reply cannot be
-        // restored. Passing the key is what makes the two channels agree.
-        redactResult: async (text, vault) => {
-          const out = await masker.mask(text, vault, session.mode, session.key);
-          matches.push(...out.matches);
-          return out.text;
-        },
-        unredactArg: (text, vault) => deps.masker.restoreArgs(text, vault),
-      });
-
-      // Both sides namespace the SAME way — the transport returns bare names and each
-      // adds one `${serverId}__` — so the name the agent called routes straight through.
-      const result = await client.callTool({ name, arguments: args as never });
-      return { result, matches };
+      // Whatever this throws reaches the AGENT as text (`routes.ts`), so it is masked under
+      // the session's vault first. The client masks the upstream's own throw itself.
+      let prepared: Awaited<ReturnType<typeof prepare>>;
+      try {
+        prepared = await prepare(name, args, session);
+      } catch (err) {
+        throw await redactError(err, async (text: string) => {
+          return (await deps.masker.mask(text, session.vault, session.mode, session.key)).text;
+        });
+      }
+      if (!("run" in prepared)) return prepared;
+      return { result: await prepared.run(), matches: prepared.matches };
     },
   };
+
+  /** Everything before the upstream call: restore, gate, a client bound to this session. */
+  async function prepare(
+    name: string,
+    args: Record<string, unknown>,
+    session: SessionState,
+  ): Promise<ToolOutcome | { matches: RedactionMatch[]; run: () => Promise<McpToolResult> }> {
+    const tools = await deps.upstream.tools();
+    const matches: RedactionMatch[] = [];
+
+    // Restore first, so the human confirms what the server will actually receive — not a
+    // masked shadow of it. `unredactArgs` is idempotent, so the client's own arg leg
+    // below is a no-op on an already-restored string.
+    const realArgs = (await mapStrings(
+      args as Record<string, never>,
+      (text, vault) => deps.masker.restoreArgs(text, vault),
+      session.vault,
+    )) as Record<string, unknown>;
+
+    // The server's own policy, when it has one: its results through ITS masker, its writes
+    // behind ITS gate. Everything else — vault, key, restore — is the session's.
+    const scoped = deps.perServer?.(splitToolName(name).serverId) ?? {};
+    const masker = scoped.masker ?? deps.masker;
+    const stop = await gateTool(
+      name,
+      tools,
+      scoped.writes ?? deps.policy,
+      deps.confirm,
+      realArgs,
+    );
+    if (stop) return { result: refusal(stop), matches, refused: true };
+
+    const client = new RedactingMcpClient({
+      connections: deps.upstream.connections(),
+      vault: session.vault,
+      // The proxy's OWN engine, under the session's key: a value masked here and a value
+      // masked in a chat message must land on the same fake, or the reply cannot be
+      // restored. Passing the key is what makes the two channels agree.
+      redactResult: async (text, vault) => {
+        const out = await masker.mask(text, vault, session.mode, session.key);
+        matches.push(...out.matches);
+        return out.text;
+      },
+      unredactArg: (text, vault) => deps.masker.restoreArgs(text, vault),
+    });
+
+    // Both sides namespace the SAME way — the transport returns bare names and each
+    // adds one `${serverId}__` — so the name the agent called routes straight through.
+    return { matches, run: () => client.callTool({ name, arguments: args as never }) };
+  }
 }

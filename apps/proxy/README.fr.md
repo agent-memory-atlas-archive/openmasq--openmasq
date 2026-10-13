@@ -285,6 +285,7 @@ Cacher un identifiant ne retire pas l'autorité qu'il donne : une instruction in
 le résultat d'un outil peut toujours demander un `send_message`. Un outil qui écrit
 s'arrête donc sur une touche de votre terminal (`y` l'exécute, toute autre touche refuse).
 Sans terminal pour demander, l'écriture est refusée.
+La demande affiche les arguments destinataires, URL et chemins en tête, et signale toute coupe.
 
 | `--mcp-writes` | Effet |
 |---|---|
@@ -605,7 +606,8 @@ ignorer les serveurs que déclare Claude Code.
 
 > [!NOTE]
 > Le proxy ne masque que du texte. Une image, un PDF ou un fichier envoyé en octets
-> (`inlineData`, `image_url`) passe tel quel. L'application de bureau fait l'OCR et le
+> (`inlineData`, `image_url`) passe tel quel, tout comme un `input` d'embeddings donné en
+> identifiants de tokens plutôt qu'en texte. L'application de bureau fait l'OCR et le
 > masquage des documents ; le proxy, non.
 
 Le modèle de menace de l'ensemble du projet se trouve dans

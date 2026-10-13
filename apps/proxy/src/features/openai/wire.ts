@@ -63,7 +63,32 @@ export async function maskChatRequest(
     }
     out.push(next);
   }
-  return { ...body, messages: out };
+  const caller = await maskCaller(body, mask);
+  const masked: Record<string, unknown> = { ...body, messages: out, ...caller };
+  // A Predicted Output is the text the model is told to expect back: it is read like a prompt.
+  if (isRecord(body.prediction) && body.prediction.content !== undefined)
+    masked.prediction = {
+      ...body.prediction,
+      content: await maskContent(body.prediction.content, mask),
+    };
+  return masked;
+}
+
+/** `user` and `metadata` values travel to the provider beside the prompt (an end-user id is
+ *  often an email; metadata holds whatever the caller tagged). Both are masked. */
+async function maskCaller(
+  body: Record<string, unknown>,
+  mask: MaskFn,
+): Promise<Record<string, unknown>> {
+  const out: Record<string, unknown> = {};
+  if (typeof body.user === "string") out.user = await mask(body.user);
+  if (isRecord(body.metadata)) {
+    const metadata: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(body.metadata))
+      metadata[k] = typeof v === "string" ? await mask(v) : v;
+    out.metadata = metadata;
+  }
+  return out;
 }
 
 /** Responses request: `instructions`, then `input` as a string or a list of items. */
@@ -71,7 +96,7 @@ export async function maskResponsesRequest(
   body: Record<string, unknown>,
   mask: MaskFn,
 ): Promise<Record<string, unknown>> {
-  const out: Record<string, unknown> = { ...body };
+  const out: Record<string, unknown> = { ...body, ...(await maskCaller(body, mask)) };
   if (typeof body.instructions === "string") out.instructions = await mask(body.instructions);
   if (typeof body.input === "string") out.input = await mask(body.input);
   else if (Array.isArray(body.input)) {
@@ -85,7 +110,11 @@ export async function maskResponsesRequest(
       if (it.content !== undefined) next.content = await maskContent(it.content, mask);
       if (typeof it.arguments === "string")
         next.arguments = await mapJsonString(it.arguments, mask);
-      if (typeof it.output === "string") next.output = await mask(it.output);
+      // A tool output is a string or a list of content parts (`input_text`, images, files).
+      if (it.output !== undefined) next.output = await maskContent(it.output, mask);
+      // A custom tool's call carries its free-form `input` where a function call has JSON.
+      if (it.type === "custom_tool_call" && typeof it.input === "string")
+        next.input = await mask(it.input);
       items.push(next);
     }
     out.input = items;
@@ -93,7 +122,8 @@ export async function maskResponsesRequest(
   return out;
 }
 
-/** Embeddings request: `input` string or list of strings. */
+/** Embeddings request: `input` string or list of strings. A list of TOKEN ids (numbers)
+ *  is not text this proxy can read — it passes as is (README « Security »). */
 export async function maskEmbeddingsRequest(
   body: Record<string, unknown>,
   mask: MaskFn,

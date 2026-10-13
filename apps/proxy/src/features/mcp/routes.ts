@@ -59,8 +59,10 @@ export function mcpBody(req: Request, res: Response, next: NextFunction): void {
   next();
 }
 
-/** The error text the AGENT receives. It names the tool and the failure, never a value from
- *  the arguments and never anything the upstream sent back verbatim. */
+/** The error text the AGENT receives: the tool name and the failure's message. That message
+ *  can echo the arguments or the upstream's own words, so the bridge masks it under the
+ *  session's vault before it gets here — and withholds it whole when masking fails
+ *  (`bridge.ts`, `redactError` in `@openmasq/mcp`). */
 const failed = (name: string, err: unknown): string =>
   `${name} failed: ${err instanceof Error ? err.message : String(err)}`;
 

@@ -8,3 +8,4 @@ export {
   type ExtractFile,
   type FoundFileUrl,
 } from "./walk";
+export { redactError, WITHHELD_ERROR } from "./error";

@@ -44,5 +44,6 @@ export type {
 
 export { RedactingMcpClient, type RedactingMcpOptions } from "./redact/client";
 export { mapStrings, mapContentText, resultText } from "./redact/walk";
+export { redactError, WITHHELD_ERROR } from "./redact/error";
 export { isDeadTransport, DEAD_TRANSPORT_MESSAGES } from "./deadTransport";
 export * from "./providers";

@@ -8,6 +8,7 @@ import type {
   RedactString,
   Vault,
 } from "../types";
+import { redactError } from "./error";
 import { mapContentFiles, mapStrings, type ExtractFile } from "./walk";
 
 export interface RedactingMcpOptions {
@@ -185,16 +186,24 @@ export class RedactingMcpClient {
       (text, vault) => this.unredactArg(text, vault, call.name),
       this.vault,
     )) as JsonObject;
-    const result = await route.connection.callTool({
-      id: call.id,
-      name: route.realName,
-      arguments: args,
-    });
     // Bind the tool NAME into the redaction callbacks per call (not shared state), so a
     // caller's per-connector policy stays correct even when several tool calls redact
     // their results concurrently.
+    const redactText: (text: string, vault: Vault) => string | Promise<string> =
+      opts?.redactText ?? ((text, vault) => this.redactResult(text, vault, call.name));
+    let result: McpToolResult;
+    try {
+      result = await route.connection.callTool({
+        id: call.id,
+        name: route.realName,
+        arguments: args,
+      });
+    } catch (err) {
+      // A thrown upstream error is model-facing text too (`./error.ts`).
+      throw await redactError(err, async (text) => redactText(text, this.vault));
+    }
     const content = await mapContentFiles(result.content, {
-      redactText: opts?.redactText ?? ((text, vault) => this.redactResult(text, vault, call.name)),
+      redactText,
       extractFile: this.extractFile,
       vault: this.vault,
       onFileUrl: this.onFileUrl ? (url, mime) => this.onFileUrl!(url, mime, call.name) : undefined,

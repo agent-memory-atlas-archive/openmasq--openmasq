@@ -8,6 +8,7 @@
 // must not approve a call the operator never read.
 import { colorsWanted, createTty, HUE_HEX, INK_HEX, type Tty } from "../../lib/ui/index.js";
 import type { ConfirmAsk, ConfirmFn } from "./gate.js";
+import { argsPreview } from "./preview.js";
 
 export interface ConfirmerOptions {
   /** Just the one line the prompt needs — not a whole Reporter, so the caller can be a
@@ -20,18 +21,6 @@ export interface ConfirmerOptions {
   tty?: Tty;
   /** Injected by tests: read exactly one keypress. */
   readKey?: (timeoutMs: number) => Promise<string>;
-}
-
-/** The arguments as the real server will get them, on one bounded line. Never written to a
- *  file, never in `--json`: this is the screen of the person answering, and nothing else. */
-function argsPreview(args: unknown, max = 220): string {
-  let text: string;
-  try {
-    text = JSON.stringify(args) ?? String(args);
-  } catch {
-    text = String(args);
-  }
-  return text.length <= max ? text : `${text.slice(0, max - 1)}…`;
 }
 
 /** One keypress from a raw-mode TTY, or "" on timeout. Takes stdin over for the wait: the
@@ -87,6 +76,7 @@ export function createConfirmer(opts: ConfirmerOptions): ConfirmFn {
     opts.note(
       `${tty.pill(hue, INK_HEX, a.risk === "high" ? "WRITE" : "write")} ${tty.bold(a.name)}`,
     );
+    // Never written to a file, never in `--json`: the screen of the person answering only.
     opts.note(`  ${tty.dim(argsPreview(a.args))}`);
     opts.note(`  ${tty.bold("y")} to run it, any other key to refuse`);
     const key = await readKey(timeoutMs);

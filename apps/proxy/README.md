@@ -271,6 +271,7 @@ openmasq-proxy --mcp --level renforce          # servers from ~/.openmasq/mcp.js
 Hiding a credential does not remove the authority it grants: an instruction injected in a
 tool result can still ask for `send_message`. So a tool that writes stops for a key on your
 terminal (`y` runs it, anything else refuses). With no terminal to ask, a write is refused.
+The prompt shows the arguments with recipients, URLs and paths first, and says when it cut.
 
 | `--mcp-writes` | Effect |
 |---|---|
@@ -571,8 +572,8 @@ servers Claude Code declares.
 
 > [!NOTE]
 > The proxy masks text only. An image, a PDF or a file sent as bytes (`inlineData`,
-> `image_url`) passes as is. The desktop app does document OCR and masking; the proxy does
-> not.
+> `image_url`) passes as is. So does an embeddings `input` given as token ids rather than
+> text. The desktop app does document OCR and masking; the proxy does not.
 
 The threat model for the whole project is in [`SECURITY.md`](../../SECURITY.md).
 

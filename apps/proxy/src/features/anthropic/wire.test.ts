@@ -73,4 +73,48 @@ describe("Anthropic wire", () => {
       { type: "tool_use", id: "t", name: "f", input: { who: "Camille" } },
     ]);
   });
+
+  it("masks text documents and search results, nested in a tool result too", async () => {
+    const out = await maskMessagesRequest(
+      {
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "document",
+                title: "Camille",
+                context: "about Camille",
+                source: { type: "text", media_type: "text/plain", data: "Camille signed" },
+              },
+              {
+                type: "document",
+                source: { type: "content", content: [{ type: "text", text: "Camille" }] },
+              },
+              {
+                type: "document",
+                source: { type: "base64", media_type: "application/pdf", data: "QUJD" },
+              },
+              {
+                type: "tool_result",
+                tool_use_id: "t",
+                content: [
+                  {
+                    type: "search_result",
+                    source: "https://crm.example/Camille",
+                    title: "Camille",
+                    content: [{ type: "text", text: "Camille's file" }],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      mask,
+    );
+    const text = JSON.stringify(out);
+    expect(text).not.toContain("Camille");
+    expect(text).toContain('"data":"QUJD"');
+  });
 });

@@ -157,7 +157,8 @@ function stripFileUrls(
  * with a single `text` block — so the model only ever sees redacted text + a
  * marker, NEVER the raw base64. A resource with inline `text` is redacted too.
  * Bytes with no extractor (or a failed extraction) are replaced with a safe
- * placeholder rather than passed through, so raw file content can't leak.
+ * placeholder rather than passed through, so raw file content can't leak. Any
+ * other block (`resource_link`, an unknown type) has every string leaf redacted.
  */
 export async function mapContentFiles(
   content: McpContent[],
@@ -178,19 +179,27 @@ export async function mapContentFiles(
     const resource = (p.resource ?? null) as Record<string, unknown> | null;
 
     // 1) Plain text block → strip any file URLs (surfaced to the host), then redact.
+    // ALLOW-listed keys only: `_meta` and any field a server adds beside `text` is
+    // model-facing data that no redactor reads, so it is not carried over.
     if (p.type === "text" && typeof p.text === "string") {
-      out.push({ ...part, text: await redactText(stripFileUrls(p.text, onFileUrl), vault) });
+      out.push({
+        type: "text",
+        text: await redactText(stripFileUrls(p.text, onFileUrl), vault),
+        ...(p.annotations !== undefined ? { annotations: p.annotations as JsonValue } : {}),
+      });
       continue;
     }
     // 2) Embedded resource with inline text → same treatment.
     if (resource && typeof resource.text === "string") {
+      const { _meta: _outer, resource: _res, ...outer } = p;
+      const { _meta: _inner, text: _text, ...inner } = resource;
       out.push({
-        ...part,
+        ...(await redactFields(outer, redactText, vault)),
         resource: {
-          ...resource,
+          ...(await redactFields(inner, redactText, vault)),
           text: await redactText(stripFileUrls(resource.text as string, onFileUrl), vault),
         },
-      } as McpContent);
+      } as unknown as McpContent);
       continue;
     }
     // 3) File BYTES (image `data` / resource `blob`).
@@ -220,8 +229,27 @@ export async function mapContentFiles(
       });
       continue;
     }
-    // 4) No text, no bytes (e.g. a bare resource link) → pass through untouched.
-    out.push(part);
+    // 4) No text, no bytes (a `resource_link`, a type this code has never seen): its
+    //    `uri`/`name`/`title`/`description` — and any string a newer spec adds — are
+    //    model-facing, so EVERY string leaf is redacted and `_meta` is dropped. Only the
+    //    `type` discriminator crosses as is.
+    const { _meta, ...rest } = p;
+    out.push((await redactFields(rest, redactText, vault)) as McpContent);
+  }
+  return out;
+}
+
+/** Every string leaf of a block redacted, nested ones included; the `type`/`mimeType`
+ *  discriminators are kept verbatim (a renamed mime breaks the host's file handling). */
+async function redactFields(
+  block: Record<string, unknown>,
+  redactText: RedactString,
+  vault: Vault,
+): Promise<Record<string, JsonValue>> {
+  const out: Record<string, JsonValue> = {};
+  for (const [k, v] of Object.entries(block)) {
+    if (k === "type" || k === "mimeType") out[k] = v as JsonValue;
+    else out[k] = await mapStrings(v as JsonValue, (t, vt) => redactText(t, vt), vault);
   }
   return out;
 }

@@ -145,4 +145,22 @@ describe("Gemini stream rewriter", () => {
       { functionCall: { name: "f", args: { who: "Camille Roussel" } } },
     ]);
   });
+
+  it("masks executed code and what it printed", async () => {
+    const out = await maskGenerateRequest(
+      {
+        contents: [
+          {
+            role: "model",
+            parts: [
+              { executableCode: { language: "PYTHON", code: "print('Camille')" } },
+              { codeExecutionResult: { outcome: "OUTCOME_OK", output: "Camille" } },
+            ],
+          },
+        ],
+      },
+      mask,
+    );
+    expect(JSON.stringify(out)).not.toContain("Camille");
+  });
 });

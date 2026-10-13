@@ -131,4 +131,43 @@ describe("OpenAI wire — replies", () => {
       { type: "function_call", arguments: '{"a":"Camille"}' },
     ]);
   });
+
+  it("masks a Chat prediction, the end-user id and metadata values", async () => {
+    const out = await maskChatRequest(
+      {
+        messages: [],
+        prediction: { type: "content", content: [{ type: "text", text: "Dear Camille" }] },
+        user: "Camille",
+        metadata: { client: "Camille", n: 3 },
+      },
+      mask,
+    );
+    expect(JSON.stringify(out)).not.toContain("Camille");
+    expect(out.metadata).toEqual({ client: "Marc", n: 3 });
+    const plain = await maskChatRequest({ messages: [], prediction: { content: "Camille" } }, mask);
+    expect(plain.prediction).toEqual({ content: "Marc" });
+  });
+
+  it("masks a Responses tool output given as content parts, and a custom tool's input", async () => {
+    const out = await maskResponsesRequest(
+      {
+        user: "Camille",
+        input: [
+          {
+            type: "function_call_output",
+            call_id: "c",
+            output: [{ type: "input_text", text: "Camille paid" }],
+          },
+          { type: "custom_tool_call", call_id: "d", name: "sh", input: "grep Camille" },
+        ],
+      },
+      mask,
+    );
+    expect(JSON.stringify(out)).not.toContain("Camille");
+  });
+
+  it("passes embeddings given as token ids through (not text it can read)", async () => {
+    const body = { input: [[1, 2, 3]] };
+    expect(await maskEmbeddingsRequest(body, mask)).toBe(body);
+  });
 });

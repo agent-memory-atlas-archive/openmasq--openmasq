@@ -82,3 +82,65 @@ describe("mapContentFiles — file URL in text", () => {
     expect(text).toContain("[fichier PDF exporté");
   });
 });
+
+describe("mapContentFiles — blocks with no text and no bytes", () => {
+  const REAL = "Camille Roussel";
+  const swap = async (t: string) => t.split(REAL).join("Marc Charvet");
+
+  it("redacts a resource_link's uri, name, title and description, and drops _meta", async () => {
+    const [out] = await mapContentFiles(
+      [
+        {
+          type: "resource_link",
+          uri: `file:///clients/${REAL}.pdf`,
+          name: `${REAL}.pdf`,
+          title: `Contrat ${REAL}`,
+          description: `Signé par ${REAL}`,
+          mimeType: "application/pdf",
+          _meta: { owner: REAL },
+        },
+      ],
+      { redactText: swap, vault: {} },
+    );
+    expect(JSON.stringify(out)).not.toContain(REAL);
+    expect(out).not.toHaveProperty("_meta");
+    expect(out).toMatchObject({ type: "resource_link", mimeType: "application/pdf" });
+  });
+
+  it("redacts every string of a block type it has never seen", async () => {
+    const [out] = await mapContentFiles(
+      [{ type: "future_block", body: { lines: [`Dear ${REAL}`] }, note: REAL } as McpContent],
+      { redactText: swap, vault: {} },
+    );
+    expect(JSON.stringify(out)).not.toContain(REAL);
+    expect(out.type).toBe("future_block");
+  });
+
+  it("keeps only type, text and annotations on a text block", async () => {
+    const [out] = await mapContentFiles(
+      [{ type: "text", text: REAL, _meta: { raw: REAL }, extra: REAL } as McpContent],
+      { redactText: swap, vault: {} },
+    );
+    expect(out).toEqual({ type: "text", text: "Marc Charvet" });
+  });
+
+  it("redacts a text resource's uri and drops both _meta", async () => {
+    const [out] = await mapContentFiles(
+      [
+        {
+          type: "resource",
+          _meta: { a: REAL },
+          resource: {
+            uri: `mem://${REAL}`,
+            text: REAL,
+            mimeType: "text/plain",
+            _meta: { b: REAL },
+          },
+        } as McpContent,
+      ],
+      { redactText: swap, vault: {} },
+    );
+    expect(JSON.stringify(out)).not.toContain(REAL);
+    expect(JSON.stringify(out)).not.toContain("_meta");
+  });
+});

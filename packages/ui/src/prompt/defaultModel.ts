@@ -1,4 +1,4 @@
-import { SIMPLE_MODEL_IDS } from "@openmasq/catalog";
+import { KEY_DEFAULT_MODEL_IDS, SIMPLE_MODEL_IDS } from "@openmasq/catalog";
 import { isModelAllowed } from "../privacy/orgAllowList";
 import { DEFAULT_MODEL_ID, findModelAny } from "./models";
 
@@ -49,14 +49,29 @@ function isFactoryDefault(id: string | undefined): boolean {
   return !id;
 }
 
-/** The model NEW conversations open on: the person's choice, else the access path's, else the seed. */
+/** When the seed cannot send here (no OpenRouter key), the first model a configured KEY
+ *  unlocks — the short list first, then one balanced model per keyed provider. Saving an
+ *  Anthropic key used to leave every new conversation on Laguna, refused at the first send. */
+function keyedFallbackId(unavailable: UnavailableView, allowedModelIds?: string[]): string | undefined {
+  if (!unavailable.has(DEFAULT_MODEL_ID)) return undefined;
+  return [...SIMPLE_MODEL_IDS, ...KEY_DEFAULT_MODEL_IDS].find(
+    (id) => !unavailable.has(id) && isModelAllowed(id, allowedModelIds) && !!findModelAny(id),
+  );
+}
+
+/** The model NEW conversations open on: the person's choice, else the access path's (a
+ *  ready CLI, then a model a saved key unlocks), else the seed. */
 export function effectiveDefaultModelId(
   chosen: string | undefined,
   unavailable: UnavailableView | undefined,
   allowedModelIds?: string[],
 ): string {
   if (!isFactoryDefault(chosen)) return chosen as string;
-  return readyAccessModelIds(unavailable, allowedModelIds)[0] ?? DEFAULT_MODEL_ID;
+  return (
+    readyAccessModelIds(unavailable, allowedModelIds)[0] ??
+    (unavailable && keyedFallbackId(unavailable, allowedModelIds)) ??
+    DEFAULT_MODEL_ID
+  );
 }
 
 /** The simplified view's FACTORY list: the ready access models first, then the governable

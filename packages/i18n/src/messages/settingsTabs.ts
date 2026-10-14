@@ -184,6 +184,10 @@ export interface ModelsTabMessages {
   price: string;
   priceTiers: { free: string; eco: string; standard: string; premium: string };
   priceTierTips: { free: string; eco: string; standard: string; premium: string };
+  /** The « Gratuit » tier in a build that serves no model (an OpenRouter key is needed). */
+  priceTierFreeUnserved: string;
+  /** The default model cannot send: its reason, then the gesture (« Clé requise · Ajouter »). */
+  defaultFix: (reason: string) => string;
   /** A provider group's status (chip + tooltip). */
   status: {
     keySaved: string;

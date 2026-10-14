@@ -106,6 +106,8 @@ export interface ModelPickerMessages {
   sectionFavorites: string;
   sectionCurrent: string;
   freeTip: string;
+  /** Same badge in a build that serves no model: « free » still needs the user's OpenRouter key. */
+  freeTipUnserved: string;
   /** The row's « ⋯ » — opens the context menu (default model). */
   moreActions: string;
   isDefault: string;

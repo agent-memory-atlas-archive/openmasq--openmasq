@@ -112,6 +112,7 @@ export const modelPicker = {
   sectionFavorites: "Favorites",
   sectionCurrent: "Current model",
   freeTip: "Free model, included with your account, limited usage.",
+  freeTipUnserved: "Free with an OpenRouter key (free account), limited usage.",
   moreActions: "More actions",
   isDefault: "Default model for new conversations",
   setDefault: "Set as default model",

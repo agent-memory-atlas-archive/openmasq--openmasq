@@ -138,6 +138,36 @@
   border-color: var(--text-muted);
   border-left-color: var(--brand);
 }
+/* The summary and, when the default cannot send, its fix beside it. */
+.model-default-row {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.model-default-row .model-default-summary {
+  margin-bottom: 0;
+}
+.model-default-summary.blocked {
+  border-left-color: var(--red-500);
+}
+.model-default-summary.blocked .model-default-check {
+  background: var(--red-500);
+}
+.model-default-fix {
+  flex: 0 0 auto;
+  padding: 0 14px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--red-500);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.model-default-fix:disabled {
+  cursor: default;
+}
 .model-default-check {
   display: inline-flex;
   align-items: center;

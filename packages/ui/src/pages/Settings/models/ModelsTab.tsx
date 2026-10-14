@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { useT } from "../../../i18n";
-import { type ProviderId } from "@openmasq/llm";
+import { PROVIDERS, type ProviderId } from "@openmasq/llm";
 import { selectableModels } from "../../../prompt/models";
-import { visibleModels, type UnavailableReason } from "../../../send/modelAvailability";
+import { unavailableLabel, visibleModels, type UnavailableReason } from "../../../send/modelAvailability";
 import { favoriteSet } from "../../../components/ModelSelector/simpleList";
 import { ModelDetail } from "../ModelDetail";
 import { useAppSelector } from "../../../state/redux";
@@ -114,6 +114,8 @@ export function ModelsTab({
     () => visibleModels(selectableModels(orgProfile?.allowedModelIds), unavailableModels, previewId ?? defaultModelId),
     [orgProfile?.allowedModelIds, unavailableModels, previewId, defaultModelId],
   );
+  const defaultModel = pickerModels.find((m) => m.id === defaultModelId);
+  const defaultReason = defaultModel ? unavailableModels?.get(defaultModel.id) : undefined;
   const families = useMemo(
     () => modelFamilies(pickerModels, FAMILY_CHIP_MIN),
     [pickerModels],
@@ -156,8 +158,10 @@ export function ModelsTab({
       />
       {/* The RESULT of the setting, stated — before the list that serves to change it. */}
       <DefaultModelSummary
-        model={pickerModels.find((m) => m.id === defaultModelId)}
+        model={defaultModel}
         onPreview={setPreviewId}
+        unavailable={defaultReason && defaultModel ? unavailableLabel(defaultReason, PROVIDERS[defaultModel.provider].label, t) : undefined}
+        onFix={defaultReason === "no_key" && defaultModel ? () => setKeyProvider(defaultModel.provider) : undefined}
       />
       <div className="cv-eyebrow mt-4 mb-3">{t.modelsTab.availableEyebrow(pickerModels.length)}</div>
       <div className="model-picker-split">

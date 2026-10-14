@@ -57,6 +57,12 @@ export function subscriptionsSold(): boolean {
   return sold;
 }
 
+/** The « gratuit » badge's tooltip: « included with your account » is true only where the
+ *  build serves models; elsewhere a free model still needs the user's OpenRouter key. */
+export function freeModelTip(t: Messages): string {
+  return served ? t.modelPicker.freeTip : t.modelPicker.freeTipUnserved;
+}
+
 /** How a sentence names the "included models" path: "dans l'abonnement X" when
  *  it sells, "avec votre compte X" otherwise. ONE home, because the same aside
  *  recurs under the badge, in the send refusal and on the group label. */

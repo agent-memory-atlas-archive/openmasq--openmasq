@@ -99,6 +99,20 @@ export const SIMPLE_MODEL_IDS: readonly string[] = Object.freeze([
   "deepseek/deepseek-chat-v3.1",
 ]);
 
+/**
+ * One BALANCED model per keyed provider: what a new conversation opens on when the
+ * person's only road is that provider's key (an Anthropic key alone unlocks nothing in
+ * `SIMPLE_MODEL_IDS`). Never the top of the provider's range: a default is sent on without
+ * a second thought, so it must not be the most expensive model on the bill.
+ */
+export const KEY_DEFAULT_MODEL_IDS: readonly string[] = Object.freeze([
+  "claude-sonnet-5",
+  "gpt-5.4",
+  "gemini-3.5-flash",
+  "mistral-medium-2508",
+  "deepseek-v4-flash",
+]);
+
 /** The simplified view's models, in list order, skipping an id removed from the
  *  registry — a frozen list must never make the picker disappear. */
 export function simpleModels(): CatalogModel[] {

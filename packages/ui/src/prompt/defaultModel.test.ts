@@ -45,6 +45,32 @@ describe("effectiveDefaultModelId", () => {
   });
 });
 
+// A saved Anthropic key used to leave new conversations on Laguna, refused at the first send.
+describe("effectiveDefaultModelId — a model a saved key unlocks", () => {
+  const { SIMPLE_MODEL_IDS: simple } = { SIMPLE_MODEL_IDS };
+  const onlyAnthropic = new Map(
+    [...allBlocked.keys(), ...simple, "gpt-5.4", "gemini-3.5-flash", "mistral-medium-2508", "deepseek-v4-flash"].map(
+      (id) => [id, "no_key"],
+    ),
+  );
+  it("le seed indisponible cède au modèle équilibré de la clé enregistrée", () => {
+    expect(effectiveDefaultModelId("", onlyAnthropic)).toBe("claude-sonnet-5");
+  });
+  it("une CLI prête passe toujours devant la clé", () => {
+    const m = new Map(onlyAnthropic);
+    m.delete("claude-cli");
+    expect(effectiveDefaultModelId("", m)).toBe("claude-cli");
+  });
+  it("le seed utilisable reste le défaut ; sans rien d'utilisable, aussi", () => {
+    expect(effectiveDefaultModelId("", allBlocked)).toBe(DEFAULT_MODEL_ID);
+    const none = new Map([...onlyAnthropic, ["claude-sonnet-5", "no_key"]]);
+    expect(effectiveDefaultModelId("", none)).toBe(DEFAULT_MODEL_ID);
+  });
+  it("un choix fait à la main n'est jamais remplacé", () => {
+    expect(effectiveDefaultModelId(DEFAULT_MODEL_ID, onlyAnthropic)).toBe(DEFAULT_MODEL_ID);
+  });
+});
+
 describe("factorySimpleIds", () => {
   it("sans CLI prête, c'est la liste gouvernable telle quelle", () => {
     expect(factorySimpleIds(allBlocked)).toBe(SIMPLE_MODEL_IDS);

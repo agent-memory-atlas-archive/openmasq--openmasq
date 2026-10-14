@@ -6,6 +6,7 @@ import { modelDisplay } from "../../../prompt/models";
 import { captureEvent } from "../../../analytics";
 
 import { useT } from "../../../i18n";
+import { freeModelTip } from "../../../send/platformAccess";
 /**
  * One selectable model card in the default-model picker. Extracted from `ModelsTab`
  * so the grid can be rendered both flat and inside a vendor-family sub-group without
@@ -72,7 +73,7 @@ export function ModelCard({
                opens the explainer without picking the model. */
             <span
               className={`model-free-badge${onAccessInfo ? " clickable" : ""}`}
-              title={t.modelPicker.freeTip}
+              title={freeModelTip(t)}
               role={onAccessInfo ? "button" : undefined}
               tabIndex={onAccessInfo ? 0 : undefined}
               onClick={

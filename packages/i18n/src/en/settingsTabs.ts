@@ -177,6 +177,9 @@ export const modelsTab = {
     standard: "$3 to $20 / M output tokens",
     premium: "> $20 / M output tokens",
   },
+  priceTierFreeUnserved: "$0 with an OpenRouter key",
+  defaultFix: (reason) => `${reason} · Add`,
+
   status: {
     keySaved: "Key saved",
     keySavedTip: (p) => `A ${p} key is saved on this device.`,

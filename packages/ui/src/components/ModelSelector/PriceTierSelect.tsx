@@ -3,6 +3,7 @@ import { useT } from "../../i18n";
 import { usePopover } from "../../hooks/usePopover";
 import { PRICE_TIERS, type PriceTier } from "../../prompt/modelFilter";
 import { CheckIcon, ChevDownIcon } from "../brand";
+import { platformAccessServed } from "../../send/platformAccess";
 
 /**
  * The token-PRICE filter of both model pickers (Réglages → Modèles and the chat's
@@ -73,7 +74,11 @@ export function PriceTierSelect({
                 role="option"
                 aria-selected={price === tier.key}
                 className={`model-price-opt${price === tier.key ? " on" : ""}`}
-                title={t.modelsTab.priceTierTips[tier.key]}
+                title={
+                  tier.key === "free" && !platformAccessServed()
+                    ? t.modelsTab.priceTierFreeUnserved
+                    : t.modelsTab.priceTierTips[tier.key]
+                }
                 onClick={() => pick(tier.key)}
               >
                 {t.modelsTab.priceTiers[tier.key]}

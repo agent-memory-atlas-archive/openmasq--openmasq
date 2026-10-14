@@ -184,6 +184,8 @@ export const modelsTab = {
     standard: "3 à 20 $ / M tokens en sortie",
     premium: "> 20 $ / M tokens en sortie",
   },
+  priceTierFreeUnserved: "0 $ avec une clé OpenRouter",
+  defaultFix: (reason) => `${reason} · Ajouter`,
   status: {
     keySaved: "Clé enregistrée",
     keySavedTip: (p) => `Une clé ${p} est enregistrée sur cet appareil.`,

@@ -8,6 +8,7 @@ import { usePopover } from "../../hooks/usePopover";
 import { pickerBlocks, unavailableLabel, type UnavailableReason } from "../../send/modelAvailability";
 import { BookOpenIcon, CheckIcon, CoinsIcon, DotsIcon, GaugeIcon, HouseIcon, ModelLogo, StarIcon } from "../brand";
 import { CountryFlag } from "../media/CountryFlag";
+import { freeModelTip } from "../../send/platformAccess";
 
 /**
  * One model row in the Finder's rightmost column (and the flat search results). An
@@ -118,7 +119,7 @@ export const ModelRow = forwardRef<
         <div className="model-option-name">
           <strong>{display.label}</strong>
           {display.free && (
-            <span className="model-free-badge" title={t.modelPicker.freeTip}>
+            <span className="model-free-badge" title={freeModelTip(t)}>
               {t.modelsTab.freeBadge}
             </span>
           )}

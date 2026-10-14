@@ -115,7 +115,7 @@ describe("AttachmentChips — many files: summary, bounded area, « Tout retirer
     expect(btn.textContent).toBe("Tout retirer");
     await m.click(btn);
     expect(removed).toEqual([]);
-    expect(btn.textContent).toBe("Retirer les 10 fichiers de ce message ?");
+    expect(btn.textContent).toBe("Retirer les 10 fichiers de ce message\u202f?");
     await m.click(btn);
     expect(removed).toEqual([9, 8, 7, 6, 5, 4, 3, 2, 1, 0]);
     await m.unmount();

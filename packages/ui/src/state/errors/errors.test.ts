@@ -61,7 +61,7 @@ describe("RedactionUnavailableError — the user reads a sentence, the log keeps
     const e = new RedactionUnavailableError("ECONNREFUSED 127.0.0.1:9", t);
     expect(e.reason).toBe("ECONNREFUSED 127.0.0.1:9");
     expect(e.message).not.toContain("ECONNREFUSED");
-    expect(e.message).toBe("Envoi bloqué : le masquage ne répond pas. Rien n'a été envoyé. Réessayez.");
+    expect(e.message).toBe("Envoi bloqué\u00a0: le masquage ne répond pas. Rien n'a été envoyé. Réessayez.");
     expect(e.message).not.toMatch(/\ble redaction\b/);
   });
 

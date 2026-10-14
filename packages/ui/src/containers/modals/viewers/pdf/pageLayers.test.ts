@@ -76,13 +76,13 @@ describe("buildTextHaloLayer — la légende est l'interrupteur du halo", () => 
     expect(legend.getAttribute("aria-pressed")).toBe("true");
     // ⚠️ The state must be READABLE: halo off, an identical button would suggest nothing
     // was recognized — hence that nothing will be redacted (conclusion drawn in a run-through, 15/08).
-    expect(legend.textContent).toContain("Surligné : texte lu");
+    expect(legend.textContent).toContain("Surligné\u00a0: texte lu");
     legend.click();
     expect(legend.textContent).toContain("Surlignage caché");
     // …and the off-phrase reminds that redaction isn't affected.
     expect(legend.textContent).toMatch(/reste masqué avant envoi/);
     legend.click();
-    expect(legend.textContent).toContain("Surligné : texte lu");
+    expect(legend.textContent).toContain("Surligné\u00a0: texte lu");
     legend.click();
     // The class lives on the pages' PARENT: p2 is hidden by the same selector.
     expect(wrap.classList.contains("pdfv-halo-off")).toBe(true);

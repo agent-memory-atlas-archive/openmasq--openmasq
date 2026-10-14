@@ -158,7 +158,7 @@ describe("redactionProblemDraft", () => {
     expect(d.category).toBe("bug");
     expect(d.mood).toBeNull(); // sentiment is never prefilled
     expect(d.message).toContain("dans un document");
-    expect(d.message).toContain("(type : e-mail)");
+    expect(d.message).toContain("(type\u00a0: e-mail)");
     // The template warns against pasting the real value (the privacy promise).
     expect(d.message).toContain("sans coller la valeur réelle");
     expect(redactionProblemDraft("reponse", fr).message).toContain("dans une réponse");
@@ -212,7 +212,7 @@ describe("messageFeedbackDraft — the action-row button", () => {
 
   it("never quotes the reply — only names it", () => {
     const d = messageFeedbackDraft(fr, "wire…");
-    expect(d.message).toBe("À propos de cette réponse : ");
+    expect(d.message).toBe("À propos de cette réponse\u00a0: ");
   });
 
   it("caps an over-long journal tail-first, like every other entry point", () => {

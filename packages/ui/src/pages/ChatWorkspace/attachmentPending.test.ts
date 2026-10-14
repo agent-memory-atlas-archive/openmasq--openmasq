@@ -99,7 +99,7 @@ describe("progressLabel — un document LONG dit combien de temps il reste", () 
     // 400k chars ≈ 100 s estimated; three quarters left ⇒ 2 min (rounded up).
     expect(progressLabel({ ...p, chars: 400_000 }, fr)).toBe("Masquage · 25 % · environ 2 min");
     expect(progressLabel({ redacting: true, chars: 400_000 }, fr)).toBe(
-      "Document long : masquage en cours, environ 2 min",
+      "Document long\u00a0: masquage en cours, environ 2 min",
     );
   });
 });

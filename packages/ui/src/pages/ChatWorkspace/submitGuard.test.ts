@@ -37,7 +37,7 @@ describe("checkSubmit — no staged file is ever dropped silently", () => {
       unread: ["a.pdf", "b.pdf"],
     });
     expect(t.runtime.send.unreadBody(2, "a.pdf, b.pdf")).toBe(
-      "2 fichiers n'ont pas pu être lus et ne seront pas envoyés : a.pdf, b.pdf",
+      "2 fichiers n'ont pas pu être lus et ne seront pas envoyés\u00a0: a.pdf, b.pdf",
     );
   });
 

@@ -23,7 +23,7 @@ describe("an extraction failure, worded by its code", () => {
 
   it("numbers fill the sentence", () => {
     const f = file({ error: "x", errorCode: "image_too_large", errorParams: { width: 9000, height: 9000 } });
-    expect(localizeExtracted(f, fr).error).toBe("Image refusée : dimensions trop grandes (9000×9000).");
+    expect(localizeExtracted(f, fr).error).toBe("Image refusée\u00a0: dimensions trop grandes (9000×9000).");
     expect(localizeExtracted(f, en).error).toBe("Image refused: dimensions too large (9000×9000).");
   });
 
@@ -55,7 +55,7 @@ describe("an extraction failure, worded by its code", () => {
   it("a digital PDF whose image pages failed OCR says it is not attached, not « no text layer »", () => {
     const f = file({ kind: "pdf", error: "x", errorCode: "ocr_failed", errorParams: { unread: 3 } });
     expect(localizeExtracted(f, en).error).toBe(en.pdfPagesUnread(3, en.ocr.failed));
-    expect(localizeExtracted(f, fr).error).toMatch(/^Ce PDF n'est pas joint : ses 3 pages en image/);
+    expect(localizeExtracted(f, fr).error).toMatch(/^Ce PDF n'est pas joint\u00a0: ses 3 pages en image/);
   });
 
   it("an image whose OCR failed for an unknown cause", () => {

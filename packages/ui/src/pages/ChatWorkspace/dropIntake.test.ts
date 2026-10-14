@@ -98,7 +98,7 @@ describe("the offer's wording", () => {
   const one: DroppedFolder[] = [{ name: "Contrats" }];
 
   it("names the folder in the singular case", () => {
-    expect(folderOfferText(one, fr)).toContain("« Contrats »");
+    expect(folderOfferText(one, fr)).toContain("«\u00a0Contrats\u00a0»");
     expect(folderOfferText([{ name: "" }], getMessages("en"))).toContain('the "folder" folder');
   });
 

@@ -7,6 +7,7 @@
  * slice already validates its own part, so a forgotten key names ITS slice.
  */
 import type { Messages } from "./messages";
+import { withFrenchSpacing } from "./typography";
 import { agent } from "./fr/agent";
 import { availability } from "./fr/availability";
 import { cards } from "./fr/cards";
@@ -73,7 +74,7 @@ const selfHost = {
   },
 } satisfies Messages["selfHost"];
 
-export const fr = {
+const source = {
   desktopMain,
   runtime,
   documents,
@@ -128,3 +129,13 @@ export const fr = {
   webNav,
   selfHost,
 } satisfies Messages;
+
+/** What a person READS gets French typography; what goes into a document's TEXT or a
+ *  prompt (the OCR markers, the compétence templates) keeps plain spaces — the model reads
+ *  it and the engine may match it. */
+const spaced = withFrenchSpacing(source);
+export const fr: Messages = {
+  ...spaced,
+  templates: source.templates,
+  documents: { ...spaced.documents, markers: source.documents.markers },
+};

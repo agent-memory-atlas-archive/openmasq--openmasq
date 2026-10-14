@@ -40,7 +40,7 @@ describe("preflightError", () => {
 
   it("blocks a model the org's allow-list does not carry", () => {
     const r = preflightError(base({ orgProfile: org({ allowedModelIds: ["autre-modele"] }) }));
-    expect(r?.text).toBe("Votre organisation a désactivé le modèle « Claude X ». Choisissez-en un autre.");
+    expect(r?.text).toBe("Votre organisation a désactivé le modèle «\u00a0Claude X\u00a0». Choisissez-en un autre.");
   });
 
   it("says the refusal in the UI language", () => {

@@ -61,7 +61,7 @@ describe("DocViewMenu", () => {
     // The tri-dot carries no label, so the current layer must survive somewhere the
     // user can reach without opening the menu.
     expect(el.querySelector(".fv-viewmenu-btn")?.getAttribute("title")).toBe(
-      "Vue : Pages redacted",
+      "Vue\u00a0: Pages redacted",
     );
     expect(el.querySelector(".fv-viewmenu-menu")).toBeNull();
 

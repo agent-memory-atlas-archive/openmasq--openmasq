@@ -25,8 +25,8 @@ describe("feedbackMailto", () => {
       ...BASE,
       context: { version: "0.8.0", os: "darwin 24.4.0 (arm64)" },
     }, fr);
-    expect(body).toContain("Version : 0.8.0");
-    expect(body).toContain("OS : darwin");
+    expect(body).toContain("Version\u00a0: 0.8.0");
+    expect(body).toContain("OS\u00a0: darwin");
     expect(body).not.toContain("Écran");
   });
 

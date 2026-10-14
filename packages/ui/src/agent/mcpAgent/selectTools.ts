@@ -14,6 +14,7 @@ import {
   routeTools,
   routerCooldownActive,
 } from "../toolRouter";
+import { routerWorthCalling } from "../routerSkip";
 import type { McpAgentParams } from "./types";
 
 export interface ToolSelection {
@@ -46,7 +47,13 @@ export async function selectTools(p: McpAgentParams, all: McpTool[], loopId?: st
   // The verdict is kept so the rescue below ADDS to the journal line instead of overwriting it.
   let routeDetail = "";
   // A recent router failure (usually configuration) skips straight to the deterministic pare.
-  if (routerCooldownActive(Date.now())) {
+  if (!routerWorthCalling(userText, p.scopedConnectors)) {
+    // Nothing in the request asks for a tool: the router would pick nothing, after a full
+    // model round-trip. Same state without the wait; the rescues below still apply.
+    kept = [];
+    routeDetail = `aucun signal d'outil dans la demande → routeur non appelé, catalogue + load_tools (0/${all.length})`;
+    updateDebug(routePhase, { ok: true, detail: routeDetail });
+  } else if (routerCooldownActive(Date.now())) {
     kept = fitToBudget(all, win, p.routingConfig?.catalog);
     routeDetail = `routeur en pause (échec récent) → repli déterministe : ${kept.length}/${all.length} outils`;
     updateDebug(routePhase, { ok: true, detail: routeDetail });

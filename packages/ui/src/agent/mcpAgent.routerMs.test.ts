@@ -47,7 +47,7 @@ describe("tool_loop_summary — routerMs", () => {
     fromWire: (s: string) => s,
     onText: () => {},
     onToolCall: () => {},
-    history: [{ role: "user" as const, content: "que peux-tu faire ?" }],
+    history: [{ role: "user" as const, content: "liste mes fichiers" }],
   });
   const summary = () =>
     captureEvent.mock.calls.map(([e]) => e).find((e) => e.name === "tool_loop_summary") as Record<
@@ -74,5 +74,16 @@ describe("tool_loop_summary — routerMs", () => {
     await runMcpAgentLoop(params(host(3, [{ text: "voici", toolCalls: [], stopReason: "stop" }])));
     expect(summary()).toBeDefined();
     expect("routerMs" in summary()).toBe(false);
+  });
+
+  // The router would pick nothing after a full model round-trip: the answer starts at once,
+  // with the catalog + load_tools a router miss would have left.
+  it("skips the router call on a request that asks for no tool", async () => {
+    const h = host(30, [{ text: "bonjour !", toolCalls: [], stopReason: "stop" }]);
+    await runMcpAgentLoop({ ...params(h), history: [{ role: "user" as const, content: "que peux-tu faire ?" }] });
+    const calls = (h.completeTools as unknown as { mock: { calls: unknown[][] } }).mock.calls;
+    expect(calls).toHaveLength(1);
+    expect("routerMs" in summary()).toBe(false);
+    expect(captureEvent.mock.calls.map(([e]) => e.name)).not.toContain("tool_route_miss");
   });
 });

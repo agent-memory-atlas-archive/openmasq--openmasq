@@ -24,6 +24,7 @@ export const mcpTab = {
   connected: "Connecté",
   manage: "Gérer →",
   connect: "Connecter →",
+  soon: "Bientôt",
   cancelConnect: "Annuler la connexion",
   linkCopied: "Lien copié ✓",
   copyLink: "Copier le lien",

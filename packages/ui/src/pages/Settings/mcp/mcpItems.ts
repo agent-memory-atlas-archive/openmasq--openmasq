@@ -4,6 +4,7 @@ import {
   BROWSER_CONNECTOR_ID,
   connectorIdFromInstance,
   findConnector,
+  isComingSoon,
   type McpConnector,
 } from "@openmasq/catalog/mcp";
 import type { CredMode, McpCatalogEntry, McpServerInfo } from "../../../host";
@@ -259,4 +260,9 @@ export function matchesSearch(item: McpItem, needle: string): boolean {
   if (!needle) return true;
   const n = needle.toLowerCase();
   return item.name.toLowerCase().includes(n) || item.desc.toLowerCase().includes(n);
+}
+
+/** Not connected AND not offered in one click yet: the card says « Bientôt », sorts last. */
+export function itemComingSoon(item: McpItem): boolean {
+  return !item.connected && !!item.connector && isComingSoon(item.connector);
 }

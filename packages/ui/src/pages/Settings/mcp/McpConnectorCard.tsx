@@ -2,7 +2,7 @@ import { CheckIcon, KeyIcon, LockIcon } from "../../../components/brand";
 import { McpTile } from "../../../components/media/McpTile";
 import { authTagOf } from "./mcpAuth";
 import { connectorErrorText } from "./connectorErrorText";
-import type { McpItem } from "./mcpItems";
+import { itemComingSoon, type McpItem } from "./mcpItems";
 
 import { useT } from "../../../i18n";
 /** How many accounts are linked — the card names it only past one. */
@@ -66,7 +66,7 @@ export function McpConnectorCard({ item, onOpen }: { item: McpItem; onOpen: () =
           the click you are about to make, so it sits with it rather than in a meta pile. */}
       <span className="mcp-card-actions">
         <span className={`mcp-card-cta ${item.connected ? "on" : ""}`} aria-hidden="true">
-          {item.connected ? t.mcpTab.manage : t.mcpTab.connect}
+          {item.connected ? t.mcpTab.manage : itemComingSoon(item) ? t.mcpTab.soon : t.mcpTab.connect}
         </span>
         <span className={`mcp-auth-badge auth-${tag.kind}`} title={tag.title}>
           <KeyIcon size={10} /> {tag.label}

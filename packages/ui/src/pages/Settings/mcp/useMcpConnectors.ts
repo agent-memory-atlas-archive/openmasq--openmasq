@@ -4,15 +4,14 @@ import { groupByMcpCategory, MCP_CONNECTORS } from "@openmasq/catalog/mcp";
 import { useT } from "../../../i18n";
 import { useHost, type CredMode, type McpCatalogEntry, type McpServerInfo } from "../../../host";
 import { captureEvent } from "../../../analytics";
-import { buildMcpItems, matchesSearch, type McpItem } from "./mcpItems";
+import { buildMcpItems, itemComingSoon, matchesSearch, type McpItem } from "./mcpItems";
+import { useConnectFailures } from "./useConnectFailures";
 import { apiKeyConnectOpts } from "./mcpApiKeyHelp";
 import { useAddCustomServer } from "./useAddCustomServer";
 import { isConnectorAllowed } from "../../../privacy/orgAllowList";
 
-// The MCP-connectors data layer of the Settings > MCP tab — all the state, the
-// host.mcp CRUD (connect/disconnect/reauth/add-account/enable-browser/remove) and
-// the derived item/group lists. Extracted from McpTab.tsx so the tab is presentation
-// over this hook. Behaviour + host calls are unchanged (pure relocation).
+// The data layer of Réglages → Connecteurs: the state, the host.mcp CRUD and the derived
+// item/group lists, so McpTab.tsx is presentation over this hook.
 export function useMcpConnectors({
   allowedMcpIds,
   requestedConnector,
@@ -39,10 +38,8 @@ export function useMcpConnectors({
   // True when the BYO-keys form is being used to ADD an account (vs connect the first).
   const [byoAdd, setByoAdd] = useState(false);
   const [inspecting, setInspecting] = useState<{ id: string; name: string } | null>(null);
-  // The OAuth authorize URL of an in-flight connect (connect-id → url), pushed by main so
-  // the modal can offer "Copier le lien" (open the login in another browser). Cleared at
-  // each connect START so a stale URL (a prior PKCE state that no longer polls) is never
-  // copyable; the fresh URL arrives once main opens the browser.
+  // The OAuth authorize URL of an in-flight connect (id → url) for « Copier le lien ». Cleared
+  // at each connect START so a stale URL (a PKCE state no longer polled) is never copyable.
   const [connectUrls, setConnectUrls] = useState<Record<string, string>>({});
   const dropConnectUrl = useCallback(
     (id: string) =>
@@ -85,7 +82,8 @@ export function useMcpConnectors({
     host.mcp?.catalog().then(setCatalog).catch(() => {});
   }, [host]);
 
-  const setBusyFor = (id: string, v: boolean) => setBusy((b) => ({ ...b, [id]: v }));
+  const failures = useConnectFailures();
+  const setBusyFor = (id: string, v: boolean) => (setBusy((b) => ({ ...b, [id]: v })), v && failures.clear(id));
   const applyInfo = (info: McpServerInfo, provider: string) => {
     setServers((prev) => [...prev.filter((s) => s.id !== info.id), info]);
     captureEvent(
@@ -101,7 +99,7 @@ export function useMcpConnectors({
   );
   const items = useMemo(
     () =>
-      buildMcpItems({
+      failures.apply(buildMcpItems({
         servers,
         catalog,
         directConnectors,
@@ -109,8 +107,8 @@ export function useMcpConnectors({
         credGroups,
         browserEnabled: !!host.mcp?.enableBrowser,
         t,
-      }),
-    [servers, catalog, directConnectors, isBlocked, credGroups, host, t],
+      })),
+    [servers, catalog, directConnectors, isBlocked, credGroups, host, t, failures.errors],
   );
   const openItem = openId ? items.find((i) => i.id === openId) ?? null : null;
   const byoItem = byoId ? items.find((i) => i.id === byoId) ?? null : null;
@@ -121,7 +119,8 @@ export function useMcpConnectors({
   // as one sitting in "Recherche & web" next to Tavily.
   const filtered = items.filter((i) => matchesSearch(i, query.trim()));
   const customItems = filtered.filter((i) => i.custom);
-  const groups = groupByMcpCategory(filtered.filter((i) => i.kind !== "local" && !i.custom));
+  const soonLast = (a: McpItem, b: McpItem) => Number(itemComingSoon(a)) - Number(itemComingSoon(b));
+  const groups = groupByMcpCategory(filtered.filter((i) => i.kind !== "local" && !i.custom).sort(soonLast));
   const localItems = filtered.filter((i) => i.kind === "local");
   const nothing = groups.length === 0 && localItems.length === 0 && customItems.length === 0;
 
@@ -135,7 +134,7 @@ export function useMcpConnectors({
         await host.mcp.add({ id: item.id, name: item.name, url });
         applyInfo(await host.mcp.connect(item.id), item.id);
       } catch (e) {
-        captureEvent({ name: "connector_error", provider: item.id, reason: connectorErrorReason(e) });
+        failures.fail(item.id, e);
       } finally {
         setBusyFor(item.serverId, false);
       }
@@ -153,7 +152,7 @@ export function useMcpConnectors({
         await host.mcp.add({ id: item.id, name: item.name, url: item.url ?? "", apiKey });
         applyInfo(await host.mcp.connect(item.id), item.id);
       } catch (e) {
-        captureEvent({ name: "connector_error", provider: item.id, reason: connectorErrorReason(e) });
+        failures.fail(item.id, e);
       } finally {
         setBusyFor(item.serverId, false);
       }
@@ -172,7 +171,7 @@ export function useMcpConnectors({
       try {
         applyInfo(await host.mcp.connectDirect(item.id, opts), item.id);
       } catch (e) {
-        captureEvent({ name: "connector_error", provider: item.id, reason: connectorErrorReason(e) });
+        failures.fail(item.id, e);
       } finally {
         setBusyFor(item.serverId, false);
       }
@@ -191,7 +190,7 @@ export function useMcpConnectors({
       try {
         applyInfo(await host.mcp.reauthDirect(serverId), serverId);
       } catch (e) {
-        captureEvent({ name: "connector_error", provider: serverId, reason: connectorErrorReason(e) });
+        failures.fail(serverId, e);
       } finally {
         setBusyFor(serverId, false);
         refresh();
@@ -210,7 +209,7 @@ export function useMcpConnectors({
       try {
         applyInfo(await host.mcp.addAccountDirect(item.id, opts), item.id);
       } catch (e) {
-        captureEvent({ name: "connector_error", provider: item.id, reason: connectorErrorReason(e) });
+        failures.fail(item.id, e);
       } finally {
         setBusyFor(item.serverId, false);
         refresh();
@@ -229,7 +228,7 @@ export function useMcpConnectors({
       try {
         applyInfo(await host.mcp.addAccountRemote(item.id, { url: item.url }), item.id);
       } catch (e) {
-        captureEvent({ name: "connector_error", provider: item.id, reason: connectorErrorReason(e) });
+        failures.fail(item.id, e);
       } finally {
         setBusyFor(item.serverId, false);
         refresh();
@@ -249,7 +248,7 @@ export function useMcpConnectors({
       try {
         applyInfo(await host.mcp.addAccountRemote(item.id, opts), item.id);
       } catch (e) {
-        captureEvent({ name: "connector_error", provider: item.id, reason: connectorErrorReason(e) });
+        failures.fail(item.id, e);
       } finally {
         setBusyFor(item.serverId, false);
         refresh();
@@ -270,7 +269,7 @@ export function useMcpConnectors({
         const added = await host.mcp.addStdio(item.id, env, params);
         applyInfo(added.error ? added : await host.mcp.connect(item.serverId), item.id);
       } catch (e) {
-        captureEvent({ name: "connector_error", provider: item.id, reason: connectorErrorReason(e) });
+        failures.fail(item.id, e);
       } finally {
         setBusyFor(item.serverId, false);
       }
@@ -339,7 +338,7 @@ export function useMcpConnectors({
     try {
       applyInfo(await host.mcp.enableBrowser(), "browser");
     } catch (e) {
-      captureEvent({ name: "connector_error", provider: "browser", reason: connectorErrorReason(e) });
+      failures.fail("browser", e);
     } finally {
       setBusyFor("browser", false);
       refresh();

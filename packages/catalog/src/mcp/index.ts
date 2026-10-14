@@ -35,7 +35,7 @@ export {
   connectorHosts,
 } from "./registry";
 export { BROWSER_CONNECTOR_ID } from "./connectors/builtin";
-export { mcpAuthTag, mcpAuthShape, type McpAuthShape, type McpAuthVariant } from "./authTag";
+export { isComingSoon, mcpAuthTag, mcpAuthShape, type McpAuthShape, type McpAuthVariant } from "./authTag";
 export { writeRisk, needsSystemConfirm, type WriteRisk, type WriteRiskContext } from "./writeRisk";
 export {
   READ_VERB,

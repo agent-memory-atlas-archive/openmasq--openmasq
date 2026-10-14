@@ -14,6 +14,7 @@ import {
   MCP_CONNECTORS,
   connectorIdFromInstance,
   groupByMcpCategory,
+  isComingSoon,
   type McpConnector,
 } from "@openmasq/catalog/mcp";
 
@@ -93,6 +94,8 @@ export function notConnectedConnectors(
     return (
       !SUGGEST_EXCLUDE.has(c.id) &&
       c.transport !== "broker" &&
+      // Not offered in one click yet: the card would lead to a Google Cloud project.
+      !isComingSoon(c) &&
       !connected.has(c.id) &&
       !(browserAvail && c.category === "search")
     );

@@ -31,6 +31,8 @@ export interface McpTabMessages {
   connected: string;
   manage: string;
   connect: string;
+  /** A connector not offered in one click yet (Google review pending): the card's CTA. */
+  soon: string;
   /** The detail sheet. */
   cancelConnect: string;
   linkCopied: string;

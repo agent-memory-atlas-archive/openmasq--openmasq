@@ -69,8 +69,8 @@ describe("notConnectedConnectors", () => {
     expect(withBrowser.some(isSearch("exa"))).toBe(false);
     expect(withBrowser.some(isSearch("firecrawl"))).toBe(false);
     expect(withBrowser.every((c) => c.category !== "search")).toBe(true);
-    // Non-search connectors (e.g. Gmail) are unaffected.
-    expect(withBrowser.some(isSearch("gmail"))).toBe(true);
+    // Non-search connectors (e.g. Outlook) are unaffected.
+    expect(withBrowser.some(isSearch("microsoft-outlook"))).toBe(true);
   });
 
   // The reported bug: the browser was the ONE integration that could never be
@@ -136,7 +136,9 @@ describe("suggestGuidance", () => {
     expect(suggestGuidance([])).toBe("");
     const g = suggestGuidance(notConnectedConnectors(new Set()));
     expect(g).toContain("suggest_integrations");
-    if (hasGmail) expect(g).toContain("gmail");
+    expect(g).toContain("microsoft-outlook");
+    // Not offered in one click yet (Google review): a suggestion would lead to a dead end.
+    if (hasGmail) expect(g).not.toContain("- gmail —");
   });
 });
 
@@ -160,7 +162,9 @@ describe("resolveSuggestCall — le choix du modèle est corroboré par la deman
   const candidates = notConnectedConnectors(new Set());
 
   it("sans texte de demande, garde la validation seule (compat)", () => {
-    expect(resolveSuggestCall(["gmail"], candidates).ids).toEqual(["gmail"]);
+    expect(resolveSuggestCall(["microsoft-outlook"], candidates).ids).toEqual(["microsoft-outlook"]);
+    // A connector the catalogue does not offer in one click is never a valid suggestion.
+    expect(resolveSuggestCall(["gmail"], candidates).ids).toEqual([]);
   });
 
   it("une lettre de relance : Gmail et Square proposés par le modèle sont ÉCARTÉS", () => {
@@ -174,7 +178,9 @@ describe("resolveSuggestCall — le choix du modèle est corroboré par la deman
   });
 
   it("…mais un impératif ou un nom de service les garde", () => {
-    expect(resolveSuggestCall(["gmail", "square"], candidates, "envoie-la par mail à M. Dupont").ids).toEqual(["gmail"]);
+    expect(resolveSuggestCall(["microsoft-outlook", "square"], candidates, "envoie-la par mail à M. Dupont").ids).toEqual([
+      "microsoft-outlook",
+    ]);
     expect(resolveSuggestCall(["square"], candidates, "combien de ventes sur Square hier ?").ids).toEqual(["square"]);
   });
 

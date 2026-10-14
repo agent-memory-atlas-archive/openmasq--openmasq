@@ -58,6 +58,14 @@ export interface McpAuthShape {
   reason?: "admin-consent" | "google-review";
 }
 
+/** Not offered in one click yet (Google review pending): only « Mes clés » leads in. The
+ *  card says « Bientôt » and the chat never suggests it — a guaranteed dead end otherwise. */
+export function isComingSoon(
+  c: Pick<McpConnector, "transport" | "auth" | "directAuth" | "byoOnly" | "byoReason" | "byoAdds">,
+): boolean {
+  return mcpAuthShape(c).variant === "comingSoon";
+}
+
 export function mcpAuthShape(
   c: Pick<McpConnector, "transport" | "auth" | "directAuth" | "byoOnly" | "byoReason" | "byoAdds">,
 ): McpAuthShape {

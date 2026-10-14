@@ -2,6 +2,7 @@ import { isDeadTransport, type McpConnection, type McpTool } from "@openmasq/mcp
 import { getServer } from "../persist";
 import { reportMainError } from "../../runtime/errorReport";
 import { BROWSER_TOOL_ALLOWLIST } from "../browserTools";
+import { forgetTools, freshTools, lastKnownTools, rememberTools } from "./toolListCache";
 import { BROWSER_ID, type McpAuthChoice } from "./types";
 
 /** The ONE home for the live MCP connection state (rule 10): every other mcp/ module
@@ -68,6 +69,7 @@ function evictConnector(id: string): void {
   if (!server) return;
   connected.delete(id);
   toolCounts.delete(id);
+  forgetTools(id);
   void Promise.resolve(server.close()).catch(() => {});
   needsReconnect.add(id);
 }
@@ -92,21 +94,30 @@ export function handleConnectorClosed(id: string): void {
  * front leaves it EMPTY during every `await listTools()`, and a call landing in that window
  * dies on "Unknown MCP tool". A reader sees the old table or the new one, never a gap.
  * `routes` stays the SAME object (`callTool.ts` holds the reference).
+ *
+ * `maxAgeMs` lets a list that recent stand in for a round-trip; a listing that fails on a
+ * LIVE transport keeps the last answer (`toolListCache.ts`).
  */
-export async function refreshRoutes(): Promise<McpTool[]> {
+export async function refreshRoutes(opts: { maxAgeMs?: number } = {}): Promise<McpTool[]> {
   const next = new Map<string, { server: McpConnection; realName: string; annotations?: McpTool["annotations"] }>();
   const all: McpTool[] = [];
   // Evicting DURING iteration would re-enter `refreshRoutes`: collect, decide after.
   const dead: string[] = [];
   for (const [id, server] of connected) {
-    let tools: McpTool[];
-    try {
-      tools = await server.listTools();
-    } catch (err) {
-      toolCounts.set(id, 0);
-      if (isDeadTransport(err)) dead.push(id);
-      else reportMainError("mcp", "list-tools", err);
-      continue;
+    let tools = freshTools(id, server, opts.maxAgeMs ?? 0);
+    if (!tools) {
+      try {
+        tools = await server.listTools();
+        rememberTools(id, server, tools);
+      } catch (err) {
+        if (isDeadTransport(err)) dead.push(id);
+        else reportMainError("mcp", "list-tools", err);
+        tools = isDeadTransport(err) ? null : lastKnownTools(id, server);
+        if (!tools) {
+          toolCounts.set(id, 0);
+          continue;
+        }
+      }
     }
     // The browser connector exposes ONLY the allow-listed tools: a package bump can't
     // silently surface a new exfil primitive.
@@ -132,8 +143,11 @@ export async function refreshRoutes(): Promise<McpTool[]> {
   return all;
 }
 
+/** How long the renderer's per-send listing reuses a server's last answer. */
+const LIST_TOOLS_MAX_AGE_MS = 60_000;
+
 export function mcpListToolsAll(): Promise<McpTool[]> {
-  return refreshRoutes();
+  return refreshRoutes({ maxAgeMs: LIST_TOOLS_MAX_AGE_MS });
 }
 
 export async function mcpDisconnect(id: string): Promise<void> {
@@ -147,6 +161,7 @@ export async function mcpDisconnect(id: string): Promise<void> {
     connected.delete(id);
     toolCounts.delete(id);
   }
+  forgetTools(id);
   // A user-driven disconnect is not a "needs reconnect" situation (also covers mcpRemove).
   if (needsReconnect.delete(id)) emitNeedsReconnect();
   await refreshRoutes();
@@ -162,4 +177,5 @@ export async function mcpCloseAll(): Promise<void> {
   }
   connected.clear();
   routes.clear();
+  forgetTools();
 }

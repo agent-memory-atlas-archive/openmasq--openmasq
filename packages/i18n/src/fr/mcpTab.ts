@@ -131,6 +131,9 @@ export const mcpTab = {
     forbidden: "Ce service a refusé l'accès. Vérifiez vos autorisations dans ce service, puis reconnectez-vous.",
     expired: "Votre autorisation a expiré. Reconnectez-vous pour continuer.",
     network: "Service injoignable. Réessayez dans un instant.",
+    rateLimit: "Ce service limite le nombre de demandes. Réessayez dans une minute.",
+    cancelled: "La connexion a été interrompue avant la fin. Relancez-la quand vous voulez.",
+    missing: "Il manque des identifiants pour ce connecteur. Complétez-les, puis reconnectez-vous.",
   },
   apiKeys: {
     exa: {

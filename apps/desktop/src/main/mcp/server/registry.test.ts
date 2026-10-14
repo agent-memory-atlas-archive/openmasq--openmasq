@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach, vi } from "vitest";
 import type { McpConnection } from "@openmasq/mcp";
-import { connected, routes, refreshRoutes } from "./registry";
+import { connected, routes, refreshRoutes, mcpListToolsAll, toolCounts } from "./registry";
+import { forgetTools } from "./toolListCache";
 
 vi.mock("../persist", () => ({ getServer: () => undefined }));
 vi.mock("../../runtime/errorReport", () => ({ reportMainError: () => {} }));
@@ -30,6 +31,7 @@ function fakeConn(toolNames: string[], gate?: Promise<void>): McpConnection {
 beforeEach(() => {
   connected.clear();
   routes.clear();
+  forgetTools();
 });
 
 describe("refreshRoutes — la table reste lisible PENDANT le rafraîchissement", () => {
@@ -77,5 +79,54 @@ describe("refreshRoutes — la table reste lisible PENDANT le rafraîchissement"
     await refreshRoutes();
     expect(routes.has("posthog__vieux-outil")).toBe(false);
     expect(routes.has("posthog__exec")).toBe(true);
+  });
+});
+
+/** A connection whose `listTools` is a spy we can make fail. */
+function spyConn(toolNames: string[]) {
+  const listTools = vi.fn(async () => toolNames.map((name) => ({ name, description: "", inputSchema: {} })));
+  const conn = { listTools, callTool: async () => ({ content: [] }), close: async () => {} } as unknown as McpConnection;
+  return { conn, listTools };
+}
+
+describe("refreshRoutes — a connector's tools survive a refused listing", () => {
+  it("a rate-limited listing on a LIVE transport keeps the last answer instead of dropping the tools", async () => {
+    const { conn, listTools } = spyConn(["exec"]);
+    connected.set("posthog", conn);
+    await refreshRoutes();
+    listTools.mockRejectedValueOnce(new Error("Streamable HTTP error: Rate limit exceeded. Please wait before trying again."));
+    await refreshRoutes();
+    expect(routes.has("posthog__exec")).toBe(true);
+    expect(toolCounts.get("posthog")).toBe(1);
+  });
+
+  it("with no earlier answer, a refused listing offers nothing (never a guess)", async () => {
+    const { conn, listTools } = spyConn(["exec"]);
+    listTools.mockRejectedValueOnce(new Error("Rate limit exceeded"));
+    connected.set("posthog", conn);
+    await refreshRoutes();
+    expect(routes.has("posthog__exec")).toBe(false);
+    expect(toolCounts.get("posthog")).toBe(0);
+  });
+
+  it("the per-send listing reuses a recent answer; a connect-time refresh re-lists", async () => {
+    const { conn, listTools } = spyConn(["exec"]);
+    connected.set("posthog", conn);
+    await mcpListToolsAll();
+    await mcpListToolsAll();
+    expect(listTools).toHaveBeenCalledTimes(1);
+    await refreshRoutes();
+    expect(listTools).toHaveBeenCalledTimes(2);
+  });
+
+  it("a reconnect under the same id is a new connection: its list is never served from the old one", async () => {
+    const first = spyConn(["exec"]);
+    connected.set("posthog", first.conn);
+    await mcpListToolsAll();
+    const second = spyConn(["exec", "query"]);
+    connected.set("posthog", second.conn);
+    await mcpListToolsAll();
+    expect(second.listTools).toHaveBeenCalledTimes(1);
+    expect(routes.has("posthog__query")).toBe(true);
   });
 });

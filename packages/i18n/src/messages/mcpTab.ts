@@ -134,6 +134,9 @@ export interface McpTabMessages {
     forbidden: string;
     expired: string;
     network: string;
+    rateLimit: string;
+    cancelled: string;
+    missing: string;
   };
   /** Where to find the key of the three key-based connectors. */
   apiKeys: {

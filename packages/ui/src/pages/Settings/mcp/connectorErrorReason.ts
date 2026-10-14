@@ -1,17 +1,18 @@
 import type { TrackEvent } from "../../../analytics";
+import { connectorErrorFamily } from "./connectorErrorText";
 
 /**
- * BOUNDED cause of a connector's connection failure — the `ConnectorErrorReason` enum
- * had existed from the start and 17 call sites all hardcoded `"unknown"` (audit 13/08):
- * the event said « a connector failed » and nothing else. Derived from the error
- * message (never sent itself — enum only).
+ * BOUNDED cause of a connector's connection failure, for measurement: the SAME
+ * classification the user's sentence comes from (`connectorErrorFamily`), so what we count
+ * and what we show cannot drift. Derived from the error message, never sent itself.
+ * Accepts the thrown error OR the `error` string a failed connect returns.
  */
 export function connectorErrorReason(
   e: unknown,
 ): Extract<TrackEvent, { name: "connector_error" }>["reason"] {
-  const m = (e instanceof Error ? e.message : String(e)).toLowerCase();
-  if (/oauth|consent|redirect|authorization code|pkce/.test(m)) return "oauth";
-  if (/401|403|unauthorized|forbidden|invalid[_ ]?api[_ ]?key|api key|token/.test(m)) return "unauthorized";
-  if (/fetch failed|network|econnrefused|enotfound|etimedout|timeout|err_network|err_internet|socket/.test(m)) return "network";
+  const m = e instanceof Error ? e.message : String(e ?? "");
+  const family = connectorErrorFamily(m);
+  if (family) return family;
+  if (/oauth|consent|redirect|authorization code|pkce/i.test(m)) return "oauth";
   return "unknown";
 }

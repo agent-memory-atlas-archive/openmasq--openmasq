@@ -12,6 +12,7 @@
 import type { Section } from "../types";
 import type { ModelAccess } from "../state/auth/modelAccess";
 import type { SendOutcome, SendRefusal } from "../send/sendResult";
+import type { ConnectorErrorFamily } from "../pages/Settings/mcp/connectorErrorText";
 // Likewise: the language is a catalogue enum, never a free string.
 import type { Locale } from "@openmasq/i18n";
 
@@ -49,7 +50,7 @@ export type ToolErrorReason =
 export type ToolErrorFamily = "auth" | "quota" | "not_found" | "bad_request" | "timeout" | "server" | "other";
 
 /** Why a connector (OAuth) failed to connect — bounded. */
-type ConnectorErrorReason = "oauth" | "network" | "unauthorized" | "unknown";
+type ConnectorErrorReason = ConnectorErrorFamily | "oauth" | "unknown";
 
 export type TrackEvent =
   // ── app / navigation ───────────────────────────────────────────────────

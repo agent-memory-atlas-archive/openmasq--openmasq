@@ -91,7 +91,7 @@ export function useMcpConnectors({
     captureEvent(
       info?.connected
         ? { name: "connector_connect", provider }
-        : { name: "connector_error", provider, reason: "unknown" },
+        : { name: "connector_error", provider, reason: connectorErrorReason(info?.error) },
     );
   };
 

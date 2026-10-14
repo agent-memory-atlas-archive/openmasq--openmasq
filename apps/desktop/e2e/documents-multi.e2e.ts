@@ -124,7 +124,9 @@ test.describe("Documents multiples — redaction local, jugé sans modèle", () 
       // ── Upload: one click, four files ────────────────────────────────────────
       // Attaching goes through the composer's « Ajouter » menu, then its « Fichier » entry.
       // Two composers stay mounted (welcome + docked): only the visible one is clickable.
-      const fileEntry = page.getByTitle("Joindre un fichier").filter({ visible: true }).first();
+      // By its visible label: the app's tooltip layer lifts a hovered element's `title` to draw
+      // its own bubble, so a title locator misses the very entry the pointer is on.
+      const fileEntry = page.getByRole("menuitem", { name: "Fichier", exact: true }).filter({ visible: true }).first();
       // The menu can miss a click made while the shell is still settling: re-open until it shows.
       await expect(async () => {
         if (!(await fileEntry.isVisible())) {

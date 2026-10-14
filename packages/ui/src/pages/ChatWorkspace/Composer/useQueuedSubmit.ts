@@ -7,7 +7,9 @@ import { useEffect, useState } from "react";
  */
 export function useQueuedSubmit(busy: boolean, input: string, onSubmit: () => void) {
   const [queued, setQueued] = useState(false);
-  useEffect(() => setQueued(false), [input]);
+  useEffect(() => {
+    setQueued(false);
+  }, [input]);
   useEffect(() => {
     if (!queued || busy) return;
     setQueued(false);

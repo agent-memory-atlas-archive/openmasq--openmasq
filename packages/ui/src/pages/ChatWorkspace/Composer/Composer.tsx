@@ -26,6 +26,7 @@ import { useLiveDetection } from "./useLiveDetection";
 import { useSendState } from "./useSendState";
 import { useLongPasteUndo } from "./useLongPasteUndo";
 import { useSlashPalette } from "./useSlashPalette";
+import { useQueuedSubmit } from "./useQueuedSubmit";
 
 type MarkMenu = { x: number; y: number; value: string; hue: string; uncertain?: boolean };
 
@@ -62,6 +63,7 @@ export function Composer(p: ComposerProps) {
   });
   const sendState = useSendState({ input, attachments, live, skillCats: utilRisk.skillCats, t });
   const { busy, showDone, scanState } = sendState;
+  const { queued, request: requestSubmit } = useQueuedSubmit(busy, input, onSubmit);
 
   // A textarea selection (not a DOM range) → the "Redact" menu; a keystroke drops it.
   const { sel: redactSel, onSelect: onTaSelect, clear: clearRedactSel } = useTextareaSelection(taRef);
@@ -83,8 +85,8 @@ export function Composer(p: ComposerProps) {
     if (palette.onKeyDown(e)) return;
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      // Never send while a file is read or the redaction is still being computed (or a file redacted).
-      if (!busy) onSubmit();
+      // Never send while a file is read or the preview still analyses: queued until it ends.
+      requestSubmit();
     }
   }
   // A long draft collapses the inline box to a card; editing moves to the modal. The
@@ -200,6 +202,7 @@ export function Composer(p: ComposerProps) {
           }
         />
         {p.redactLevel && <ComposerRedactButton api={p.redactLevel} />}
+        {queued && <span className="protected-pill sm">{t.composer.sendQueued}</span>}
         {/* Idle-only count; the LIVE state (running → done) is shown IN the send button. */}
         {!busy && !showDone && scanState.kind === "count" && (
           <span

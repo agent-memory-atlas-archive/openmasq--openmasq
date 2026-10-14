@@ -95,6 +95,7 @@ export const composer = {
   add: "Add",
   addFile: "File",
   attachFile: "Attach a file",
+  sendQueued: "Sending once the analysis ends…",
   addFolder: "Folder",
   addFolderTip: "Give access to a folder on this computer",
   addConnector: "Connector",

@@ -146,6 +146,8 @@ export interface ComposerMessages {
   add: string;
   addFile: string;
   attachFile: string;
+  /** Enter pressed while the preview still analyses: the message leaves once it ends. */
+  sendQueued: string;
   addFolder: string;
   addFolderTip: string;
   addConnector: string;

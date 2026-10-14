@@ -14,7 +14,8 @@ interface Deps {
 
 /**
  * The send button IS the redaction indicator: a spinner while reading, detecting or redacting, a
- * brief ✓ once something was actually protected, then the send icon. The live count comes
+ * brief ✓ once a FILE was actually masked, then the send icon. Never after a pause in typing:
+ * a ✓ there read as « masked and sent » while nothing had left. The live count comes
  * from the MERGED detection (the same source as the chips and the highlight), minus the
  * values kept in clear, plus the staged compétence's prompt — it goes out too.
  */
@@ -34,16 +35,16 @@ export function useSendState(d: Deps) {
   const scanState = previewStatus(live.detecting, liveCount, hasSomething, t, live.modelGaveUp);
 
   const [showDone, setShowDone] = useState(false);
-  const wasBusy = useRef(false);
+  const wasRedacting = useRef(false);
   useEffect(() => {
-    const finished = wasBusy.current && !busy;
-    wasBusy.current = busy;
+    const finished = wasRedacting.current && !redacting;
+    wasRedacting.current = redacting;
     if (!finished) return;
-    if (liveCount === 0 && !attachments.some((a) => (a.redactPreview ?? 0) > 0)) return;
+    if (!attachments.some((a) => (a.redactPreview ?? 0) > 0)) return;
     setShowDone(true);
     const timer = window.setTimeout(() => setShowDone(false), 650);
     return () => window.clearTimeout(timer);
-  }, [busy]);
+  }, [redacting]);
 
   return { redacting, reading: reading && !redacting && !live.detecting, busy, sendDisabled, liveCount, scanState, showDone };
 }

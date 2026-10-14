@@ -98,6 +98,7 @@ export const composer = {
   add: "Ajouter",
   addFile: "Fichier",
   attachFile: "Joindre un fichier",
+  sendQueued: "Envoi dès la fin de l'analyse…",
   addFolder: "Dossier",
   addFolderTip: "Autoriser l'accès à un dossier de cet ordinateur",
   addConnector: "Connecteur",

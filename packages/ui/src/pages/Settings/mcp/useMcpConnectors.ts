@@ -119,7 +119,8 @@ export function useMcpConnectors({
   // as one sitting in "Recherche & web" next to Tavily.
   const filtered = items.filter((i) => matchesSearch(i, query.trim()));
   const customItems = filtered.filter((i) => i.custom);
-  const soonLast = (a: McpItem, b: McpItem) => Number(itemComingSoon(a)) - Number(itemComingSoon(b));
+  const rank = (i: McpItem) => (i.connected ? 0 : itemComingSoon(i) ? 2 : 1); // connected, one-click, soon
+  const soonLast = (a: McpItem, b: McpItem) => rank(a) - rank(b);
   const groups = groupByMcpCategory(filtered.filter((i) => i.kind !== "local" && !i.custom).sort(soonLast));
   const localItems = filtered.filter((i) => i.kind === "local");
   const nothing = groups.length === 0 && localItems.length === 0 && customItems.length === 0;

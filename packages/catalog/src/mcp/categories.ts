@@ -1,15 +1,17 @@
 import type { McpCategory } from "./types";
 
+/** The ORDER is the reading order of every connector list: what most people connect first
+ *  (mail, agenda, documents) leads, the developer tools close it. */
 export const MCP_CATEGORIES: McpCategory[] = [
-  { id: "search", label: "Recherche & web" },
-  { id: "dev", label: "Développement" },
-  { id: "data", label: "Données & stockage" },
   { id: "productivity", label: "Productivité" },
+  { id: "data", label: "Données & stockage" },
   { id: "crm", label: "CRM & support" },
   { id: "finance", label: "Finance & paiements" },
+  { id: "search", label: "Recherche & web" },
   { id: "design", label: "Design & sites" },
   { id: "automation", label: "Automatisation" },
   { id: "ai", label: "IA & modèles" },
+  { id: "dev", label: "Développement" },
 ];
 /** The id used for connectors with no (or an unknown) category. */
 export const MCP_CATEGORY_OTHER = "other";

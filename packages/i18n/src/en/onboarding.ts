@@ -36,12 +36,12 @@ export const onboarding = {
     titleIncluded: "Your account, or your key",
     titleUnserved: "Your key, or a local model",
     subServed:
-      "You can change this later. Either way, masking runs before every message is sent.",
+      "You can change this later.",
     subUnserved:
-      "An API key, a model running on your machine, or your Claude Code / Codex subscription. Either way, masking runs before every message is sent.",
+      "Your Claude Code / Codex subscription or an API key. You can change this later.",
     titleAgents: "Your subscription, or a key",
     subAgents:
-      "With Claude Code or Codex on this machine, your messages go through your subscription. No API key needed. Otherwise, use an API key or a local model. Either way, masking runs before every message is sent.",
+      "With Claude Code or Codex, your messages go through the subscription you already pay for, no key. Otherwise, an API key.",
     required: "Add an API key or switch on your subscription to continue: without access, no model can answer you.",
   },
 
@@ -89,8 +89,8 @@ export const onboarding = {
     },
     agent: {
       title: "My Claude Code / Codex subscription",
-      sub: "Uses the subscription you already pay for. If the CLI is not installed or signed in, set it up here in two clicks. Each message counts against your personal subscription. No API key needed.",
-      hint: "Each CLI's subscription and quota are shown in Settings → Models.",
+      sub: "Uses the subscription you already pay for, no key. The app installs and connects Claude Code or Codex for you if needed.",
+      hint: "Each message counts against your subscription. Its quota is shown in Settings → Models.",
     },
     recommended: "recommended",
     otherProvider: "Another provider",

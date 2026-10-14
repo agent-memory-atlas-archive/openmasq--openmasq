@@ -92,7 +92,7 @@ export const viewers = {
     failed: "échec du masquage",
     notChecked: "masquage non vérifié ici",
     none: "aucune valeur détectée",
-    protected: (n) => `${n} valeur${n > 1 ? "s" : ""} protégée${n > 1 ? "s" : ""}`,
+    protected: (n) => `${n} valeur${n > 1 ? "s" : ""} masquée${n > 1 ? "s" : ""}`,
     byKind: (n, kind) => `${n} × ${kind}`,
   },
 } satisfies Messages["viewers"];

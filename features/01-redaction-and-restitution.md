@@ -40,7 +40,7 @@ a real city — the model reasons correctly, on values that are not yours.
 - [ ] Restoring a marker the model translated (« [PERSONNE1] ») — not covered
 
 ### The 18 categories, and the protection level
-**Access**: Réglages → **Confidentialité** → « **Niveau de protection** » (Allégé /
+**Access**: Réglages → **Confidentialité** → « **Niveau de masquage** » (Allégé /
 Renforcé / Strict, « Sur mesure » being the hand-set state), then the expandable matrix.
 Each card names a concrete use — Allégé « recherche web et outils », Renforcé (the default)
 « rédaction, e-mails, échanges courants », Strict « documents à analyser » — then what it
@@ -97,7 +97,7 @@ holds, it is not merely displayed.
 
 ### Seeing what the model saw
 **Access**: under a reply → « Voir ce que le modèle a vu » (`TransparencyModal`), or
-Réglages → Confidentialité → « Options avancées » → « **Journal technique détaillé** ».
+Réglages → Confidentialité → « Options avancées » → « **Journal de débogage** ».
 
 **What it makes possible.** Comparing, message by message, what you wrote and what actually
 left. The comparison is not a copy taken aside: it replays the same substitution as the
@@ -123,7 +123,7 @@ opens in one click from any reply.
       `packages/ui/src/components/message/MessageBubble.tsx`
 - [x] **« Comprendre mon masquage »** — a small container under the first replies opens the guide's redaction chapter (public figures left in the clear, a zero counter on a conversation with no personal data, Coffre for code names); « Fermer pour toujours » (`Settings.redactionIntroSeen`), the chapter staying in Aide; never stacked with the transparency card — `packages/ui/src/privacy/redactionIntro.ts`, `packages/ui/src/pages/ChatWorkspace/RedactionIntroCard.tsx`
 - [x] Global audit log, filterable and searchable — Réglages → **Journal** (the per-conversation log, an impoverished view of the same vault, was removed)
-- [x] Technical **debug log**, turn by turn, **persistent** (⋯ → « Journal de débogage », visible when « Journal technique détaillé » is on) — `packages/ui/src/containers/modals/DebugLogModal/`
+- [x] Technical **debug log**, turn by turn, **persistent** (⋯ → « Journal de débogage », visible when « Journal de débogage » is on) — `packages/ui/src/containers/modals/DebugLogModal/`
 - [x] Copy an exchange **without** the mapping table (the text that left, alone)
 - [x] **Send the log to the developers** — the debug log opens « Votre feedback » pre-filled, the mapping-free export attached and re-readable before sending — `packages/ui/src/feedback/feedback.ts` (`debugLogDraft`)
 - [x] **Report from the reply itself** — a feedback icon in the action bar (next to Copy / Regenerate / Fork) opens « Votre feedback » with this conversation's log already attached; it catches the eye once per reply, then goes quiet — `packages/ui/src/feedback/feedback.ts` (`messageFeedbackDraft`)

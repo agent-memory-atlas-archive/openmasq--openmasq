@@ -80,7 +80,7 @@ export const composer = {
     `${n} catégorie${n > 1 ? "s" : ""} imposée${n > 1 ? "s" : ""} par votre organisation, quel que soit le niveau.`,
   applied: (level, scope) => `${level} · ${scope}`,
   undo: "Annuler",
-  protectionLevel: "Niveau de protection",
+  protectionLevel: "Niveau de masquage",
 
   placeholder: (brand) => `Écrivez à ${brand} ou déposez un fichier…`,
 

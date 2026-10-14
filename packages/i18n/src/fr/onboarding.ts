@@ -25,7 +25,7 @@ export const onboarding = {
     },
     webReveal: {
       lead: (brand) => `Avant une recherche sur le web, ${brand} vous `,
-      strong: "propose de révéler",
+      strong: "propose de démasquer",
       tail: " ce qui est masqué. Sinon, la recherche porterait sur des substituts qui n'existent pas.",
     },
   },
@@ -36,12 +36,12 @@ export const onboarding = {
     titleIncluded: "Votre compte, ou votre clé",
     titleUnserved: "Votre clé, ou un modèle local",
     subServed:
-      "Modifiable à tout moment. Dans tous les cas, le masquage s'applique avant chaque envoi.",
+      "Modifiable à tout moment.",
     subUnserved:
-      "Une clé API, un modèle qui tourne sur votre machine, ou votre abonnement Claude Code / Codex. Dans tous les cas, le masquage s'applique avant chaque envoi.",
+      "Votre abonnement Claude Code / Codex ou une clé API. Modifiable à tout moment.",
     titleAgents: "Votre abonnement, ou une clé",
     subAgents:
-      "Avec Claude Code ou Codex sur cette machine, vos messages passent par votre abonnement. Aucune clé API nécessaire. Sinon, utilisez une clé API ou un modèle local. Dans tous les cas, le masquage s'applique avant chaque envoi.",
+      "Avec Claude Code ou Codex, vos messages passent par l'abonnement que vous payez déjà, sans clé. Sinon, une clé API.",
     required:
       "Ajoutez une clé API ou activez votre abonnement pour continuer : sans accès, aucun modèle ne peut vous répondre.",
   },
@@ -90,8 +90,8 @@ export const onboarding = {
     },
     agent: {
       title: "Mon abonnement Claude Code / Codex",
-      sub: "Utilise l'abonnement que vous payez déjà. Si la CLI n'est pas installée ou connectée, deux clics suffisent ici. Chaque message est décompté de votre abonnement personnel. Aucune clé API nécessaire.",
-      hint: "L'abonnement et le quota de chaque CLI s'affichent dans Réglages → Modèles.",
+      sub: "Utilise l'abonnement que vous payez déjà, sans clé. L'app installe et connecte Claude Code ou Codex pour vous si besoin.",
+      hint: "Chaque message est décompté de votre abonnement. Son quota s'affiche dans Réglages → Modèles.",
     },
     recommended: "conseillé",
     otherProvider: "Autre fournisseur",

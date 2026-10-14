@@ -48,7 +48,7 @@ export const privacyTab = {
   managedByOrg: (n) => ` · ${n} managed by your organization`,
   advancedTitle: "Advanced options",
   advancedSub: "Technical log, placeholder display, what the model receives.",
-  debugLogTitle: "Detailed technical log",
+  debugLogTitle: "Debug log",
   debugLogHint: "Adds “Debug log” to the ⋯ menu of every conversation. Stored on this device only.",
   tokenDisplayTitle: "Show placeholders instead of substitutes",
   tokenDisplayHint:

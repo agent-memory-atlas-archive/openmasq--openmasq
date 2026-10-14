@@ -34,7 +34,7 @@ describe("groupEgress", () => {
 
   it("de-duplicates sources by LABEL — the browser and its favicon fetcher are one origin", () => {
     const lemonde = groupEgress(rows).find((g) => g.host === "lemonde.fr")!;
-    expect(lemonde.sources).toEqual(["Navigateur piloté"]);
+    expect(lemonde.sources).toEqual(["Navigateur intégré"]);
   });
 
   it("carries the refusal count and OUR reason, and flags an unencrypted scheme", () => {
@@ -94,6 +94,6 @@ describe("in English", () => {
     const en = getMessages("en");
     expect(label("link-preview", en)).toBe("Link preview");
     expect(label("some-future-thing", en)).toBe("some-future-thing");
-    expect(filterEgress(group(rows, en), "agent browser").length).toBeGreaterThan(0);
+    expect(filterEgress(group(rows, en), "built-in browser").length).toBeGreaterThan(0);
   });
 });

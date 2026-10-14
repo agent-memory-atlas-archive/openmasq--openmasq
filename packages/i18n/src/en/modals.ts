@@ -136,7 +136,7 @@ export const modals = {
 
   debug: {
     emptyFiltered: "No entry matches this filter.",
-    empty: "No entries yet. Send a message with debug mode on.",
+    empty: "No entries yet. Send a message with the debug log on (Settings → Advanced).",
     eyebrow: "DEVELOPER",
     title: "Debug log",
     subLead: "What was really sent and received for ",

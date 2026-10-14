@@ -48,13 +48,13 @@ export const conversation = {
   artifact: { pane: "Aperçu du fichier", copy: "Copier", copied: "Copié", close: "Fermer" },
 
   browser: {
-    pane: "Navigateur agent",
+    pane: "Navigateur intégré",
     bookmarks: "Favoris",
     askAboutPage: "Poser une question sur cette page",
     askAboutPageLabel: "Demander à propos de cette page",
     embedded: "Navigateur intégré",
-    unavailable: "Navigateur agent indisponible sur cette plateforme.",
-    loading: "Chargement du navigateur agent…",
+    unavailable: "Navigateur intégré indisponible sur cette plateforme.",
+    loading: "Chargement du navigateur intégré…",
     offlineTitle: "Le navigateur est désactivé.",
     offlineSub: (brand) =>
       `Activez-le pour consulter le web ici, et laisser ${brand} y chercher pour vous.`,
@@ -151,7 +151,7 @@ export const conversation = {
     redactionFailedTip: "Le modèle de masquage a échoué pour ce message",
     redactedTip:
       "Remplacé par une valeur de substitution avant d'atteindre le modèle, restauré dans sa réponse",
-    protectedCount: (n) => `${n} protégé${n === 1 ? "" : "s"}`,
+    protectedCount: (n) => `${n} masqué${n === 1 ? "" : "s"}`,
     protectedSee: "voir",
     autoRoutedTip:
       "Mode Auto : le modèle de cette réponse a été choisi automatiquement selon la tâche.",

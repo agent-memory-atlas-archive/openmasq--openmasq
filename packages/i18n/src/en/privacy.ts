@@ -49,10 +49,10 @@ export const redactTypes = {
 } satisfies Messages["redactTypes"];
 
 export const webNav = {
-  ariaLabel: "Web browsing: protection level for this search",
+  ariaLabel: "Web browsing: masking level for this search",
   eyebrow: "Web browsing",
   thisMessageOnly: "This message only.",
   keepMasking: "Keep masking",
-  title: (level) => `Search the web with ${level} protection?`,
+  title: (level) => `Search the web at the ${level} level?`,
   rest: "Everything else stays masked for the model. Your search query is sent with real values either way.",
 } satisfies Messages["webNav"];

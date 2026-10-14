@@ -6,7 +6,7 @@
  */
 import type { Messages } from "../messages";
 
-const NOT_MASKED = "Les noms et prénoms n'ont pas été masqués. Rien n'a été envoyé.";
+const NOT_MASKED = "Rien n'a été envoyé : les noms n'ont pas pu être masqués.";
 
 export const runtimeSend = {
   maskingBlocked: (cause) => `Envoi bloqué : ${cause}. Rien n'a été envoyé. Réessayez.`,
@@ -118,8 +118,8 @@ export const runtimeFiles = {
 
 export const runtimeMisc = {
   egressSources: {
-    browser: "Navigateur piloté",
-    "browser-favicon": "Navigateur piloté",
+    browser: "Navigateur intégré",
+    "browser-favicon": "Navigateur intégré",
     connector: "Connecteur",
     "mcp-connect": "Connexion d'un connecteur",
     "tool-result-fetch": "Téléchargement depuis un outil",

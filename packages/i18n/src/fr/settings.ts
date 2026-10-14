@@ -94,12 +94,12 @@ export const settings = {
       kw: "analytics telemetrie consentement anonymes",
     },
     transparencyLog: {
-      label: "Journal technique détaillé",
+      label: "Journal de débogage",
       kw: "transparence debogage debug journal wire message exact modele vu par le modele comparatif options avancees",
     },
     linkPreviews: { label: "Aperçus de liens", kw: "lien preview vignette apercu url ip" },
     protectionLevel: {
-      label: "Niveau de protection",
+      label: "Niveau de masquage",
       kw: "niveau allege renforce strict light enhanced sur mesure categories regles masquage",
     },
     showTokens: {
@@ -139,8 +139,8 @@ export const settings = {
       kw: "confirmation confirmer chaque action ecriture write gate renforce outils agent",
     },
     browserSecurity: {
-      label: "Sécurité du navigateur agent",
-      kw: "navigateur agent lecture seule domaines autorises injection securite browser",
+      label: "Sécurité du navigateur intégré",
+      kw: "navigateur integre agent lecture seule domaines autorises injection securite browser",
     },
     connectedDevices: {
       label: "Appareils connectés",

@@ -113,14 +113,14 @@ export const mcpTab = {
   autoApprove: "Allow everything without asking (this session)",
   autoApproveHint:
     "Actions run without asking until you restart the app. You confirm this choice once, in a separate window.",
-  browserSecurityEyebrow: "Agent browser security",
+  browserSecurityEyebrow: "Built-in browser security",
   readOnly: "Read-only (search)",
   readOnlyHint:
     "The browser can only open and read pages. The model cannot click, type or submit forms. This blocks actions a malicious page might try to trigger.",
   allowedDomains: "Allowed domains",
   allowedDomainsHint:
     "Limits the model to these domains and their subdomains. One domain per line. Leave empty to allow all domains. Addresses you type yourself are never restricted.",
-  allowedDomainsAria: "Allowed domains for the agent browser",
+  allowedDomainsAria: "Allowed domains for the built-in browser",
   loadingTools: "Loading tools…",
   noTools: "This connector offers no tools.",
   toolsAvailable: (n) => `${n} tool${n === 1 ? "" : "s"} available`,

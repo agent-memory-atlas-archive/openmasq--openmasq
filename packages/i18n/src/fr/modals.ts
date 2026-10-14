@@ -10,7 +10,7 @@ export const modals = {
   transparency: {
     title: "Ce que le modèle a vu",
     sub: (n, modelName) =>
-      `${n} information${n === 1 ? "" : "s"} remplacée${n === 1 ? "" : "s"} avant d'atteindre ${modelName}. À gauche votre texte, à droite ce qui a été envoyé.`,
+      `${n} valeur${n === 1 ? "" : "s"} masquée${n === 1 ? "" : "s"} avant d'atteindre ${modelName}. À gauche votre texte, à droite ce qui a été envoyé.`,
     theModel: "le modèle",
     close: "Fermer",
     empty:
@@ -21,7 +21,7 @@ export const modals = {
     modelWrote: "Ce que le modèle a écrit",
     yourMessage: "Votre message",
     reply: "Réponse",
-    swapped: (n) => `${n} remplacement${n === 1 ? "" : "s"}`,
+    swapped: (n) => `${n} valeur${n === 1 ? "" : "s"} masquée${n === 1 ? "" : "s"}`,
     showMore: (n) => `Afficher la suite (${n.toLocaleString("fr-FR")} caractères restants)`,
   },
 
@@ -138,7 +138,7 @@ export const modals = {
 
   debug: {
     emptyFiltered: "Aucune entrée ne correspond à ce filtre.",
-    empty: "Aucune entrée. Envoyez un message avec le mode débogage activé.",
+    empty: "Aucune entrée. Envoyez un message avec le journal de débogage activé (Réglages → Avancé).",
     eyebrow: "DÉVELOPPEUR",
     title: "Journal de débogage",
     subLead: "Ce qui a réellement été envoyé et reçu pour ",

@@ -152,7 +152,7 @@ a weakening cannot come from anywhere but you.
 ### The driven browser
 **Access**: the globe in the right rail of a conversation · Réglages → **Navigateur** (the
 search engine) · Réglages → **Connecteurs** → « Ce que l'agent peut faire » (« **Sécurité du
-navigateur agent** »: read-only mode, allowed domains).
+navigateur intégré** »: read-only mode, allowed domains).
 
 **What it makes possible.** Giving the model a real browser — pages, forms, signed-in
 sessions — in an isolated window, next to the conversation, which you watch working and can

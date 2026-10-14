@@ -78,7 +78,7 @@ export const composer = {
     `${n} ${n > 1 ? "categories" : "category"} required by your organization at every level.`,
   applied: (level, scope) => `${level} · ${scope}`,
   undo: "Undo",
-  protectionLevel: "Protection level",
+  protectionLevel: "Masking level",
 
   placeholder: (brand) => `Message ${brand} or drop a file…`,
 

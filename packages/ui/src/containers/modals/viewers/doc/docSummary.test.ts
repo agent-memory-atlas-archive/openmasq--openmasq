@@ -12,7 +12,7 @@ describe("docSummary — the subtitle states what IS, not what will be", () => {
       { real: "a@b.fr", kind: "email" },
       { real: "12 rue de Verdun", kind: "address" },
     ], fr);
-    expect(s.label).toBe("4 valeurs protégées");
+    expect(s.label).toBe("4 valeurs masquées");
     expect(s.detail).toBe("2 × Noms & prénoms · 1 × Adresse postale · 1 × E-mail");
   });
 
@@ -21,7 +21,7 @@ describe("docSummary — the subtitle states what IS, not what will be", () => {
       { real: "a@b.fr", kind: "email" },
       { real: "a@b.fr", kind: "email" },
     ], fr);
-    expect(s.label).toBe("1 valeur protégée");
+    expect(s.label).toBe("1 valeur masquée");
     expect(s.detail).toBe("1 × E-mail");
   });
 
@@ -64,7 +64,7 @@ describe("previewStatus — « aucune valeur détectée » n'est jamais qu'une P
 
   it("le compte PROUVÉ (tableau présent) redonne la ligne de docSummary", () => {
     expect(previewStatus({ replacements: [] }, fr).label).toBe("aucune valeur détectée");
-    expect(previewStatus({ replacements: [{ real: "a@b.fr", kind: "email" }] }, fr).label).toBe("1 valeur protégée");
+    expect(previewStatus({ replacements: [{ real: "a@b.fr", kind: "email" }] }, fr).label).toBe("1 valeur masquée");
   });
 
   it("« en cours » l'emporte sur un échec PRÉCÉDENT — un re-run efface l'alerte le temps de tourner", () => {

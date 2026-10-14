@@ -52,10 +52,10 @@ export const redactTypes = {
 } satisfies Messages["redactTypes"];
 
 export const webNav = {
-  ariaLabel: "Navigation web : niveau de protection pour cette recherche",
+  ariaLabel: "Navigation web : niveau de masquage pour cette recherche",
   eyebrow: "Navigation web",
   thisMessageOnly: "Ce message seulement.",
   keepMasking: "Garder le masquage",
-  title: (level) => `Chercher sur le web avec la protection ${level} ?`,
+  title: (level) => `Chercher sur le web avec le niveau ${level} ?`,
   rest: "Tout le reste est toujours masqué pour le modèle. Votre requête de recherche est de toute façon envoyée avec les vraies valeurs.",
 } satisfies Messages["webNav"];

@@ -94,12 +94,12 @@ export const settings = {
       kw: "analytics telemetry consent anonymous",
     },
     transparencyLog: {
-      label: "Detailed technical log",
+      label: "Debug log",
       kw: "transparency debugging debug log wire exact message what the model saw comparison advanced options",
     },
     linkPreviews: { label: "Link previews", kw: "link preview thumbnail url ip" },
     protectionLevel: {
-      label: "Protection level",
+      label: "Masking level",
       kw: "level light enhanced strict reinforced standard custom categories rules masking redaction",
     },
     showTokens: {
@@ -139,8 +139,8 @@ export const settings = {
       kw: "confirmation confirm every action write gate stricter reinforced tools agent",
     },
     browserSecurity: {
-      label: "Agent browser security",
-      kw: "agent browser read-only allowed domains injection security navigateur",
+      label: "Built-in browser security",
+      kw: "built-in agent browser read-only allowed domains injection security navigateur",
     },
     connectedDevices: {
       label: "Connected devices",

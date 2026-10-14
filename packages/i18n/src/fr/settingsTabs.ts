@@ -38,7 +38,7 @@ export const accountTab = {
 } satisfies Messages["accountTab"];
 
 export const privacyTab = {
-  protectedEyebrow: "Ce qui est protégé",
+  protectedEyebrow: "Ce qui est masqué",
   perConnectorEyebrow: "Connecteurs avec leur propre niveau",
   perConnectorNote: (n) =>
     n === 1
@@ -49,12 +49,12 @@ export const privacyTab = {
   managedByOrg: (n) => ` · ${n} gérée(s) par votre organisation`,
   advancedTitle: "Options avancées",
   advancedSub: "Journal technique, affichage des marqueurs, ce que le modèle reçoit.",
-  debugLogTitle: "Journal technique détaillé",
+  debugLogTitle: "Journal de débogage",
   debugLogHint:
     "Ajoute « Journal de débogage » au menu ⋯ de chaque conversation. Conservé sur cet appareil uniquement.",
   tokenDisplayTitle: "Afficher des marqueurs plutôt que des substituts",
   tokenDisplayHint:
-    "Une valeur protégée s'affiche « [PERSON1] » au lieu d'un nom de substitution. Ne change que l'affichage : ce que reçoit le modèle dépend du réglage ci-dessous.",
+    "Une valeur masquée s'affiche « [PERSON1] » au lieu d'un nom de substitution. Ne change que l'affichage : ce que reçoit le modèle dépend du réglage ci-dessous.",
   wireTokensTitle: "Le modèle ne voit que des marqueurs",
   wireTokensHint:
     "Le modèle reçoit « [PERSON1] » au lieu d'un nom de substitution réaliste. Aucun nom n'est inventé, mais le modèle rédige et raisonne moins bien. S'applique aux nouvelles conversations.",
@@ -65,9 +65,9 @@ export const privacyTab = {
   memoryExportTitle: "Exporter la mémoire (diagnostic)",
   memoryExportHint:
     "Les fiches et leurs liens sémantiques, en texte, dans un fichier local. Contient des données réelles. Utile pour comprendre un regroupement ou un doublon.",
-  reportEyebrow: "Ce qui a été protégé",
+  reportEyebrow: "Ce qui a été masqué",
   reportEmpty: (brand) =>
-    `Rien n'a encore été envoyé. Après votre premier message, vous verrez ici ce que ${brand} a protégé, et de quel type.`,
+    `Rien n'a encore été envoyé. Après votre premier message, vous verrez ici ce que ${brand} a masqué, et de quel type.`,
   reportMessagesSub: (n) => `saisies dans vos messages · ${n} conversation${n === 1 ? "" : "s"}`,
   reportAllSub: "tout ce qui a été masqué · messages, outils et documents",
   reportDetail: "Voir le journal détaillé",
@@ -76,7 +76,7 @@ export const privacyTab = {
   reportMessagesTitle: "Vos messages · par type",
   reportAllTitle: "Tout ce qui a été masqué · par type",
   protectedValues: (n) =>
-    `${n.toLocaleString("fr-FR")} valeur${n === 1 ? "" : "s"} protégée${n === 1 ? "" : "s"}`,
+    `${n.toLocaleString("fr-FR")} valeur${n === 1 ? "" : "s"} masquée${n === 1 ? "" : "s"}`,
   auditAria: "Journal",
   auditRedaction: "Masquage",
   auditNetwork: "Réseau",

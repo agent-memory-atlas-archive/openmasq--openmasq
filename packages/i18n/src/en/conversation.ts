@@ -41,13 +41,13 @@ export const conversation = {
   artifact: { pane: "File preview", copy: "Copy", copied: "Copied", close: "Close" },
 
   browser: {
-    pane: "Agent browser",
+    pane: "Built-in browser",
     bookmarks: "Bookmarks",
     askAboutPage: "Ask a question about this page",
     askAboutPageLabel: "Ask about this page",
     embedded: "Built-in browser",
-    unavailable: "The agent browser is not available on this platform.",
-    loading: "Loading the agent browser…",
+    unavailable: "The built-in browser is not available on this platform.",
+    loading: "Loading the built-in browser…",
     offlineTitle: "The browser is off.",
     offlineSub: (brand) =>
       `Turn it on to browse the web here, and to let ${brand} search it for you.`,

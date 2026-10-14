@@ -62,7 +62,7 @@ nothing becomes unreachable, only less cluttered.
 - [x] Each tab is titled and searchable by construction — `packages/ui/src/pages/Settings/settingsIndex.ts`
 - [x] The settings themselves are indexed in ⌘K, not only the tabs
 - [x] Réglages → Connecteurs → « Ce que l'agent peut faire »: « **Confirmation des actions** »
-      and « **Sécurité du navigateur agent** » (read-only browsing, allowed domains) in ONE
+      and « **Sécurité du navigateur intégré** » (read-only browsing, allowed domains) in ONE
       section — `packages/ui/src/pages/Settings/mcp/McpAgentPowers.tsx`
 - [x] Réglages → Confidentialité → « **Options avancées** », folded: the technical log, the
       token display, what the model receives, the memory extraction — one fold for the

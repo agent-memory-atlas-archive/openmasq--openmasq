@@ -113,14 +113,14 @@ export const mcpTab = {
   autoApprove: "Tout autoriser sans demander (cette session)",
   autoApproveHint:
     "Les actions s'exécutent sans confirmation jusqu'au redémarrage de l'app. Vous confirmez ce choix une fois, dans une fenêtre dédiée.",
-  browserSecurityEyebrow: "Sécurité du navigateur agent",
+  browserSecurityEyebrow: "Sécurité du navigateur intégré",
   readOnly: "Lecture seule (recherche)",
   readOnlyHint:
     "Le navigateur peut seulement ouvrir et lire des pages. Le modèle ne peut ni cliquer, ni saisir, ni envoyer de formulaire. Cela bloque les actions qu'une page malveillante pourrait tenter de déclencher.",
   allowedDomains: "Domaines autorisés",
   allowedDomainsHint:
     "Limite le modèle à ces domaines et à leurs sous-domaines. Un domaine par ligne. Laissez vide pour autoriser tous les domaines. Les adresses que vous saisissez vous-même ne sont jamais restreintes.",
-  allowedDomainsAria: "Domaines autorisés pour le navigateur agent",
+  allowedDomainsAria: "Domaines autorisés pour le navigateur intégré",
   loadingTools: "Chargement des outils…",
   noTools: "Ce connecteur ne propose aucun outil.",
   toolsAvailable: (n) => `${n} outil${n === 1 ? "" : "s"} disponible${n === 1 ? "" : "s"}`,

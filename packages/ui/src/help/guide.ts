@@ -1,6 +1,7 @@
 
 import type { Messages } from "@openmasq/i18n";
 import { BRAND } from "@openmasq/branding";
+import { platformAccessServed } from "../send/platformAccess";
 
 /**
  * THE in-app guide — the app explaining itself, in the user's language.
@@ -48,14 +49,17 @@ export interface GuideChapter {
 const CHAPTERS: {
   id: string;
   key: keyof Messages["guide"];
+  /** The chapter's copy in a build that serves no model (`platformAccessServed`). */
+  unserved?: keyof Messages["guide"];
   demo?: true;
   sections?: true;
   releases?: true;
 }[] = [
   { id: "protection", key: "protection", demo: true },
-  { id: "premier-message", key: "firstMessage" },
-  { id: "modeles", key: "models" },
+  { id: "premier-message", key: "firstMessage", unserved: "firstMessageUnserved" },
+  { id: "modeles", key: "models", unserved: "modelsUnserved" },
   { id: "sections", key: "sections", sections: true },
+  { id: "outils", key: "tools" },
   { id: "mots", key: "words" },
   { id: "donnees", key: "data" },
   { id: "nouveautes", key: "releases", releases: true },
@@ -68,8 +72,10 @@ export const CHAPTER_IDS = CHAPTERS.map((c) => c.id);
 /** The guide in `t`'s language, with the brand name injected. */
 export function guideChapters(t: Messages): readonly GuideChapter[] {
   const b = BRAND.name;
-  return CHAPTERS.map(({ id, key, ...flags }) => {
-    const c = t.guide[key];
+  const served = platformAccessServed();
+  return CHAPTERS.map(({ id, key, unserved, ...flags }) => {
+    // « A free model works with your account » is false where nothing is served.
+    const c = t.guide[!served && unserved ? unserved : key];
     return {
       id,
       ...flags,

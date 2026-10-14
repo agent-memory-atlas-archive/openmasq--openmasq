@@ -123,3 +123,22 @@ describe("le guide décrit l'app RÉELLE", () => {
     expect(chapters[0].lead).toMatch(word);
   });
 });
+
+// A production build serves no model: « un modèle gratuit … fonctionne avec votre compte »
+// was false there, in the very chapter a newcomer opens first.
+describe("guide — a build that serves no model", () => {
+  it("never promises a model included with the account, and teaches the two roads", async () => {
+    const { configurePlatformAccess } = await import("../send/platformAccess");
+    configurePlatformAccess({ served: false });
+    try {
+      for (const locale of ["fr", "en"] as const) {
+        const chapters = guideChapters(getMessages(locale));
+        const text = JSON.stringify(chapters);
+        expect(text, locale).not.toMatch(/fonctionne avec votre compte|works with your .* account/);
+        expect(chapters.some((c) => c.id === "outils"), locale).toBe(true);
+      }
+    } finally {
+      configurePlatformAccess({ served: true });
+    }
+  });
+});

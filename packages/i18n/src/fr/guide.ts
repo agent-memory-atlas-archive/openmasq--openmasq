@@ -30,6 +30,50 @@ export const guide = {
       () => "Tapez / dans la zone de message pour vos compétences, vos routines et « retiens que… ».",
     ],
   },
+  firstMessageUnserved: {
+    title: () => "Votre premier message",
+    lead:
+      () => "Le modèle relié à votre abonnement ou à votre clé est déjà sélectionné. Écrivez un message et envoyez-le, ou cliquez sur un exemple de l'écran d'accueil.",
+    points: [
+      () => "Le nom du modèle est sous la zone de saisie. Cliquez dessus pour changer de modèle.",
+      () => "Un modèle d'un autre fournisseur demande la clé de ce fournisseur : l'app vous le signale et vous propose de l'ajouter.",
+      () => "Tapez / dans la zone de message pour vos compétences, vos routines et « retiens que… ».",
+    ],
+  },
+  modelsUnserved: {
+    title: () => "Votre abonnement, ou votre clé",
+    lead:
+      (brand) => `${brand} ne fournit pas de modèle : il utilise le vôtre. Deux façons de le relier, que vous pouvez combiner.`,
+    terms: [
+      {
+        term: () => "Votre abonnement",
+        def: () =>
+          "Claude Code ou Codex installé sur cet ordinateur : vos messages passent par l'abonnement que vous payez déjà. L'app peut l'installer et le connecter pour vous. Aucune clé.",
+      },
+      {
+        term: () => "Votre clé",
+        def: () =>
+          "Une clé OpenRouter, OpenAI, Anthropic, Mistral… : le fournisseur vous facture à l'usage. Une clé OpenRouter gratuite suffit pour les modèles gratuits.",
+      },
+    ],
+    points: [
+      () => "Dans le sélecteur de modèle, une pastille signale les modèles que vous ne pouvez pas encore utiliser. Cliquez dessus pour savoir quoi faire.",
+      (brand) => `Si vous ne pouvez pas encore utiliser un modèle, rien n'est envoyé : ${brand} bloque le message et vous dit quoi ajouter.`,
+      () => "Vos clés restent chiffrées sur cet appareil et ne sont jamais envoyées au modèle.",
+    ],
+  },
+  tools: {
+    title: () => "Brancher vos outils",
+    lead:
+      (brand) => `${brand} peut agir dans vos services : lire vos e-mails, chercher dans vos fichiers, consulter une page web. Ce qui en revient est masqué comme vos messages.`,
+    points: [
+      () => "Connecteurs : Réglages → Connecteurs, ou « + » dans la zone de saisie. La plupart se connectent en un clic, dans votre navigateur.",
+      () => "Dossiers : le volet de droite donne accès à un dossier de cet ordinateur. Le modèle ne lit que ce que vous avez autorisé.",
+      () => "Navigateur : le modèle peut ouvrir des pages dans un navigateur à part, visible dans le volet de droite. Vous le regardez faire.",
+      () => "Les actions qui envoient ou modifient quelque chose sur vos comptes vous sont présentées pour confirmation, avec les vraies valeurs qui partiront. Réglable dans Réglages → Connecteurs.",
+      () => "Une demande a besoin d'un service non connecté ? Une carte propose de le connecter, puis la réponse reprend là où elle s'était arrêtée.",
+    ],
+  },
   models: {
     title: () => "Modèles inclus, ou votre clé",
     lead:

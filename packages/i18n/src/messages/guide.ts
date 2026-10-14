@@ -29,8 +29,13 @@ export interface GuideChapterCopy {
 export interface GuideMessages {
   protection: GuideChapterCopy;
   firstMessage: GuideChapterCopy;
+  /** The same chapter in a build that serves no model: no « free model already selected ». */
+  firstMessageUnserved: GuideChapterCopy;
   models: GuideChapterCopy;
+  modelsUnserved: GuideChapterCopy;
   sections: GuideChapterCopy;
+  /** Connectors, folders, the browser, the confirmation — what the app can DO. */
+  tools: GuideChapterCopy;
   words: GuideChapterCopy;
   data: GuideChapterCopy;
   releases: GuideChapterCopy;

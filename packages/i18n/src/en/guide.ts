@@ -28,6 +28,49 @@ export const guide = {
         "Add code names or nicknames that detection cannot recognize to the Vault. They are masked in every conversation.",
     ],
   },
+  firstMessageUnserved: {
+    title: () => "Your first message",
+    lead: () =>
+      "The model linked to your subscription or your key is already selected. Type a message and send it, or click an example on the home screen.",
+    points: [
+      () => "The model name is under the message box. Click it to switch models.",
+      () => "A model from another provider needs that provider's key: the app tells you and offers to add it.",
+      () => "Type / in the message box for your skills, your routines and “remember that…”.",
+    ],
+  },
+  modelsUnserved: {
+    title: () => "Your subscription, or your key",
+    lead: (brand) => `${brand} provides no model: it uses yours. Two ways to link one, which you can combine.`,
+    terms: [
+      {
+        term: () => "Your subscription",
+        def: () =>
+          "Claude Code or Codex installed on this computer: your messages go through the subscription you already pay for. The app can install and connect it for you. No key.",
+      },
+      {
+        term: () => "Your key",
+        def: () =>
+          "An OpenRouter, OpenAI, Anthropic, Mistral… key: the provider bills you per use. A free OpenRouter key is enough for the free models.",
+      },
+    ],
+    points: [
+      () => "In the model picker, a badge marks the models you can't use yet. Click it to see what to do.",
+      (brand) => `If you can't use a model yet, nothing is sent: ${brand} blocks the message and tells you what to add.`,
+      () => "Your keys stay encrypted on this device and are never sent to the model.",
+    ],
+  },
+  tools: {
+    title: () => "Connect your tools",
+    lead: (brand) =>
+      `${brand} can act in your services: read your e-mails, search your files, look at a web page. What comes back is masked like your messages.`,
+    points: [
+      () => "Connectors: Settings → Connectors, or “+” in the message box. Most connect in one click, in your browser.",
+      () => "Folders: the right panel gives access to a folder on this computer. The model only reads what you allowed.",
+      () => "Browser: the model can open pages in a separate browser, visible in the right panel. You watch it work.",
+      () => "Actions that send or change something on your accounts are shown to you for confirmation, with the real values that will leave. Adjustable in Settings → Connectors.",
+      () => "A request needs a service you haven't connected? A card offers to connect it, then the answer picks up where it stopped.",
+    ],
+  },
   firstMessage: {
     title: () => "Your first message",
     lead: (brand) =>

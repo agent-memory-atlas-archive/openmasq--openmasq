@@ -2,6 +2,7 @@ import type { RedactionMatch, Vault } from "../../types";
 import type { UrlOccurrenceGuard } from "../../engine/urls";
 import { staysGlued } from "../../engine/vault/glue";
 import { entityKey } from "../../util";
+import { foldedEntityKey } from "./resolvers";
 
 export const UNREVERSIBLE_ERROR = "redaction postcondition failed: a reported match was not vaulted";
 export const RESIDUAL_ERROR = "redaction postcondition failed: a reported value is still in the text";
@@ -14,9 +15,10 @@ export const RESIDUAL_ERROR = "redaction postcondition failed: a reported value 
  * the wire. Reconciled here, at the single exit:
  *  - the placeholder is in `exclude` ⇒ the user turned that category off (or kept the
  *    value in clear). Not substituting is CORRECT, but it is not a redaction: drop the claim.
- *  - the placeholder restores ANOTHER CASING of the same entity (« McDonald » vaulted,
- *    « Mcdonald » now: `recaseLike` cannot spell the difference, so both land on one fake
- *    and the vault keeps the first). Reversible to the same identity — accepted ONLY when
+ *  - the placeholder restores ANOTHER SPELLING of the same entity — a casing (« McDonald »
+ *    vaulted, « Mcdonald » now: `recaseLike` cannot spell the difference) or an accent
+ *    (« Amélie » vaulted, « Amelie » now) — so both land on one fake and the vault keeps the
+ *    first. Same identity definition as the resolver that shared the fake (`foldedEntityKey`). Reversible to the same identity — accepted ONLY when
  *    `text` no longer holds the value, i.e. the variant pass really substituted it.
  *  - anything else ⇒ UNREVERSIBLE and never substituted: fails CLOSED via `error`, which
  *    the send path turns into a refusal rather than a downgrade.
@@ -48,7 +50,7 @@ export function reconcileMatches(
     // `sameEntity` only matters when the vault restores something else — and its
     // `text.includes` is a scan of the whole text, so it is not paid per ordinary match.
     const sameEntity = () =>
-      restored !== undefined && entityKey(restored) === entityKey(m.value) && !text.includes(m.value);
+      restored !== undefined && foldedEntityKey(restored) === foldedEntityKey(m.value) && !text.includes(m.value);
     if (restored !== m.value && !sameEntity()) {
       unreversible = true;
       continue;

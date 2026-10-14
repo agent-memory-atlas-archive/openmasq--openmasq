@@ -12,6 +12,11 @@ export interface Resolvers {
 
 const fold = (s: string): string => foldAccents(s.normalize("NFC")).toLowerCase();
 
+/** ONE identity, accents folded: « Amélie Brivet » and « Amelie Brivet » are the same person,
+ *  so they share a fake here — and the exit postcondition (`postcondition.ts`) must accept
+ *  that pair by the SAME definition, or it refuses a value that was masked. */
+export const foldedEntityKey = (s: string): string => fold(entityKey(s));
+
 /**
  * The ACCENT-folded index: « helene » and « Hélène » (or its NFD spelling) are one key. A
  * key two DIFFERENT reals fold onto (beyond their casing) resolves to NOTHING — the accent
@@ -43,7 +48,7 @@ function foldIndex(reverse: Map<string, string>, keyOf: (real: string) => string
 
 export function makeResolvers(reverse: Map<string, string>): Resolvers {
   const byFoldedWord = foldIndex(reverse, fold);
-  const byFoldedGlue = foldIndex(reverse, (r) => fold(entityKey(r)));
+  const byFoldedGlue = foldIndex(reverse, foldedEntityKey);
   // The value's existing canonical fake (a name token, a domain), tried across case
   // variants so a lowercase alias and a capitalised NAME resolve to the same identity —
   // then across accents (« helene » for a vaulted « Hélène »).

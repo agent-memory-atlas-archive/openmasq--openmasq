@@ -65,7 +65,11 @@ describe("pseudonymize — reported ⇒ vaulted ⇒ substituted", () => {
     ["Jean McDonald", "Jean Mcdonald"],
     ["Anne DeLaRue", "Anne Delarue"],
     ["Karl Studio", "KaRL Studio"],
-  ])("an intra-word casing variant (%s → %s) is masked, not refused", async (first, again) => {
+    // An accent dropped or added (a CSV says « Amélie », the PDF « Amelie »): the resolver
+    // shares the fake across accents, so the postcondition must recognise the pair too.
+    ["Amélie Brivet", "Amelie Brivet"],
+    ["Helene Roux", "Hélène Roux"],
+  ])("a spelling variant (%s → %s) is masked, not refused", async (first, again) => {
     const vault: Record<string, string> = {};
     await pseudonymize(`Contact : ${first}`, { vault, numbers: false, complete: detects({ value: first, category: "NAME" }) });
     const r = await pseudonymize(`Relance ${again} demain`, {
@@ -91,6 +95,11 @@ describe("reconcileMatches — what still fails CLOSED", () => {
 
   it("a casing variant still on the wire is a refusal", () => {
     expect(reconcileMatches([match("Jean Mcdonald")], ctx("Relance Jean Mcdonald")).error).toBe(UNREVERSIBLE_ERROR);
+  });
+
+  it("an accent variant still on the wire is a refusal", () => {
+    const c = { ...ctx("Relance Amelie Brivet"), vault: { "Basile Cazenave": "Amélie Brivet" } };
+    expect(reconcileMatches([match("Amelie Brivet")], c).error).toBe(UNREVERSIBLE_ERROR);
   });
 
   it("a placeholder restoring ANOTHER entity is a refusal, even once masked", () => {

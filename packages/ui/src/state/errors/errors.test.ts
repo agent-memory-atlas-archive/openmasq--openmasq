@@ -252,3 +252,23 @@ describe("humanizeSendError — « gratuit » n'est dit que quand le corps le di
     expect(msg).not.toMatch(/gratuit/i);
   });
 });
+
+// Production, 14/09: a free OpenRouter model answered 403 « only available on agentic
+// harnesses ». The bubble showed the raw JSON and analytics counted a key problem.
+describe("a model the provider reserves for other apps", () => {
+  const raw =
+    'openrouter tools request failed (403): {"error":{"message":"thinkingmachines/inkling:free is only available on agentic harnesses. Try plugging it into a coding agent"}}';
+  const fr = getMessages("fr");
+
+  it("says to pick another model, not to fix the key", () => {
+    const out = humanizeSendError(raw, fr, { provider: "openrouter" });
+    expect(out).toContain("Choisissez-en un autre");
+    expect(out).not.toMatch(/clé/i);
+    expect(sendErrorAction(raw, "openrouter")).toBeUndefined();
+  });
+
+  it("is counted apart from an auth failure", () => {
+    expect(sendErrorReason(new Error(raw))).toBe("model_unavailable");
+    expect(sendErrorReason(new Error("403 Forbidden"))).toBe("auth");
+  });
+});

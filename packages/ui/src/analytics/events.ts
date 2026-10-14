@@ -30,6 +30,8 @@ export type SendErrorReason =
   // Anthropic "credit balance is too low"). Neither a rate limit (its 429 clothing) nor
   // a bad request (its 400 clothing) — kept apart so billing friction is countable.
   | "provider_credits"
+  // The provider reserves the model for some apps only (a 403 that is not about the key).
+  | "model_unavailable"
   | "unknown";
 
 /** Why a tool call failed — bounded. `arg_error` = the model malformed the call

@@ -45,6 +45,9 @@ export function isRateLimitError(err: unknown): boolean {
  *  valid"). Deliberately NOT a bare `\b401\b`: a 401 can also be the app's
  *  session on the platform path, which has its own message. */
 const INVALID_KEY = /invalid_api_key|incorrect api key|invalid x-api-key|authentication_error|api key not valid/i;
+/** The provider reserves the model for some apps (OpenRouter's « only available on agentic
+ *  harnesses », a 403): neither the key nor a retry fixes it, another model does. */
+const MODEL_RESTRICTED = /only available (?:on|in|via|through|to) (?:agentic|certain|specific|select)|agentic harness/i;
 
 /**
  * Map a raw provider/tool/IPC error string to a friendly message (UI language) when it
@@ -107,6 +110,7 @@ export function humanizeSendError(
     // (`sendErrorAction` → missing_key).
     return name ? e.providerCreditsNamed(name) : e.providerCredits;
   }
+  if (MODEL_RESTRICTED.test(m)) return e.modelRestricted(BRAND.name);
   if (INVALID_KEY.test(m)) {
     return name ? e.invalidKeyNamed(name) : e.invalidKey;
   }
@@ -198,6 +202,8 @@ export function sendErrorReason(e: unknown): SendErrorReason {
   if (cliAuthOf(rawText)) return "auth";
   if (providerCreditsExhausted(rawText)) return "provider_credits";
   if (e instanceof RateLimitError || isRateLimitError(e)) return "rate_limit";
+  // Before the 403 → "auth": a model the provider reserves for other apps is not a key problem.
+  if (MODEL_RESTRICTED.test(rawText)) return "model_unavailable";
   const t = rawText.toLowerCase();
   if (/401|403|unauthor|forbidden|invalid.*(key|token)|api key/.test(t)) return "auth";
   if (/econnrefused|fetch failed|failed to fetch|enotfound|network|timed out|timeout|socket/.test(t))

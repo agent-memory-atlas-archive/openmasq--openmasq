@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { launchApp } from "./helpers";
 import { supabaseAuthStorageKey } from "./supabaseAuthKey";
+import { stubSupabaseAuth } from "./supabaseStub";
 
 /**
  * "The model writes, the user sees" — end to end, on the built app.
@@ -30,8 +31,17 @@ test("un fichier modifié sur le disque se recharge tout seul dans le panneau", 
   mkdirSync(ROOT, { recursive: true });
   writeFileSync(FILE, BEFORE, "utf8");
 
-  const { app, page } = await launchApp({ useDefaultProfile: true });
+  // A FRESH profile per run (the model-switch pattern): the machine's default profile keeps
+  // its own state (an onboarding not done, a session), which outranks what the test seeds.
+  const profile = join(SCRATCH, `profile-${process.pid}`);
+  rmSync(profile, { recursive: true, force: true });
+  mkdirSync(profile, { recursive: true });
+  process.env.OPENMASQ_USER_DATA_DIR = profile;
+  const { app, page } = await launchApp();
   await page.waitForLoadState("domcontentloaded");
+  // A CONFIGURED build would refresh the fake token against the real project, be refused and
+  // purge the session (`supabaseStub.ts`): neutralise it before seeding, as model-switch does.
+  await stubSupabaseAuth(page);
   await page.evaluate((authKey) => {
     const now = Math.floor(Date.now() / 1000);
     localStorage.setItem(
@@ -45,10 +55,9 @@ test("un fichier modifié sur le disque se recharge tout seul dans le panneau", 
         user: { id: "u1", email: "e2e@acme.test", aud: "authenticated", role: "authenticated" },
       }),
     );
-    localStorage.setItem(
-      "openmasq.settings:u1",
-      JSON.stringify({ onboarded: true, redactRulesSeen: true }),
-    );
+    // Both keys: a build with no auth service has no user, and reads the unscoped one.
+    const settings = JSON.stringify({ onboarded: true, redactRulesSeen: true });
+    for (const k of ["openmasq.settings", "openmasq.settings:u1"]) localStorage.setItem(k, settings);
     localStorage.setItem("openmasq.conversations:u1", "[]");
   }, supabaseAuthStorageKey());
   await page.reload();
@@ -89,22 +98,20 @@ test("un fichier modifié sur le disque se recharge tout seul dans le panneau", 
   // would otherwise satisfy a weaker check and the test would browse the wrong folder.
   expect(granted?.roots, "notre dossier doit être accordé").toContain(ROOT);
 
-  await page.getByText("Bibliothèque", { exact: true }).first().click().catch(() => {});
+  await page.getByRole("button", { name: "Bibliothèque", exact: true }).first().click().catch(() => {});
   await new Promise((r) => setTimeout(r, 1200));
-  await page.getByRole("button", { name: /Dossiers/ }).first().click().catch(() => {});
+  await page.getByRole("button", { name: "live-test", exact: true }).first().click().catch(() => {});
   await new Promise((r) => setTimeout(r, 1200));
-  await page.getByText("notes.txt", { exact: false }).first().click().catch(() => {});
-  await new Promise((r) => setTimeout(r, 1500));
-  await page.getByRole("button", { name: /Modifier/ }).first().click().catch(() => {});
+  await page.getByRole("button", { name: "notes.txt", exact: true }).first().click().catch(() => {});
   await new Promise((r) => setTimeout(r, 1500));
 
-  const editor = page.locator(".fold-edit-area");
-  await expect(editor).toHaveValue(new RegExp(BEFORE.slice(0, 20)), { timeout: 20000 });
+  // The file viewer shows the text itself (there is no edit mode to enter first).
+  await expect(page.getByText(BEFORE)).toBeVisible({ timeout: 20000 });
   await page.screenshot({ path: `${SCRATCH}/live-01-before.png` });
 
   // THE point of the test: a write from outside, and NOTHING clicked afterwards.
   writeFileSync(FILE, AFTER, "utf8");
-  await expect(editor).toHaveValue(new RegExp(AFTER.slice(0, 20)), { timeout: 20000 });
+  await expect(page.getByText(AFTER)).toBeVisible({ timeout: 20000 });
   await page.screenshot({ path: `${SCRATCH}/live-02-after.png` });
 
   await app.close();

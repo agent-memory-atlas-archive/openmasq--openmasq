@@ -66,8 +66,12 @@ export function ComposerRedactButton({ api }: { api: RedactLevelApi }) {
         expanded={pop.open}
         haspopup="dialog"
         onClick={pop.toggle}
+        className="with-label"
       >
         <LevelsIcon size={16} bars={api.bars} />
+        {/* The level is WRITTEN: three strokes alone read as a drag handle, and a protection
+            setting whose value hides in a tooltip is one nobody checks. */}
+        <span>{privacyLevelLabel(t, api.level)}</span>
       </IconButton>
       {applied && (
         <span className="crm-applied kx-pill-in" role="status">

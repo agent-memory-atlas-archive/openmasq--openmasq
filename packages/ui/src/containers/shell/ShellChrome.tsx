@@ -159,6 +159,7 @@ export function ShellChrome({
                   {notice && (
                     <StatusChip
                       key={notice.kind}
+                      defaultOpen={notice.open}
                       tone={notice.tone}
                       title={notice.title}
                       message={notice.message}

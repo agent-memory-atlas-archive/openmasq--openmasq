@@ -20,6 +20,16 @@
   gap: 6px;
 }
 
+/* The trigger names the level beside its bars. */
+.composer-redact-wrap .icon-btn.with-label {
+  width: auto;
+  gap: 6px;
+  padding: 0 9px 0 7px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 /* ⚠️ PORTALED and `position: fixed` — the position AND the height come from `usePopover`
    (`anchor`, `clampHeight`), not from here. As `absolute` under the button, two things
    broke: the composer's `overflow` ancestors clipped the menu, and on the home

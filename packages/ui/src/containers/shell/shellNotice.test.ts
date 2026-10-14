@@ -62,6 +62,8 @@ describe("pickShellNotice", () => {
     expect(n?.dismissible).toBe(false);
     expect(n?.title).toBe(fr.shell.notice.noAccessTitle);
     expect(n?.actionLabel).toBe(fr.shell.notice.noAccessAction);
+    // The one state that blocks everything is shown unfolded, its action in sight.
+    expect(n?.open).toBe(true);
   });
 
   it("une panne réseau reste devant l'absence de modèle", () => {

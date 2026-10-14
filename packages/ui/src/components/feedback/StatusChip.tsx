@@ -22,11 +22,14 @@ export interface StatusChipProps {
   action?: BannerAction;
   /** Present ⇒ the chip closes for good. An OUTAGE doesn't have one. */
   onClose?: () => void;
+  /** Unfolded at first sight: for the one state that blocks everything (no model at all),
+   *  a title the eye may skip is not enough. Still foldable. */
+  defaultOpen?: boolean;
 }
 
-export function StatusChip({ tone, title, message, action, onClose }: StatusChipProps) {
+export function StatusChip({ tone, title, message, action, onClose, defaultOpen = false }: StatusChipProps) {
   const t = useT();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const hasDetail = !!message || !!action;
   const head = (
     <>

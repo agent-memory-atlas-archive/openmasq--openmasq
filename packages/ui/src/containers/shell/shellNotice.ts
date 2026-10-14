@@ -23,6 +23,8 @@ export interface ShellNotice {
   actionLabel?: string;
   /** An OUTAGE cannot be dismissed: it disappears when it's over. */
   dismissible: boolean;
+  /** Shown unfolded (message + action) from the start — reserved for « no model at all ». */
+  open?: boolean;
 }
 
 export function pickShellNotice(
@@ -54,6 +56,7 @@ export function pickShellNotice(
       actionLabel: t.shell.notice.noAccessAction,
       // Not a preference to dismiss: it disappears when a road exists.
       dismissible: false,
+      open: true,
     };
   }
   const items = input.mcpItems;

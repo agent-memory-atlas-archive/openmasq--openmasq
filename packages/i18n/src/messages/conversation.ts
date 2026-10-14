@@ -204,6 +204,8 @@ export interface ConversationMessages {
     seenByModel: string;
     /** Tooltips on the displayed value, per surface. */
     seenByModelTip: string;
+    /** Under the pseudonym, when the app displays a token instead: « Affiché [PERSON1] dans l'app ». */
+    shownAs: (token: string) => string;
     realValueTip: string;
     orgForced: string;
     scopeSend: string;

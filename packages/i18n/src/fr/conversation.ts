@@ -207,6 +207,7 @@ export const conversation = {
     realValue: "valeur réelle",
     seenByModel: "vu par le modèle",
     seenByModelTip: "Valeur vue par le modèle",
+    shownAs: (token) => `Affiché ${token} dans l'app`,
     realValueTip: "Valeur réelle. Envoyée non masquée seulement si vous la démasquez.",
     orgForced: "Imposé par l'organisation",
     scopeSend: "cet envoi",

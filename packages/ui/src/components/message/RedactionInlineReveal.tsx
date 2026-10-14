@@ -155,9 +155,12 @@ export function RedactionInlineReveal({
         <span className="rmark-pop-eyebrow">
           {label} · {show === "real" ? mark.realValue : mark.seenByModel}
         </span>
-        <span className="rmark-pop-val">
-          {(show === "real" ? hov.real : displayTokens?.get(hov.real) ?? hov.fake) || "—"}
-        </span>
+        {/* « Vu par le modèle » names what the model GOT — the pseudonym, never the on-screen
+            token, which it never saw. The token, when shown, is said for what it is. */}
+        <span className="rmark-pop-val">{(show === "real" ? hov.real : hov.fake) || "—"}</span>
+        {show === "fake" && displayTokens?.get(hov.real) && displayTokens.get(hov.real) !== hov.fake && (
+          <span className="rmark-pop-token">{mark.shownAs(displayTokens.get(hov.real)!)}</span>
+        )}
       </span>
       {readOnly ? null : forced ? (
         <span className="rmark-pop-btn locked" title={mark.orgForced}>

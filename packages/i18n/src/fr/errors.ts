@@ -15,6 +15,8 @@ export const errors = {
     `Ce modèle n'est pas disponible avec votre compte ${brand}. Choisissez-en un autre.`,
   upstreamUnavailable: (brand) =>
     `${brand} n'a pas pu joindre le fournisseur. Réessayez, ou changez de modèle.`,
+  modelRestricted: (brand) =>
+    `Ce modèle n'est pas utilisable dans ${brand} : son fournisseur le réserve à certaines applications. Choisissez-en un autre.`,
   providerCreditsNamed: (provider) =>
     `Votre compte ${provider} n'a plus de crédits. Rechargez-le chez ${provider}, ou changez de modèle.`,
   providerCredits:

@@ -67,6 +67,9 @@ export type ShellApi = {
   splash: boolean;
   /** Session lost but kept (offline-tolerant) → the reconnecting banner. */
   reconnecting: boolean;
+  /** Known for sure: no road to any model (no key, no CLI found, nothing served) → the
+   *  « aucun modèle branché » banner. Never true while an answer is still pending. */
+  noModelAccess: boolean;
   /** Initials source for the rail / sidebar avatar; "Vous" when signed out. */
   userName: string;
   /** First name for the home greeting; undefined ⇒ a plain time-of-day greeting. */
@@ -211,7 +214,7 @@ export function useShell({
   }, []);
   // A CLI this host cannot probe is left out: its answer would never come.
   const s = chat.settings;
-  useAccessStateEvent({
+  const installAccess = useAccessStateEvent({
     onboarded: !!s.onboarded,
     keysKnown: chat.keysKnown,
     served: platformAccessServed(),
@@ -232,6 +235,7 @@ export function useShell({
     overlay,
     splash: splashVisible({ authEnabled: auth.enabled, authLoading: auth.loading, minDone: minSplashDone }),
     reconnecting: !!(auth.reconnecting && auth.user),
+    noModelAccess: installAccess.known && installAccess.access === "none",
     userName: accountDisplayName(auth.user?.email),
     greetingName: firstNameOf(auth.user),
     guide: {

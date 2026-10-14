@@ -100,7 +100,7 @@ export function ShellChrome({
   }, [established, onboarded]);
 
   const notice = pickShellNotice(
-    { reconnecting: shell.reconnecting, mcpItems: mcpReconnect.items, showAccess },
+    { reconnecting: shell.reconnecting, mcpItems: mcpReconnect.items, showAccess, noAccess: shell.noModelAccess },
     t,
   );
   const runNoticeAction = (kind: ShellNoticeKind) => {

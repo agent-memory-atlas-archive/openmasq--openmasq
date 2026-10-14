@@ -41,6 +41,10 @@ export interface ShellMessages {
     accessBodySold: (brand: string) => string;
     accessBody: string;
     seeAccess: string;
+    /** No road to any model on a build that serves none. */
+    noAccessTitle: string;
+    noAccessBody: string;
+    noAccessAction: string;
   };
   /** The document tabs above a panel. */
   panelTabs: {

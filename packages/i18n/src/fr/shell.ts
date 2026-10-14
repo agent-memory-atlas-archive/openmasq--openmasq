@@ -34,6 +34,10 @@ export const shell = {
       `Pour utiliser tous les modèles, prenez un abonnement ${brand} ou ajoutez votre propre clé API.`,
     accessBody: "Pour utiliser tous les modèles, ajoutez votre propre clé API.",
     seeAccess: "Voir mes accès",
+    noAccessTitle: "Aucun modèle n'est branché",
+    noAccessBody:
+      "Ajoutez une clé API ou activez votre abonnement Claude Code ou Codex : sans cela, aucun modèle ne peut vous répondre.",
+    noAccessAction: "Brancher un modèle",
   },
   panelTabs: {
     sidePanel: "Panneau latéral",

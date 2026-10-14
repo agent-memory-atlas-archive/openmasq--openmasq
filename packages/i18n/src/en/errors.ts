@@ -15,6 +15,8 @@ export const errors = {
     `This model isn't available with your ${brand} account. Pick another one.`,
   upstreamUnavailable: (brand) =>
     `${brand} couldn't reach the provider. Try again, or switch models.`,
+  modelRestricted: (brand) =>
+    `This model can't be used in ${brand}: its provider reserves it for some apps only. Pick another one.`,
   providerCreditsNamed: (provider) =>
     `Your ${provider} account is out of credits. Add credits at ${provider}, or switch models.`,
   providerCredits: "Your provider account is out of credits. Add credits, or switch models.",

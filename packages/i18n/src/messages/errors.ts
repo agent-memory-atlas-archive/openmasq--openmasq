@@ -21,6 +21,9 @@ export interface ErrorsMessages {
   creditsUnverifiable: string;
   modelNotAllowed: (brand: string) => string;
   upstreamUnavailable: (brand: string) => string;
+  /** The provider reserves this model for some apps only (OpenRouter: « only available on
+   *  agentic harnesses »): not the key, not a retry — another model. */
+  modelRestricted: (brand: string) => string;
   providerCreditsNamed: (provider: string) => string;
   providerCredits: string;
   invalidKeyNamed: (provider: string) => string;

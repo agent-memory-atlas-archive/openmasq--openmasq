@@ -30,6 +30,8 @@ export function pickShellNotice(
     reconnecting: boolean;
     mcpItems: McpReconnectItem[];
     showAccess: boolean;
+    /** No road to any model: nothing can answer, so it outranks the connectors. */
+    noAccess?: boolean;
   },
   t: Messages,
 ): ShellNotice | null {
@@ -39,6 +41,18 @@ export function pickShellNotice(
       tone: "warning",
       title: t.leaves.offline,
       message: t.shell.notice.offlineBody(BRAND.name),
+      dismissible: false,
+    };
+  }
+  // No model at all: nothing can answer, so a connector to reconnect would not help yet.
+  if (input.noAccess) {
+    return {
+      kind: "access",
+      tone: "warning",
+      title: t.shell.notice.noAccessTitle,
+      message: t.shell.notice.noAccessBody,
+      actionLabel: t.shell.notice.noAccessAction,
+      // Not a preference to dismiss: it disappears when a road exists.
       dismissible: false,
     };
   }

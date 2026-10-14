@@ -53,4 +53,18 @@ describe("pickShellNotice", () => {
     expect(n?.tone).toBe("info");
     expect(n?.dismissible).toBe(true);
   });
+
+  // A build serving nothing, and no key nor CLI: not "only the free models" — NO model.
+  it("aucun modèle branché passe devant les connecteurs, ne se ferme pas, et mène aux modèles", () => {
+    const n = pickShellNotice({ ...NONE, mcpItems: [{ id: "slack", name: "Slack" }], showAccess: true, noAccess: true }, fr);
+    expect(n?.kind).toBe("access");
+    expect(n?.tone).toBe("warning");
+    expect(n?.dismissible).toBe(false);
+    expect(n?.title).toBe(fr.shell.notice.noAccessTitle);
+    expect(n?.actionLabel).toBe(fr.shell.notice.noAccessAction);
+  });
+
+  it("une panne réseau reste devant l'absence de modèle", () => {
+    expect(pickShellNotice({ ...NONE, reconnecting: true, noAccess: true }, fr)?.kind).toBe("offline");
+  });
 });

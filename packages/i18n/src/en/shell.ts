@@ -34,6 +34,9 @@ export const shell = {
       `To use every model, get a ${brand} subscription or add your own provider API key.`,
     accessBody: "To use every model, add your own provider API key.",
     seeAccess: "See my access",
+    noAccessTitle: "No model is connected",
+    noAccessBody: "Add an API key or switch on your Claude Code or Codex subscription: without one, no model can answer you.",
+    noAccessAction: "Connect a model",
   },
   panelTabs: {
     sidePanel: "Side panel",

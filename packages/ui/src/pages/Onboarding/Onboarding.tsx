@@ -221,17 +221,18 @@ export function Onboarding({ settings, onChange, onDone, onSaveKey, onConnectOpe
               <>
                 <div className="cv-eyebrow ob-eyebrow">{t.onboarding.ready.eyebrow}</div>
                 <h1 className="cv-display ob-title">{t.onboarding.ready.title}</h1>
-                {/* What the previous step leaves in suspense: redaction depends on
-                    NEITHER of the two access paths, and « Passer » cuts nothing off. The
-                    second sentence is what makes the first verifiable — a free model is
-                    selected by default (`prompt/models.ts` DEFAULT_MODEL_ID), so a fresh
-                    install writes with no key and no subscription. */}
+                {/* The road just set up, said back; the served/unserved lines only where
+                    none was (a hosted build, or a host that cannot open one). */}
                 <p className="ob-sub">
-                  {/* Without a hosted service, no model is reachable until an access path
-                      is wired up: say so, rather than promise a model that's ready. */}
-                  {served
-                    ? t.onboarding.ready.subServed(BRAND.name)
-                    : t.onboarding.ready.subUnserved}
+                  {access === "agent"
+                    ? t.onboarding.ready.subAgent
+                    : access === "key"
+                      ? t.onboarding.ready.subKey
+                      : access === "local"
+                        ? t.onboarding.ready.subLocal
+                        : served
+                          ? t.onboarding.ready.subServed(BRAND.name)
+                          : t.onboarding.ready.subUnserved}
                 </p>
                 <ul className="ob-ready">
                   <li>{t.onboarding.ready.modelHint}</li>

@@ -58,6 +58,10 @@ export interface OnboardingMessages {
     title: string;
     subServed: (brand: string) => string;
     subUnserved: string;
+    /** The road the person just set up, said back: their subscription, their key, their server. */
+    subAgent: string;
+    subKey: string;
+    subLocal: string;
     modelHint: string;
     slashHint: { lead: string; strong: string; tail: string };
     helpHint: { lead: string; strong: string; tail: string };

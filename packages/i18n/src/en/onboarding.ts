@@ -19,9 +19,9 @@ export const onboarding = {
     sub: (brand) =>
       `Before a message is sent, ${brand} finds sensitive data and replaces it with substitutes. The model sees only the substitutes. You keep seeing the real values.`,
     notoriety: {
-      lead: "Public figures, major brands and countries are ",
+      lead: "Public figures and major brands are ",
       strong: "not masked",
-      tail: " by default: they don't identify your client.",
+      tail: " by default, countries never: they identify no one.",
     },
     webReveal: {
       lead: (brand) => `Before a web search, ${brand} `,
@@ -52,8 +52,10 @@ export const onboarding = {
       `Masking needs no key and applies from your first message. A free model is already selected and works with your ${brand} account.`,
     subUnserved:
       "Masking needs no account and applies from your first message. You only need access to a model: an API key, a local server, or your CLI.",
-    modelHint:
-      "The model name is under the message box. Click it to switch models, or to add access if you skipped that step.",
+    subAgent: "Your messages go through your subscription, masked before each send.",
+    subKey: "Your messages go out with your API key, masked before each send.",
+    subLocal: "Your messages stay on your computer, masked before each send.",
+    modelHint: "The model name is under the message box: click it to switch.",
     slashHint: {
       lead: "Type ",
       strong: "/",

@@ -19,9 +19,9 @@ export const onboarding = {
     sub: (brand) =>
       `Avant l'envoi d'un message, ${brand} repère les données sensibles et les remplace par des valeurs de substitution. Le modèle ne voit que ces substituts. Vous continuez de voir les vraies valeurs.`,
     notoriety: {
-      lead: "Les personnalités, grandes marques et pays ne sont ",
-      strong: "pas masqués",
-      tail: " par défaut : ils n'identifient pas votre client.",
+      lead: "Les personnalités et grandes marques ne sont ",
+      strong: "pas masquées",
+      tail: " par défaut, les pays jamais : ils n'identifient personne.",
     },
     webReveal: {
       lead: (brand) => `Avant une recherche sur le web, ${brand} vous `,
@@ -53,8 +53,10 @@ export const onboarding = {
       `Le masquage ne dépend d'aucune clé et s'applique dès votre premier message. Un modèle gratuit est déjà sélectionné et fonctionne avec votre compte ${brand}.`,
     subUnserved:
       "Le masquage ne dépend d'aucun compte et s'applique dès votre premier message. Il vous faut seulement un accès à un modèle : une clé API, un serveur local ou votre CLI.",
-    modelHint:
-      "Le nom du modèle est sous la zone de saisie. Cliquez dessus pour changer de modèle, ou pour ajouter un accès si vous avez passé l'étape.",
+    subAgent: "Vos messages passent par votre abonnement, masqués avant chaque envoi.",
+    subKey: "Vos messages partent avec votre clé API, masqués avant chaque envoi.",
+    subLocal: "Vos messages restent sur votre ordinateur, masqués avant chaque envoi.",
+    modelHint: "Le nom du modèle est sous la zone de saisie : cliquez dessus pour en changer.",
     slashHint: {
       lead: "Tapez ",
       strong: "/",

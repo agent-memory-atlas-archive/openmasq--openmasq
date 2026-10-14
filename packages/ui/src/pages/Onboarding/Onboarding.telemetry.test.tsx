@@ -148,4 +148,13 @@ describe("onboarding — la télémétrie du premier lancement", () => {
     expect(events("onboarding_blocked")).toEqual([]);
     expect(events("onboarding_step").map((e) => e.step)).toEqual(["1", "2", "3"]);
   });
+
+  it("l'écran final redit la route choisie, au lieu de réclamer un accès déjà là", async () => {
+    configurePlatformAccess({ served: false });
+    const m = await mount(<Harness keys={["anthropic"]} />, { host });
+    await m.click(".ob-next");
+    await m.click(".ob-next");
+    const fr = (await import("@openmasq/i18n")).getMessages("fr");
+    expect(m.find(".ob-sub").textContent).toBe(fr.onboarding.ready.subKey);
+  });
 });

@@ -51,6 +51,19 @@
 .ob-demo-flip.is-fake .ob-demo-v-fake {
   opacity: 1;
 }
+/* The reply: its room is kept from the start, it fades in on its beat. */
+.ob-demo-reply {
+  margin-top: 12px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 0.45s var(--ease-out),
+    transform 0.45s var(--ease-out);
+}
+.ob-demo-reply.on {
+  opacity: 1;
+  transform: none;
+}
 .ob-demo-legend {
   display: flex;
   flex-wrap: wrap;

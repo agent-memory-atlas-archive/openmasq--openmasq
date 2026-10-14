@@ -216,7 +216,7 @@ export interface LeavesMessages {
       followsDefaultHint: (globalLevel: string) => string;
     };
   };
-  demo: { youWrite: string; modelReceives: string };
+  demo: { youWrite: string; modelReceives: string; youRead: string };
   toolTrace: string;
   conversations: string;
   offline: string;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEMO_SPANS, demoLegend, demoText } from "./demo";
+import { DEMO_REPLY, DEMO_SPANS, demoLegend, demoText } from "./demo";
 
 /**
  * The first screen of the app makes a factual claim about what redaction does. These pin
@@ -66,5 +66,12 @@ describe("les deux promesses de comportement du premier écran", () => {
     // and `evals/navigation.test.ts`; here we hold the link to what the screen claims.
     const { WebNavRedactOffer } = await import("../../components/WebNavRedactOffer");
     expect(typeof WebNavRedactOffer).toBe("function");
+  });
+
+  it("la réponse reprend LES MÊMES faux que la demande : une personne, un faux", () => {
+    const fakeOf = new Map(DEMO_SPANS.filter((s) => s.fake).map((s) => [s.text, s.fake]));
+    const reply = DEMO_REPLY.filter((s) => s.fake);
+    expect(reply.length).toBeGreaterThan(0);
+    for (const s of reply) expect(fakeOf.get(s.text), s.text).toBe(s.fake);
   });
 });

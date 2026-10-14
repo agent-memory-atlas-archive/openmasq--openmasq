@@ -236,7 +236,7 @@ export const leaves = {
         `Follows your overall level (${globalLevel}).`,
     },
   },
-  demo: { youWrite: "WHAT YOU WRITE", modelReceives: "WHAT THE MODEL RECEIVES" },
+  demo: { youWrite: "WHAT YOU WRITE", modelReceives: "WHAT THE MODEL RECEIVES", youRead: "WHAT YOU READ" },
   toolTrace: "TOOL CALLS",
   conversations: "Conversations",
   offline: "Offline",

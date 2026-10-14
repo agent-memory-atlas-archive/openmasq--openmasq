@@ -34,6 +34,17 @@ export const DEMO_SPANS: readonly DemoSpan[] = [
   { text: "." },
 ];
 
+/** The model's REPLY, written on the fakes it received and shown back with the real values:
+ *  the round trip IS the product (the model never saw them, you read them). Its fakes are
+ *  the request's own — one person, one fake (`demo.test.ts`). */
+export const DEMO_REPLY: readonly DemoSpan[] = [
+  { text: "Voici la relance pour " },
+  { text: "Camille Berliand", fake: "Léa Chandrel", kind: "name" },
+  { text: ", au sujet du devis " },
+  { text: "Atelier Torbel", fake: "Karl Studio", kind: "company" },
+  { text: "…" },
+];
+
 export interface DemoLegendItem {
   kind: string;
   label: string;

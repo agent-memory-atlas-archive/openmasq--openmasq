@@ -244,7 +244,7 @@ export const leaves = {
         `Suit votre niveau général (${globalLevel}).`,
     },
   },
-  demo: { youWrite: "CE QUE VOUS ÉCRIVEZ", modelReceives: "CE QUE LE MODÈLE REÇOIT" },
+  demo: { youWrite: "CE QUE VOUS ÉCRIVEZ", modelReceives: "CE QUE LE MODÈLE REÇOIT", youRead: "CE QUE VOUS LISEZ" },
   toolTrace: "APPEL D'OUTILS",
   conversations: "Conversations",
   offline: "Hors ligne",

@@ -214,7 +214,8 @@ export const conversation = {
     scopeMessage: "ce message",
     leaveClear: (scope) => `Démasquer · ${scope}`,
     leaveClearKind: (scope) => `Démasquer la catégorie · ${scope}`,
-    leaveClearTip: "Réversible : le modèle reçoit la valeur réelle. Remasquez-la en un clic.",
+    leaveClearTip:
+      "Le modèle recevra la valeur réelle dans vos prochains envois. Remasquer protège les envois suivants, pas ceux déjà partis.",
     reMask: (scope) => `Remasquer · ${scope}`,
     reMaskKind: (scope) => `Remasquer la catégorie · ${scope}`,
     reMaskTip: "Masquer à nouveau cette valeur",

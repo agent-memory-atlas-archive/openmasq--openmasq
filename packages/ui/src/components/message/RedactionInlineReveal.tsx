@@ -141,6 +141,9 @@ export function RedactionInlineReveal({
   const mark = t.conversation.mark;
   // The two verbs and their reach, from THE lexicon (`conversation.mark`).
   const reach = scope === "send" ? mark.scopeSend : mark.scopeConversation;
+  // The category action reaches the marks of THIS message only: a value of that kind met
+  // later stays masked, so « cette conversation » promised more than it did.
+  const kindReach = scope === "send" ? mark.scopeSend : mark.scopeMessage;
   const toggleTitle = isRevealed ? mark.reMaskTip : mark.leaveClearTip;
   // The card + actions — ONE content tree, two presentations (popover / sheet).
   const content = (
@@ -168,7 +171,7 @@ export function RedactionInlineReveal({
           {hov.kind && (
             <button type="button" className="rmark-pop-btn" onClick={toggleKind} title={toggleTitle}>
               <LayersIcon size={14} />{" "}
-              {isRevealed ? mark.reMaskKind(reach) : mark.leaveClearKind(reach)}
+              {isRevealed ? mark.reMaskKind(kindReach) : mark.leaveClearKind(kindReach)}
             </button>
           )}
         </>

@@ -206,7 +206,8 @@ export const conversation = {
     scopeMessage: "this message",
     leaveClear: (scope) => `Unmask · ${scope}`,
     leaveClearKind: (scope) => `Unmask category · ${scope}`,
-    leaveClearTip: "Reversible: the model receives the real value. Mask it again in one click.",
+    leaveClearTip:
+      "The model will receive the real value in your next sends. Masking again protects the next sends, not the ones already gone.",
     reMask: (scope) => `Mask again · ${scope}`,
     reMaskKind: (scope) => `Mask category again · ${scope}`,
     reMaskTip: "Mask this value again",

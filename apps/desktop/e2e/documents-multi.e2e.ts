@@ -14,13 +14,19 @@ import { test, expect } from "@playwright/test";
 import { readFileSync, existsSync } from "node:fs";
 import { resolve, basename, extname } from "node:path";
 import { _electron as electron } from "@playwright/test";
-import { extractBytes } from "@openmasq/redact/documents";
+import { createRequire } from "node:module";
 import { pseudonymize } from "@openmasq/redact";
 import { ATTACHMENT_INLINE_NOTE } from "../../../packages/ui/src/send/foldPayload";
 import { startFakeModel } from "./fakeModel";
 import { supabaseAuthStorageKey } from "./supabaseAuthKey";
 
 const DESKTOP_DIR = process.cwd();
+// The oracle extracts with the BUILT package, as the app does. Through the tsconfig paths the
+// runner loads the TS sources instead, where the sheet reader dies on a module-format clash
+// (« exports is not defined in ES module scope ») and every .xlsx reads as empty.
+const { extractBytes } = createRequire(__filename)(
+  resolve(DESKTOP_DIR, "../../packages/redact/dist/documents/documents.cjs"),
+) as typeof import("@openmasq/redact/documents");
 const NER_DIR = resolve(DESKTOP_DIR, "build/ner-models");
 // ONE home for the PII fixtures (a duplicated fixture drifts, rule 9).
 const fixture = (name: string) => resolve(DESKTOP_DIR, "../../packages/redact/src/__fixtures__", name);
@@ -116,11 +122,25 @@ test.describe("Documents multiples — redaction local, jugé sans modèle", () 
       await page.waitForSelector(".rail-btn, .side-nav-item", { timeout: 60_000 });
 
       // ── Upload: one click, four files ────────────────────────────────────────
-      await page.getByLabel("Joindre un fichier").click();
+      // Attaching goes through the composer's « Ajouter » menu, then its « Fichier » entry.
+      // Two composers stay mounted (welcome + docked): only the visible one is clickable.
+      const fileEntry = page.getByTitle("Joindre un fichier").filter({ visible: true }).first();
+      // The menu can miss a click made while the shell is still settling: re-open until it shows.
+      await expect(async () => {
+        if (!(await fileEntry.isVisible())) {
+          await page.getByRole("button", { name: "Ajouter", exact: true }).filter({ visible: true }).first().click();
+        }
+        await expect(fileEntry).toBeVisible({ timeout: 2_000 });
+      }).toPass({ timeout: 30_000 });
+      await fileEntry.click();
       await expect(page.locator(".attach-chip")).toHaveCount(DOCS.length, { timeout: 180_000 });
       // A chip in error state is a document that would go out unredacted.
       await expect(page.locator(".attach-tile.loading")).toHaveCount(0, { timeout: 300_000 });
-      await expect(page.locator(".attach-chip.err")).toHaveCount(0);
+      // Name the failing files and what they say, not just a count.
+      const failed = await page.locator(".attach-chip.err").evaluateAll((els) =>
+        els.map((e) => `${e.textContent?.trim()} — ${e.getAttribute("title") ?? ""}`),
+      );
+      expect(failed, `pastilles en erreur : ${failed.join(" | ")}`).toEqual([]);
 
       // The composer refuses to submit while detection runs: retry until the field empties.
       const input = page.locator(".composer-input");

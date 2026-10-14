@@ -14,6 +14,7 @@ export const runtimeSend = {
     network: "masking is not responding",
     auth: "masking failed on our side",
     unknown: "masking could not run",
+    engine: "masking could not finish safely",
   },
   maskingTimeout: "Send blocked: masking took too long. Nothing was sent. Try again. If the text is long, send it in several parts.",
   modelBlockedByOrg: (model) => `Your organization turned off the model "${model}". Choose another one.`,
@@ -50,6 +51,7 @@ export const runtimeSend = {
     modelNetwork: `Masking is unavailable: the model is unreachable. Check that Ollama is running and the address is correct. ${NOT_MASKED}`,
     modelUnknown: `Masking is unavailable. ${NOT_MASKED}`,
     timeout: `Masking took too long. ${NOT_MASKED} Try again. If the document is long, split it.`,
+    engine: `Masking could not finish safely. ${NOT_MASKED} Try again; if it happens again, report it from "Send feedback".`,
   },
   token: {
     outage: (brand) =>

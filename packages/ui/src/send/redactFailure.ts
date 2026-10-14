@@ -16,10 +16,14 @@ import type { Settings } from "../types";
  */
 
 /** Coarse cause of a redaction-model failure, inferred from the raw error text. */
-export type RedactFailureKind = "auth" | "network" | "timeout" | "unknown";
+export type RedactFailureKind = "auth" | "network" | "timeout" | "engine" | "unknown";
 
 /** Classify a raw model/endpoint error so the warning can be phrased precisely. */
 export function classifyRedactFailure(raw: string): RedactFailureKind {
+  // The engine's own exit check refused its result (`@openmasq/redact` postcondition): the
+  // detector loaded and ran. Saying « le modèle n'a pas pu se charger » sent the user to
+  // reinstall an app that was fine.
+  if (/redaction postcondition failed/i.test(raw)) return "engine";
   // Key/credential problems: missing OR invalid (401/403) — the local model key,
   // OR the cloud function's server-side GPT-OSS key ("… is not set", HTTP 401).
   if (/\b401\b|\b403\b|api[\s_-]?key|unauthor|forbidden|missing key|no api key|not set|invalid.*(key|token|credential)|clé/i.test(raw))
@@ -56,6 +60,7 @@ export function describeRedactFailure(raw: string, t: Messages, engine?: Setting
   const kind = classifyRedactFailure(raw);
   const f = t.runtime.send.maskFail;
   if (kind === "timeout") return f.timeout;
+  if (kind === "engine") return f.engine;
   // What never gets cut: what was NOT masked, and that nothing was sent. The rest doesn't
   // change the next move, which is « réessayer » (retry) either way.
   if (engine === "remote") {

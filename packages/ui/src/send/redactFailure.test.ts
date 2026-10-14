@@ -25,6 +25,7 @@ describe("classifyRedactFailure", () => {
 
   it("tells a pass that ran out of time from an unreachable service", () => {
     expect(classifyRedactFailure("timed out after 45s")).toBe("timeout");
+    expect(classifyRedactFailure("redaction postcondition failed: a reported match was not vaulted")).toBe("engine");
     expect(classifyRedactFailure("remote redaction timed out")).toBe("timeout");
     expect(classifyRedactFailure("détection locale : délai dépassé")).toBe("timeout");
   });
@@ -86,5 +87,16 @@ describe("redactFailureIsUserFixable", () => {
     expect(redactFailureIsUserFixable("model")).toBe(true);
     expect(redactFailureIsUserFixable("patterns")).toBe(true);
     expect(redactFailureIsUserFixable(undefined)).toBe(true);
+  });
+});
+
+// Production and e2e: an engine-check refusal on the offline engine read « le modèle de
+// détection n'a pas pu se charger » — the model had loaded and run.
+describe("describeRedactFailure — the engine's own check", () => {
+  it("never blames the model's loading for a postcondition refusal", () => {
+    const fr = getMessages("fr");
+    const out = describeRedactFailure("redaction postcondition failed: a reported match was not vaulted", fr, "local");
+    expect(out).toBe(fr.runtime.send.maskFail.engine);
+    expect(out).not.toMatch(/charger|réinstallez/);
   });
 });

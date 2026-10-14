@@ -83,7 +83,7 @@ export interface RuntimeMessages {
   send: {
     /** The masking step could not run: the send is blocked, nothing was sent. */
     maskingBlocked: (cause: string) => string;
-    maskingCause: { network: string; auth: string; unknown: string };
+    maskingCause: { network: string; auth: string; unknown: string; engine: string };
     /** The masking pass ran past its time budget (a long text, a busy machine): the send
      *  is blocked like any masking failure, and the advice is to retry or split the text. */
     maskingTimeout: string;
@@ -121,6 +121,9 @@ export interface RuntimeMessages {
       modelUnknown: string;
       /** The masking pass ran out of time (any engine). */
       timeout: string;
+      /** The masking ran but its own exit check refused the result (an engine defect):
+       *  neither the model nor the network is at fault. */
+      engine: string;
     };
     /** The platform send could not get its session token. */
     token: {

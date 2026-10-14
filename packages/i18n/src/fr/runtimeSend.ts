@@ -14,6 +14,7 @@ export const runtimeSend = {
     network: "le masquage ne répond pas",
     auth: "le masquage a échoué de notre côté",
     unknown: "le masquage n'a pas pu s'exécuter",
+    engine: "le masquage n'a pas pu se terminer de façon sûre",
   },
   maskingTimeout:
     "Envoi bloqué : le masquage a pris trop de temps. Rien n'a été envoyé. Réessayez. Si le texte est long, envoyez-le en plusieurs parties.",
@@ -54,6 +55,7 @@ export const runtimeSend = {
     modelNetwork: `Masquage indisponible : modèle injoignable. Vérifiez qu'Ollama est démarré et que l'adresse est correcte. ${NOT_MASKED}`,
     modelUnknown: `Masquage indisponible. ${NOT_MASKED}`,
     timeout: `Le masquage a pris trop de temps. ${NOT_MASKED} Réessayez. Si le document est long, découpez-le.`,
+    engine: `Le masquage n'a pas pu se terminer de façon sûre. ${NOT_MASKED} Réessayez ; si cela se reproduit, signalez-le depuis « Envoyer un avis ».`,
   },
   token: {
     outage: (brand) =>

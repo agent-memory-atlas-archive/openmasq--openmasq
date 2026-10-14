@@ -50,6 +50,24 @@ kept in the French they were sent in, for the reason given above.
 
 ---
 
+## 0.16.0 — 2026-10-14
+> A first run that ends ready to answer, and quicker replies to simple messages.
+
+### What's new
+- **A first run that ends ready** — setup connects your subscription or your key, so the first message gets an answer.
+- **Quicker replies to simple messages** — a message that needs no tool goes straight to the model.
+- **What's new, after each update** — the first launch on a new version shows what it brings.
+
+### Improvements & fixes
+- Connectors keep their tools when a service is busy, and say why a connection did not complete.
+- Updates arrive sooner after your computer wakes, and install while the app sits unused.
+- A message sent while the text is being analysed leaves as soon as the analysis ends.
+- The masking level is written on its button, and the help now covers connecting your tools.
+- Masking recognises more spellings of the same name.
+- Clearer, more consistent wording throughout the app.
+
+---
+
 ## 0.15.3 — 2026-10-08
 > Updates arrive quietly, and a waiting version shows as ready to install.
 

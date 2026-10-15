@@ -63,6 +63,15 @@ export interface MenusMessages {
   markKeep: {
     uncertain: (brand: string) => string;
   };
+  /** The composer's discoverability hints: what the « N à masquer » count means and how to
+   *  act on it, that a selection masks a word, and that « / » opens the compétences. */
+  composerHints: {
+    placeholder: (brand: string) => string;
+    countTip: string;
+    skillShortcut: string;
+    /** A send asked while the text is still being checked: it leaves once the check ends. */
+    sendQueued: string;
+  };
   /** A page's ⋯ — today only the Mémoire's. */
   page: {
     moreActions: string;

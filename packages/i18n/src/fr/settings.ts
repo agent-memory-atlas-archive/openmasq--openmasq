@@ -28,8 +28,8 @@ export const settings = {
     },
     models: {
       label: "Modèles",
-      title: "Liste de modèles",
-      sub: () => "Les modèles disponibles avec vos clés API ou votre offre, et un modèle qui tourne sur votre ordinateur.",
+      title: "Modèles",
+      sub: () => "Les modèles que vous pouvez utiliser : avec vos clés d'accès, votre abonnement, ou un modèle installé sur votre ordinateur.",
       kw: "modele defaut gpt claude gemini mistral deepseek llm fournisseur provider cle api local ollama lm studio adresse localhost",
     },
     mcp: {
@@ -45,10 +45,10 @@ export const settings = {
       kw: "web recherche moteur duckduckgo google qwant ecosia brave startpage",
     },
     audit: {
-      label: "Journal",
-      title: "Journal d'audit",
-      sub: () => "L'historique de ce qui a été masqué, avec recherche et filtres.",
-      kw: "log historique sécurité traçabilité rédaction masquage export",
+      label: "Historique de confidentialité",
+      title: "Historique de confidentialité",
+      sub: () => "Ce qui a été masqué avant l'envoi, et les adresses que l'app a contactées.",
+      kw: "journal audit log historique sécurité traçabilité rédaction masquage export réseau adresses",
     },
     usage: {
       label: "Usage",
@@ -58,9 +58,9 @@ export const settings = {
     },
     sync: {
       label: "Vos appareils",
-      title: "Synchronisation",
+      title: "Vos appareils",
       sub: () => "Vos appareils et la synchronisation entre eux.",
-      kw: "appareils devices cloud chiffrement sauvegarde",
+      kw: "appareils devices synchronisation synchro cloud chiffrement sauvegarde",
     },
     billing: {
       label: "Paiement",
@@ -94,8 +94,8 @@ export const settings = {
       kw: "analytics telemetrie consentement anonymes",
     },
     transparencyLog: {
-      label: "Journal de débogage",
-      kw: "transparence debogage debug journal wire message exact modele vu par le modele comparatif options avancees",
+      label: "Journal technique (pour le support)",
+      kw: "transparence debogage debug journal technique support wire message exact modele vu par le modele comparatif options avancees",
     },
     linkPreviews: { label: "Aperçus de liens", kw: "lien preview vignette apercu url ip" },
     protectionLevel: {
@@ -103,11 +103,11 @@ export const settings = {
       kw: "niveau allege renforce strict light enhanced sur mesure categories regles masquage",
     },
     showTokens: {
-      label: "Afficher des marqueurs ([PERSON1]) plutôt que des substituts",
+      label: "Afficher « Personne 1 » au lieu d'un faux nom",
       kw: "marqueurs substituts jetons pseudonymes person1 iban affichage",
     },
     modelSeesTokens: {
-      label: "Le modèle ne voit que des marqueurs",
+      label: "Envoyer « Personne 1 » au modèle au lieu d'un faux nom",
       kw: "jetons marqueurs pseudonymes modèle anonymisation person1 envoi",
     },
     memoryAuto: {
@@ -147,7 +147,7 @@ export const settings = {
       kw: "appareils devices synchro revoquer passphrase",
     },
     environment: {
-      label: "Environnement",
+      label: "Version de test",
       kw: "environnement staging production basculer beta test acces",
     },
   },

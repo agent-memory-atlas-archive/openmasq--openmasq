@@ -221,6 +221,12 @@ const MIGRATIONS: { name: string; statements: string[] }[] = [
       `ALTER TABLE conversations ADD COLUMN file_redactions TEXT`,
     ],
   },
+  {
+    // A failed turn's CLASS (`blocked` | `quota`), derived from the error code at failure
+    // time: the card's eyebrow reads it after a reload instead of matching the sentence.
+    name: "0024_message_error_kind",
+    statements: [`ALTER TABLE messages ADD COLUMN error_kind TEXT`],
+  },
 ];
 
 export async function migrate(c: Client): Promise<void> {

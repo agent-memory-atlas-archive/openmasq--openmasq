@@ -98,6 +98,19 @@ export interface ModelPickerMessages {
   groupClaudeCli: string;
   groupCodexCli: string;
   groupAntigravityCli: string;
+  /** Plain group names for the providers whose registry label is technical English. */
+  groupLocal: string;
+  groupChatgptSession: string;
+  groupClaudeSession: string;
+  /** The SHORT name of those same providers, read in a sentence or under a reply. */
+  nameLocal: string;
+  nameChatgptSession: string;
+  nameClaudeSession: string;
+  /** The picker chip's accessible name / tooltip, and the « runs here » badge of a compact row. */
+  chooseModel: string;
+  onYourComputer: string;
+  /** Where a provider's models run (`HostCode` → words), the flag's tooltip. */
+  hostedIn: { US: string; FR: string; CN: string; local: string; global: string };
   manage: string;
   none: string;
   models: string;

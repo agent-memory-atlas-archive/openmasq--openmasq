@@ -3,7 +3,8 @@ import { useT } from "../../i18n";
 import { ShieldIcon, SendIcon, CheckIcon } from "../../components/brand";
 import { AgentCard, GlyphTile, AgentCardTitle, AgentCardDesc } from "../../components/agent/AgentCard";
 import { describeWriteArgs, writeConfirmCopy, navHostOf } from "./writeConfirm";
-import { humanToolLabel } from "../../agent/humanToolLabel";
+import { humanParamLabel, humanToolLabel } from "../../agent/humanToolLabel";
+import { connectorDisplayName } from "./connectorDisplayName";
 import type { WriteConfirmInfo } from "../../agent/mcpAgent";
 
 /**
@@ -38,6 +39,7 @@ export function WriteConfirmCard({
   attachments,
   reason,
   flags,
+  floor,
   onDecision,
 }: WriteConfirmInfo & {
   /** `remember` = add this connector/tool to the session write allow-list. */
@@ -46,7 +48,9 @@ export function WriteConfirmCard({
   const [remember, setRemember] = useState(false);
   const { lines, context, json } = describeWriteArgs(args);
   const t = useT();
-  const copy = writeConfirmCopy(reason, server, navHostOf(args), t);
+  // The connector by its NAME (« Gmail »), never its id (`gmail--a1b2`).
+  const serverName = connectorDisplayName(server, t);
+  const copy = writeConfirmCopy(reason, serverName, navHostOf(args), t);
   // Neutral by default: a confirmation doesn't need to shout to be read, and the
   // solid tint made it look like a redaction mark. It only takes on a color
   // when it has something to FLAG — the loop raised an exfiltration signal
@@ -93,7 +97,7 @@ export function WriteConfirmCard({
           <ul className="write-confirm-exfil-list">
             {flags.map((f, i) => (
               <li key={i}>
-                <code>{f.param}</code> — {f.reason} :{" "}
+                <strong>{humanParamLabel(f.param)}</strong> — {f.reason} :{" "}
                 <span className="write-confirm-exfil-val">
                   {f.value.length > 60 ? f.value.slice(0, 60) + "…" : f.value}
                 </span>
@@ -104,16 +108,14 @@ export function WriteConfirmCard({
       )}
 
       {/* Target + content preview — the kit's boxed region. The connector and the action
-          in the user's words, then the EXACT tool in parentheses: "which surface am I
-          authorising" must stay unambiguous, and two of a connector's tools can share a
-          human label. That is also why the scope note and « Détails techniques » below
-          keep the raw name ALONE — they state what the allow-list actually keys on, and a
-          vulgarised name there would describe a permission wider than the one granted. */}
+          in the user's words only. Two of a connector's tools can share a human label, so
+          the EXACT tool — what the allow-list keys on — is named inside « Détails
+          techniques », the one place a raw id is shown. */}
       <div className="agent-card-box">
         <div className="agent-card-box-target">
           <span className="agent-card-box-target-label">{t.cards.writeConfirm.target}</span>
-          <span className="agent-card-box-target-val" title={t.conversation.writeConfirm.targetTip(server, tool)}>
-            {server} · {humanToolLabel(server, tool, t)} ({tool})
+          <span className="agent-card-box-target-val">
+            {serverName} · {humanToolLabel(server, tool, t)}
           </span>
         </div>
         {lines.length > 0 && (
@@ -143,23 +145,31 @@ export function WriteConfirmCard({
       )}
 
       <details className="write-confirm-json">
-        <summary>{t.cards.writeConfirm.details(tool)}</summary>
+        <summary>{t.cards.writeConfirm.details}</summary>
+        <p className="write-confirm-tool-id">{t.cards.writeConfirm.toolId(tool)}</p>
         <pre>{json}</pre>
       </details>
 
       {/* Scope of an « Autoriser » click: this tool, THIS conversation — stated so the
           user knows they won't be re-asked (per-call re-confirmation taught clicking
-          without reading). The checkbox widens it to every conversation this session. */}
+          without reading). The checkbox widens it to every conversation until the app
+          quits (the same words as main's « Toujours pour cet outil »). A FLOOR card (send,
+          attachment, possible leak) is asked EVERY time — no allow-list exempts it — so it
+          says so and offers no checkbox that would change nothing. */}
       <div className="write-confirm-scope">
-        <span className="write-confirm-scope-note">{t.cards.writeConfirm.scopeNote(tool)}</span>
-        <label className="write-confirm-remember">
-          <input
-            type="checkbox"
-            checked={remember}
-            onChange={(e) => setRemember(e.target.checked)}
-          />
-          <span>{t.conversation.writeConfirm.alsoOtherChats}</span>
-        </label>
+        <span className="write-confirm-scope-note">
+          {floor ? t.cards.writeConfirm.scopeFloor : t.cards.writeConfirm.scopeNote}
+        </span>
+        {!floor && (
+          <label className="write-confirm-remember">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+            />
+            <span>{t.conversation.writeConfirm.alsoOtherChats}</span>
+          </label>
+        )}
       </div>
     </AgentCard>
   );

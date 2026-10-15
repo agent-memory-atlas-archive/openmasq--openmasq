@@ -75,10 +75,15 @@ describe("McpConnectorModal — bloqué par l'organisation", () => {
 describe("McpConnectorModal — autorisation expirée", () => {
   const EXPIRED = { configured: true, error: "Refresh token is invalid." };
 
-  it("dit la panne en français, et le geste — jamais le message brut du fournisseur", async () => {
+  it("dit la panne en français, et le geste — le message brut seulement replié en détail", async () => {
     const m = await open(EXPIRED);
     expect(m.el.textContent).toContain("Votre autorisation a expiré");
-    expect(m.el.textContent).not.toContain("Refresh token is invalid");
+    const error = m.el.querySelector(".mcp-modal-error")!;
+    const detail = error.querySelector("details")!;
+    expect(detail.open).toBe(false);
+    expect(detail.textContent).toContain("Refresh token is invalid");
+    // Outside the closed fold, the raw English is nowhere.
+    expect(error.firstChild?.textContent).not.toContain("Refresh token is invalid");
     await m.unmount();
   });
 
@@ -93,9 +98,12 @@ describe("McpConnectorModal — autorisation expirée", () => {
     await m.unmount();
   });
 
-  it("une panne INCONNUE garde son texte brut — on n'invente pas de phrase rassurante", async () => {
+  it("une panne INCONNUE est DITE en clair, sans phrase rassurante, le brut replié en détail", async () => {
     const m = await open({ configured: true, error: "Kaboom v2 subsystem misaligned" });
-    expect(m.el.textContent).toContain("Kaboom v2 subsystem misaligned");
+    expect(m.el.textContent).toContain("La connexion n'a pas abouti");
+    expect(m.el.querySelector(".mcp-modal-error details")?.textContent).toContain(
+      "Kaboom v2 subsystem misaligned",
+    );
     expect(m.el.textContent).not.toContain("Reconnectez-vous");
     await m.unmount();
   });
@@ -104,6 +112,20 @@ describe("McpConnectorModal — autorisation expirée", () => {
     const m = await open({ configured: true });
     expect(m.el.textContent).not.toContain("Votre autorisation a expiré");
     expect(m.el.textContent).not.toContain("Reconnectez-vous ci-dessous");
+    await m.unmount();
+  });
+});
+
+describe("McpConnectorModal — abonnement payant du service", () => {
+  it("Superhuman dit l'abonnement requis AVANT la connexion", async () => {
+    const m = await open({ id: "superhuman", serverId: "superhuman", name: "Superhuman" });
+    expect(m.el.textContent).toContain("Nécessite un abonnement Superhuman Business");
+    await m.unmount();
+  });
+
+  it("aucun autre connecteur n'en invente", async () => {
+    const m = await open({});
+    expect(m.el.textContent).not.toContain("Nécessite un abonnement");
     await m.unmount();
   });
 });

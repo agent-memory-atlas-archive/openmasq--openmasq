@@ -72,7 +72,7 @@ describe("a document too long to mask in full is REFUSED, never masked in part",
     expect(state.redacting).toBe(false);
     expect(state.replacements).toBeUndefined();
     expect(state.redactError).toBe(t.composer.attachments.tooLongToMask(Math.round((MAX_MASK_CHARS + 1) / 3000)));
-    expect(state.redactError).toContain("Découpez-le");
+    expect(state.redactError).toContain("plusieurs fichiers plus petits");
     expect(checkSubmit({ text: "résume", attachments: [chip()], t }).kind).toBe("refuse");
   });
 });

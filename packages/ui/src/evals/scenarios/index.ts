@@ -153,7 +153,7 @@ export async function runScenario(model: WorkflowModel, sc: Scenario): Promise<S
     // d'appels atteinte », « n'a renvoyé aucune réponse ») is NEVER a conformant
     // answer — a permissive spec.answer (/./) used to let it through (measured: ling ✅
     // with the interruption banner as its only answer).
-    if (/⚠️ (?:Boucle d'outils interrompue|Limite d'appels d'outils atteinte)|n'a renvoyé aucune réponse/.test(answerOf(run))) {
+    if (/⚠️ Arrêté (?:après|:)|n'a renvoyé aucune réponse/.test(answerOf(run))) {
       verdict = { ok: false, failures: [...verdict.failures, "réponse finale = bannière d'échec de la boucle (pas une réponse)"] };
     }
     return { run, verdict };

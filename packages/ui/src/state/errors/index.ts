@@ -16,3 +16,4 @@ export {
   sendErrorReason,
   sendErrorAction,
 } from "./humanize";
+export { failureKindOf, refusalFailureKind, type TurnFailureKind } from "./failureKind";

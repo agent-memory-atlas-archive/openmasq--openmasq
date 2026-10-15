@@ -5,10 +5,10 @@ import type { Messages } from "@openmasq/i18n";
  *
  * Two application styles exist:
  *  - `keyIn: "query"` — the hosted endpoint takes the key as a URL query param
- *    (Exa `?exaApiKey=…`, Tavily `?tavilyApiKey=…`); the key is composed INTO the
+ *    (Exa `?exaApiKey=…`); the key is composed INTO the
  *    connect URL client-side (`composeApiKeyUrl`) and connects anonymously.
- *  - `keyIn: "header"` — the endpoint wants `Authorization: Bearer <key>`
- *    (Fireflies); the desktop stores the key ENCRYPTED and sends it as a header.
+ *  - `keyIn: "header"` — the endpoint wants `Authorization: Bearer <key>`; the desktop
+ *    stores the key ENCRYPTED and sends it as a header (no catalogued connector today).
  */
 export interface ApiKeyHelp {
   /** How the key is applied: appended to the URL as a query param, or a Bearer header. */
@@ -25,9 +25,9 @@ export interface ApiKeyHelp {
 
 /** The FACTS about each connector's key — where it's configured, and where it's obtained. */
 const API_KEY_SHAPE: Record<string, Omit<ApiKeyHelp, "keyLabel" | "steps">> = {
+  // Only Exa still authenticates with a key: Tavily and Fireflies are one-click now
+  // (`@openmasq/catalog/mcp` `REMOTE`), so their tutorials were dropped with their shapes.
   exa: { keyIn: "query", param: "exaApiKey", keyUrl: "https://dashboard.exa.ai/api-keys" },
-  tavily: { keyIn: "query", param: "tavilyApiKey", keyUrl: "https://app.tavily.com/home" },
-  fireflies: { keyIn: "header", keyUrl: "https://fireflies.ai/dashboard/settings/api" },
 };
 
 /** The API-key help for a connector id, or undefined if none is documented. */

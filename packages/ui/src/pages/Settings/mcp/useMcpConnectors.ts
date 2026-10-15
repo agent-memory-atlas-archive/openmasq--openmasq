@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { connectorErrorReason } from "./connectorErrorReason";
-import { groupByMcpCategory, MCP_CONNECTORS } from "@openmasq/catalog/mcp";
+import { groupByMcpCategory, MCP_CONNECTORS, mcpConnectorRank } from "@openmasq/catalog/mcp";
 import { useT } from "../../../i18n";
 import { useHost, type CredMode, type McpCatalogEntry, type McpServerInfo } from "../../../host";
 import { captureEvent } from "../../../analytics";
-import { buildMcpItems, itemComingSoon, matchesSearch, type McpItem } from "./mcpItems";
+import { buildMcpItems, matchesSearch, type McpItem } from "./mcpItems";
 import { useConnectFailures } from "./useConnectFailures";
 import { apiKeyConnectOpts } from "./mcpApiKeyHelp";
 import { useAddCustomServer } from "./useAddCustomServer";
@@ -119,9 +119,9 @@ export function useMcpConnectors({
   // as one sitting in "Recherche & web" next to Tavily.
   const filtered = items.filter((i) => matchesSearch(i, query.trim()));
   const customItems = filtered.filter((i) => i.custom);
-  const rank = (i: McpItem) => (i.connected ? 0 : itemComingSoon(i) ? 2 : 1); // connected, one-click, soon
-  const soonLast = (a: McpItem, b: McpItem) => rank(a) - rank(b);
-  const groups = groupByMcpCategory(filtered.filter((i) => i.kind !== "local" && !i.custom).sort(soonLast));
+  // Connected first, then everyday services (`mcpConnectorRank`); « Bientôt » stays in place.
+  const order = (a: McpItem, b: McpItem) => +b.connected - +a.connected || mcpConnectorRank(a.id) - mcpConnectorRank(b.id);
+  const groups = groupByMcpCategory(filtered.filter((i) => i.kind !== "local" && !i.custom).sort(order));
   const localItems = filtered.filter((i) => i.kind === "local");
   const nothing = groups.length === 0 && localItems.length === 0 && customItems.length === 0;
 
@@ -285,7 +285,7 @@ export function useMcpConnectors({
    */
   const setDirs = useCallback(
     async (serverId: string, key: string, dirs: string[]): Promise<string | undefined> => {
-      if (!host.mcp?.setDirs) return "non disponible sur cette plateforme";
+      if (!host.mcp?.setDirs) return t.mcpTab.desktopOnly;
       setBusyFor(serverId, true);
       try {
         const info = await host.mcp.setDirs(serverId, key, dirs);
@@ -294,12 +294,12 @@ export function useMcpConnectors({
         refresh();
         return info.error;
       } catch (e) {
-        return e instanceof Error ? e.message : "échec de la mise à jour";
+        return e instanceof Error ? e.message : t.mcpTab.setDirsFailed;
       } finally {
         setBusyFor(serverId, false);
       }
     },
-    [host, refresh],
+    [host, refresh, t],
   );
 
   // Cancel an in-flight interactive connect. Main tears down the OAuth loopback /

@@ -45,6 +45,10 @@ message, necessarily the most sensitive one, stays in memory.
 - [x] **One status slot** under a reply — failed, interrupted, empty, or a failed tool step:
       the same card, a variant per reason, and a single « Réessayer » that regenerates in
       place; the credits card is its amber variant — `packages/ui/src/components/message/TurnStatus/`.
+      A failed turn also offers « Signaler le problème » (« Votre avis », this conversation's
+      journal attached). Its label (« Envoi impossible », « Quota épuisé »…) reads the turn's
+      class persisted from the error CODE (`Message.errorKind`), never the sentence —
+      `packages/ui/src/state/errors/failureKind.ts`.
       A retry resends EVERY document of the turn or nothing: a file the library cannot give
       back is named on the card — `packages/ui/src/send/retryResend.ts`
 - [x] Conversation tabs + a splittable workspace — `packages/ui/src/workspace/`
@@ -155,6 +159,13 @@ re-reading an old conversation means knowing who wrote what.
       `apps/desktop/src/main/subscription/authFailure.ts`,
       `packages/ui/src/containers/agentSetup/CliReconnectModal.tsx`,
       `packages/ui/src/state/effects/cliSession.ts`
+- [x] The picker chip is named « Choisir le modèle »; provider groups read in plain words
+      (« Modèles sur votre ordinateur », « ChatGPT (avec votre abonnement) »), and the flag's
+      tooltip is translated by hosting code — `packages/ui/src/components/ModelSelector/providers.ts`,
+      `packages/ui/src/components/media/CountryFlag.tsx`
+- [x] The conversation's size is a passive line of the ⋯ menu, in PAGES (never « tokens »);
+      a message too long for the model is refused in pages too —
+      `packages/ui/src/pages/ChatWorkspace/ConversationTokens.tsx`, `packages/ui/src/send/contextFit.ts`
 - [x] OpenRouter catalogue fetched live
 - [x] The model that answered stays stamped on the reply
 - [ ] **« Auto » mode** — REMOVED from the picker: neither view offers it any more. The
@@ -165,8 +176,8 @@ re-reading an old conversation means knowing who wrote what.
       `packages/ui/src/send/autoTaskIntent.test.ts`
 - [x] An unreachable model explains what it takes to reach it — `packages/ui/src/containers/modals/ModelAccessModal.tsx`
 - [x] **The default follows the access path**: a subscription CLI switched on AND found (Claude Code, Codex, Antigravity) leads the short list and becomes the model of new conversations, until a default is picked by hand — `packages/ui/src/prompt/defaultModel.ts`
-- [x] **Two picker views**: **simplified by default** (a short list of favourites, no price
-      and no flag) or full (every provider, columns + search) — toggled from the menu, both
+- [x] **Two picker views**: **simplified by default** (a short list of favourites, no price,
+      but still WHERE it runs: the hosting flag, or « Sur votre ordinateur ») or full (every provider, columns + search) — toggled from the menu, both
       ways, and remembered —
       `packages/ui/src/components/ModelSelector/simpleList.test.ts`
 - [x] **The short list is CUSTOMISABLE** (the « Modèles favoris » setting): a star on each

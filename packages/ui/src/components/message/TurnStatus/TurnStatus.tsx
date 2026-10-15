@@ -17,12 +17,14 @@ export function TurnStatus({
   onErrorAction,
   credits,
   creditsResetIso,
+  conversationId,
 }: {
   message: Message;
   onRegenerate?: (assistantId: string) => void;
   onErrorAction?: (assistantId: string, action: ErrorAction) => void;
   credits?: CreditBalance | null;
   creditsResetIso?: string;
+  conversationId?: string;
 }) {
   const status = turnStatusOf(message);
   if (!status) return null;
@@ -46,6 +48,8 @@ export function TurnStatus({
       assistantId={message.id}
       reason={status.reason}
       text={status.reason === "error" ? message.errorText || "" : undefined}
+      kind={status.reason === "error" ? message.errorKind : undefined}
+      conversationId={conversationId}
       action={status.reason === "error" ? action : undefined}
       onAction={onErrorAction}
       onRetry={onRegenerate}

@@ -79,16 +79,16 @@ describe("checkSubmit — a message too big for the model is refused BEFORE mask
   it("refuses, naming the size and the limit, and suggests a larger model or fewer files", () => {
     const doc = file({ name: "dossier.pdf", text: big(200_000) });
     const r = checkSubmit({ text: "résume", attachments: [doc], t, modelId: "gpt-4o" });
-    expect(r).toEqual({ kind: "refuse", warning: t.runtime.send.contextTooLarge("GPT-4o", "200K", "128K", true) });
+    expect(r).toEqual({ kind: "refuse", warning: t.runtime.send.contextTooLarge("GPT-4o", 320, 205, true) });
     if (r.kind === "refuse") {
       expect(r.warning).toContain("Rien n'a été envoyé");
-      expect(r.warning).toContain("moins de fichiers");
+      expect(r.warning).toContain("Joignez moins de fichiers");
     }
   });
 
   it("the typed text alone counts too — and then the advice is to shorten it", () => {
     const r = checkSubmit({ text: big(200_000), attachments: [], t, modelId: "gpt-4o" });
-    expect(r.kind === "refuse" && r.warning).toContain("raccourcissez le texte");
+    expect(r.kind === "refuse" && r.warning).toContain("Raccourcissez le texte");
   });
 
   it("the bound is the window minus the reply's room: up to it sends, one token past it refuses", () => {

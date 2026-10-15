@@ -1,5 +1,5 @@
 import type { Messages } from "@openmasq/i18n";
-import { PROVIDERS, type ProviderId } from "@openmasq/llm";
+import { type ProviderId } from "@openmasq/llm";
 import { ModelBlockedByOrgError, CreditsExhaustedError } from "../state/errors";
 import { SUBSCRIPTION_CLI_IN_APP_LOGIN, subscriptionCliOfProvider } from "@openmasq/llm";
 import { modelUnavailableReason, type CliReadiness } from "./modelAvailability";
@@ -8,6 +8,7 @@ import type { OrgProfileInfo, CreditBalance, BillingSubscription } from "../host
 import type { Message } from "../types";
 import { BRAND } from "@openmasq/branding";
 import type { SendRefusal } from "./sendResult";
+import { providerLabel } from "../help/providerLabel";
 
 /** The outcome of the send PRE-FLIGHT gate: `null` = proceed, else the inline
  *  failure to render on the assistant bubble (text + optional CTA action). Pure so
@@ -64,7 +65,7 @@ export interface PreflightInput {
  */
 export function preflightError(p: PreflightInput): PreflightFailure | null {
   const { t } = p;
-  const label = PROVIDERS[p.provider].label;
+  const label = providerLabel(p.provider, t);
   // Org governance. A suspended member can't send (the backend already 403s their
   // org calls; fail closed here too). And a member cannot send with a model their org
   // disabled — the picker hides it, but a conversation pinned to a now-blocked model

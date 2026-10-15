@@ -176,6 +176,9 @@
 /* Right-aligned page action, pushed to the far edge. */
 .page-header-action {
   margin-left: auto;
+  /* A long subtitle must not squeeze « Ajouter un terme » onto two lines. */
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 .settings-page-body {
   flex: 1;

@@ -149,6 +149,18 @@ describe("onboarding — la télémétrie du premier lancement", () => {
     expect(events("onboarding_step").map((e) => e.step)).toEqual(["1", "2", "3"]);
   });
 
+  it("« Retour » ramène à l'écran précédent, sans jamais servir de sortie au blocage", async () => {
+    configurePlatformAccess({ served: false });
+    const m = await mount(<Harness />, { host });
+    await act(async () => {});
+    expect(m.maybe(".ob-back")).toBeNull(); // first screen: nothing to go back to
+    await m.click(".ob-next");
+    expect(m.maybe(".ob-access")).not.toBeNull();
+    await m.click(".ob-back");
+    expect(m.maybe(".ob-access")).toBeNull();
+    expect(m.maybe(".ob-skip")).toBeNull(); // still gated: going back is not « Passer »
+  });
+
   it("l'écran final redit la route choisie, au lieu de réclamer un accès déjà là", async () => {
     configurePlatformAccess({ served: false });
     const m = await mount(<Harness keys={["anthropic"]} />, { host });

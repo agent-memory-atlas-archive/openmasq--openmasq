@@ -28,7 +28,7 @@ export const modals = {
   error: {
     eyebrow: "ERREUR",
     title: "Détail de l'erreur",
-    sub: "Le message brut du fournisseur ou de l'outil. Il n'est pas ajouté à la conversation.",
+    sub: "Le message d'origine, tel que renvoyé par le service ou l'outil. Il n'est pas ajouté à la conversation.",
     copy: "Copier",
     copied: "Copié",
     retry: "Réessayer",
@@ -79,7 +79,7 @@ export const modals = {
     sub: "Dites-nous ce qui marche et ce qui ne marche pas.",
     thanks: "Merci !",
     thanksWithLog:
-      "Message reçu, avec le journal de débogage. Il ne contient pas vos valeurs réelles.",
+      "Message reçu, avec le journal technique. Il ne contient pas vos valeurs réelles.",
     thanksPlain: "Message reçu. Aucun contenu de vos conversations n'a été joint.",
     close: "Fermer",
     moodLabel: "Comment ça se passe ?",
@@ -90,14 +90,14 @@ export const modals = {
     attachContext: "Joindre le contexte technique",
     attachContextSub:
       "Version de l'app, écran actuel et identifiant d'installation. Jamais le contenu de vos conversations.",
-    attachLog: "Joindre le journal de débogage",
+    attachLog: "Joindre le journal technique",
     inDocument: "dans un document",
     inReply: "dans une réponse",
     inMessage: "dans un message",
     problemKind: (kind) => ` (type : ${kind})`,
     problemBody: (where, kind) =>
       `Masquage incorrect${kind} ${where}.\nCe qui n'allait pas (sans coller la valeur réelle) : `,
-    logDraft: "Rapport depuis le journal de débogage.\nCe qui n'allait pas : ",
+    logDraft: "Rapport depuis le journal technique.\nCe qui n'allait pas : ",
     replyDraft: "À propos de cette réponse : ",
     attachLogSub:
       "Le texte envoyé au modèle (déjà masqué), les outils et les erreurs, sans vos valeurs réelles. Aperçu ci-dessous.",
@@ -138,9 +138,10 @@ export const modals = {
 
   debug: {
     emptyFiltered: "Aucune entrée ne correspond à ce filtre.",
-    empty: "Aucune entrée. Envoyez un message avec le journal de débogage activé (Réglages → Avancé).",
-    eyebrow: "DÉVELOPPEUR",
-    title: "Journal de débogage",
+    empty:
+      "Aucune entrée. Activez le journal dans Réglages → Confidentialité → Options avancées, puis envoyez un message.",
+    eyebrow: "POUR LE SUPPORT",
+    title: "Journal technique",
     subLead: "Ce qui a réellement été envoyé et reçu pour ",
     thisConversation: "cette conversation",
     subCount: (n) => ` — ${n} entrée${n > 1 ? "s" : ""}.`,
@@ -176,6 +177,7 @@ export const modals = {
     reading: "Lecture des compétences…",
     dropTitle: "Déposez vos compétences ici",
     nothingFound: "Rien trouvé automatiquement sur cet appareil.",
+    submit: (n) => (n > 0 ? `Importer ${n} compétence${n > 1 ? "s" : ""}` : "Importer"),
   },
 
   modelAccess: {
@@ -184,23 +186,23 @@ export const modals = {
     titleCreditsSold: "Ce modèle demande un abonnement",
     titleCreditsClosed: "Ce modèle n'est pas disponible sur votre compte",
     titleFree: "Gratuit, avec des limites",
-    thisProvider: "Ce fournisseur",
+    thisProvider: "Ce service",
     leadUnserved: (provider) =>
-      `${provider} demande votre propre clé API. Cette version n'a pas de service hébergé. Vous pouvez aussi utiliser un modèle local ou la CLI de votre abonnement.`,
-    leadKey: (provider) => `${provider} demande votre propre clé API. Vous pouvez aussi choisir un autre modèle.`,
+      `${provider} demande votre propre clé d'accès. Cette version de l'app ne fournit pas de modèle elle-même. Vous pouvez aussi utiliser un modèle installé sur votre ordinateur, ou votre abonnement Claude ou ChatGPT.`,
+    leadKey: (provider) => `${provider} demande votre propre clé d'accès. Vous pouvez aussi choisir un autre modèle.`,
     leadCreditsSold: (brand) => `Ce modèle passe par ${brand}, et votre compte n'a plus de crédits.`,
     leadCreditsClosed: (brand) =>
       `Ce modèle passe par ${brand}, et il n'est pas disponible sur votre compte pour le moment.`,
     leadFreeSold: (brand) =>
-      `Les modèles gratuits n'utilisent pas vos crédits. Il suffit d'être connecté à ${brand}, sans abonnement. Débit et disponibilité dépendent du fournisseur.`,
+      `Les modèles gratuits n'utilisent pas vos crédits. Il suffit d'être connecté à ${brand}, sans abonnement. Débit et disponibilité dépendent du service qui fait tourner le modèle.`,
     leadFreeServed: (brand) =>
-      `Un modèle gratuit est inclus avec votre compte ${brand}, sans clé. Débit et disponibilité dépendent du fournisseur.`,
+      `Un modèle gratuit est inclus avec votre compte ${brand}, sans clé. Débit et disponibilité dépendent du service qui fait tourner le modèle.`,
     freeModels: "Les modèles gratuits",
     includedModels: "Les modèles inclus",
     freeDescSold: (brand) =>
       `Inclus avec votre compte ${brand}, sans abonnement ni clé. Usage limité. Sélectionné par défaut.`,
     freeDescServed: (brand) =>
-      `Servis sur votre compte ${brand}, sans clé à gérer. Un modèle gratuit est sélectionné par défaut. Son débit dépend du fournisseur.`,
+      `Servis sur votre compte ${brand}, sans clé à gérer. Un modèle gratuit est sélectionné par défaut. Son débit dépend du service qui le fait tourner.`,
     subscription: (brand) => `Un abonnement ${brand}`,
     subscriptionDesc: (brand) =>
       `Les modèles fournis par ${brand}, sans clé à gérer. Vos crédits mensuels paient l'usage.`,
@@ -208,9 +210,9 @@ export const modals = {
     subscriptionCoversDesc: "Choisissez un modèle non gratuit.",
     ownKey: "Votre propre clé",
     ownKeyDesc: (soldSuffix) =>
-      `Ajoutez votre clé OpenAI, Anthropic, Mistral… : votre fournisseur vous facture${soldSuffix}. La protection est la même.`,
+      `Ajoutez votre clé OpenAI, Anthropic, Mistral… : ce service vous facture${soldSuffix}. La protection est la même.`,
     ownKeyWithoutCredits: ", sans utiliser vos crédits",
-    ownKeyStatic: "Ajoutez-la avec le bouton de son fournisseur, en haut de cette page.",
+    ownKeyStatic: "Ajoutez-la avec le bouton du service, en haut de cette page.",
     openRouterNote: (brand) =>
       `Cas particulier : dans le catalogue étendu OpenRouter, seuls les modèles proposés par ${brand} fonctionnent sans clé. Les autres demandent votre propre clé OpenRouter.`,
   },

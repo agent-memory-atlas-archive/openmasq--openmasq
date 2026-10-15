@@ -1,5 +1,6 @@
 import type { Messages } from "@openmasq/i18n";
-import { PROVIDERS, type ProviderId } from "@openmasq/llm";
+import { type ProviderId } from "@openmasq/llm";
+import { providerLabel } from "../../help/providerLabel";
 
 /**
  * Per-PROVIDER "where to find your API key" help — the data behind the detailed
@@ -102,7 +103,7 @@ export function providerKeyIssue(
   const v = value.trim();
   if (!v) return undefined;
   const shape = PROVIDER_KEY_SHAPE[provider as ProviderId];
-  const label = PROVIDERS[provider as ProviderId]?.label ?? provider;
+  const label = providerLabel(provider as ProviderId, t);
   if (shape?.prefix && !v.startsWith(shape.prefix)) {
     return { level: "error", message: t.providerKeys.wrongPrefix(label, shape.prefix) };
   }

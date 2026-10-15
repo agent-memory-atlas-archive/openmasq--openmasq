@@ -51,6 +51,16 @@ describe("inactiveCategoryLabels", () => {
   // than what the product promises — that's exactly what this banner exists to say.
   it("liste « Chaînes type clé » quand elle est éteinte — c'est un écart au défaut", () => {
     const labels = inactiveCategoryLabels({ apikey: false }, undefined, undefined);
-    expect(labels).toEqual(["Chaînes type clé (générique)"]);
+    expect(labels).toEqual(["Autres codes qui ressemblent à un mot de passe"]);
+  });
+});
+
+describe("inactiveCategoryLabels — in the reader's language", () => {
+  it("names a category from the catalogue of the UI language", async () => {
+    const { getMessages } = await import("@openmasq/i18n");
+    const en = getMessages("en");
+    expect(inactiveCategoryLabels({ email: false }, undefined, undefined, en)).toContain(
+      en.redactionCatalog.categories.email!.label,
+    );
   });
 });

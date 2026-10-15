@@ -71,13 +71,16 @@
   color: var(--text-muted);
   flex-shrink: 0;
 }
-/* Kept in clear → muted + struck through: this item will NOT be redacted. */
+/* Kept in clear → no fill, dashed outline + a painted « en clair »: this item will NOT
+   be redacted. Never a strikethrough (it read as « removed »). */
 .detect-chip.kept {
   background: transparent;
-  border-color: var(--border-default);
-  opacity: 0.75;
+  border-style: dashed;
+  border-color: var(--border-strong, var(--border-default));
 }
-.detect-chip.kept .detect-chip-val {
-  text-decoration: line-through;
+.detect-clear-badge {
+  font-size: 10px;
+  font-weight: var(--weight-medium, 500);
   color: var(--text-muted);
+  white-space: nowrap;
 }

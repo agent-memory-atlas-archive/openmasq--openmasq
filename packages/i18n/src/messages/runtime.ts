@@ -101,7 +101,8 @@ export interface RuntimeMessages {
     fileReadInPart: (name: string, read: number, total: number) => string;
     /** The message alone overflows the model's context window (estimated, before masking):
      *  refused, draft and files kept. Figures come preformatted (« 310K », « 128K »). */
-    contextTooLarge: (model: string, tokens: string, limit: string, hasFiles: boolean) => string;
+    /** Sizes said in PAGES (`send/contextFit.ts` `tokensToPages`), never in tokens. */
+    contextTooLarge: (model: string, pages: number, limitPages: number, hasFiles: boolean) => string;
     /** Files with no readable content: the confirmation NAMES them before a send without them. */
     unreadTitle: (n: number) => string;
     unreadBody: (n: number, names: string) => string;

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useT } from "../../../i18n";
 import type { Conversation } from "../../../types";
 import { AuditRedactionView } from "./AuditRedactionView";
+import { buildAuditGroups, countAuditRows } from "./auditRows";
 import { EgressLogCard } from "./EgressLogCard";
 import { MemoryExportRow } from "../../Memory";
 
@@ -29,10 +30,9 @@ export function AuditLogTab({
   const [view, setView] = useState<View>("redaction");
   // The « Masquage » segment's counter: what the view will show, computed here so
   // the label doesn't lie before it's even opened.
-  const protectedTotal = useMemo(
-    () => conversations.reduce((n, c) => n + Object.keys(c.redactionVault ?? {}).length, 0),
-    [conversations],
-  );
+  // The SAME rows the view counts — a raw vault key count also holds internal entries and
+  // read 15 above a hero saying « 5 éléments masqués ».
+  const protectedTotal = useMemo(() => countAuditRows(buildAuditGroups(conversations, t)), [conversations, t]);
 
   return (
     <>

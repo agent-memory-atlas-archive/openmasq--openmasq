@@ -94,8 +94,8 @@ export const orgShares = {
 } satisfies Messages["orgShares"];
 
 export const modelPicker = {
-  search: "Search models (name, gpt, claude…)",
-  priceFilter: "Filter by token price",
+  search: "Search models (for example: Claude, Mistral…)",
+  priceFilter: "Filter by price",
   price: "Price",
   simpleView: "Simple view",
   simpleViewTip: "Show a short list of models only",
@@ -104,6 +104,21 @@ export const modelPicker = {
   groupClaudeCli: "Claude Code — your Claude subscription",
   groupCodexCli: "Codex — your ChatGPT subscription",
   groupAntigravityCli: "Antigravity — your Google subscription",
+  groupLocal: "Models on your computer",
+  groupChatgptSession: "ChatGPT (with your subscription)",
+  groupClaudeSession: "Claude (with your subscription)",
+  nameLocal: "Local model",
+  nameChatgptSession: "ChatGPT",
+  nameClaudeSession: "Claude",
+  chooseModel: "Choose the model",
+  onYourComputer: "On your computer",
+  hostedIn: {
+    US: "Hosted in the United States",
+    FR: "Hosted in France (EU)",
+    CN: "Hosted in China",
+    local: "Runs on your computer",
+    global: "Several possible hosts, depending on the model",
+  },
   manage: "Manage models and keys (Settings)",
   none: "No model",
   models: "Models",
@@ -140,7 +155,7 @@ export const modelPicker = {
       onDesc:
         "Adds “Claude Code” to the model list. Each message counts against your personal Claude subscription.",
       missingDesc:
-        "CLI not found on this machine: install it below, then connect it to your Claude account.",
+        "The Claude Code app isn't installed on this computer. Install it with the button below, then sign in to your Claude account.",
     },
     codex: {
       title: "Your ChatGPT subscription",
@@ -149,7 +164,7 @@ export const modelPicker = {
       onDesc:
         "Adds “GPT Codex” to the model list. Each message counts against your personal ChatGPT subscription.",
       missingDesc:
-        "CLI not found on this machine: install it below, then connect it to your ChatGPT account.",
+        "The Codex app isn't installed on this computer. Install it with the button below, then sign in to your ChatGPT account.",
     },
     antigravity: {
       title: "Your Google Antigravity subscription",
@@ -158,7 +173,7 @@ export const modelPicker = {
       onDesc:
         "Adds “Antigravity” to the model list. Each message counts against your personal Google subscription. The app's connectors work as with any other model.",
       missingDesc:
-        "CLI not found on this machine: install Antigravity, connect it to your Google account, then come back here.",
+        "The Antigravity app isn't installed on this computer. Install it, sign in to your Google account, then come back here.",
     },
     setup: {
       install: "Install",

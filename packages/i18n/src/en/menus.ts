@@ -45,6 +45,13 @@ export const menus = {
   markKeep: {
     uncertain: (brand) => `Low-confidence detection by ${brand}. Please check it.`,
   },
+  composerHints: {
+    placeholder: (brand) => `Write to ${brand}, drop a file, or type “/” for your skills…`,
+    countTip:
+      "These values will be replaced with fakes before sending. Click to see them and choose which ones to send unmasked. To mask another word, select it in your text.",
+    skillShortcut: "Tip: type “/” in the message box to open your skills.",
+    sendQueued: "Sending as soon as the check for data to mask is done…",
+  },
   page: {
     moreActions: "More actions",
     exportMemory: "Export (diagnostic)",

@@ -95,12 +95,12 @@ export const redactionCatalog = {
         "Masks the whole URL (domain, path and parameters), not just what it contains. When off, URLs stay readable and nothing inside them is masked by mistake (file names, page cache tokens), but keys inside them are still masked. On at the Strict level, for document review.",
     },
     secret: {
-      label: "Keys & secrets",
+      label: "Passwords and secret codes",
       detail:
         "Access keys (OpenAI, AWS, Stripe, GitHub, Slack…), sign-in tokens, private keys, passwords, OTP/PIN codes, crypto wallets.",
     },
     apikey: {
-      label: "Key-like strings (generic)",
+      label: "Other password-like codes",
       detail:
         "Broad rule: masks any string that looks like a key (a long mix of letters and digits). On at every privacy level, because a missed key would be sent unmasked. It can also catch harmless product codes.",
     },
@@ -136,8 +136,8 @@ export const redactionCatalog = {
     ip: "IP addresses",
     number: "Numbers",
     path: "File paths",
-    secret: "Keys & secrets",
-    apikey: "Key-like strings",
+    secret: "Passwords and secret codes",
+    apikey: "Password-like codes",
   },
   lockedByOrg: "Set by your organization",
   modified: "changed",

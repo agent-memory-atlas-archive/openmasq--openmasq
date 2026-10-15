@@ -5,9 +5,11 @@ import type { Messages } from "../messages";
 
 export const documents = {
   refused: {
-    fileTooLarge: (mb) => `File too large (${mb} MB max). Split it into smaller parts.`,
-    pdfTooManyPages: (pages, max) => `PDF too long (${pages} pages, ${max} max). Split it into smaller parts.`,
-    tooLongToMask: (pages) => `Too long to mask in full (≈ ${pages} pages). Split it into smaller parts.`,
+    fileTooLarge: (mb) => `File too large (${mb} MB max). Save it as several smaller files, then attach them one at a time.`,
+    pdfTooManyPages: (pages, max) =>
+      `PDF too long (${pages} pages, ${max} max). Save it as several smaller PDFs, then attach them one at a time.`,
+    tooLongToMask: (pages) =>
+      `Too long to mask in full (≈ ${pages} pages). Save it as several smaller files, then attach them one at a time.`,
     executable: "File type not allowed: the file contains executable code.",
     typeMismatch: "File refused: its content does not match its extension.",
     imageTooLarge: (width, height) => `Image refused: dimensions too large (${width}×${height}).`,
@@ -17,13 +19,14 @@ export const documents = {
     zipRatio: "File refused: its compression ratio is abnormal.",
   },
   ocr: {
-    failed: "Text recognition failed. The technical cause is in the debug log.",
+    failed:
+      "The text couldn't be read. Try again. If it's a scan or a photo, try a sharper copy. If it keeps happening, report it from “Your feedback”.",
     engineMissing: "The text recognition engine is unavailable. Reinstall the app.",
     engineIncompatible: "The text recognition engine is incompatible. Reinstall the app.",
     pdfRendererMissing: "The PDF rendering engine is unavailable on this computer. Reinstall the app.",
     pdfRendererIncompatible: "The PDF rendering engine is incompatible with this computer. Reinstall the app.",
   },
-  scanPdf: (cause) => `This PDF has no text layer. ${cause}`,
+  scanPdf: (cause) => `This PDF is a scanned image: its text has to be recognized before sending. ${cause}`,
   pdfPagesUnread: (pages, cause) =>
     pages === 1
       ? `This PDF isn't attached: its image page couldn't be read. ${cause}`
@@ -31,6 +34,6 @@ export const documents = {
   imageOcrFailed: "The image text could not be read. Text recognition failed. The technical cause is in the debug log.",
   unsupportedType: (ext) => (ext ? `Unsupported file type: ${ext}` : "Unsupported file type (no extension)."),
   markers: {
-    pageTooLarge: (page) => `[… page ${page} not OCR'd: dimensions too large]`,
+    pageTooLarge: (page) => `[… page ${page} not read: image too large]`,
   },
 } satisfies Messages["documents"];

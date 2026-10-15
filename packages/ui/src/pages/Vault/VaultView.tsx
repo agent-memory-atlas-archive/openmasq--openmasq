@@ -11,6 +11,8 @@ import { VaultAddModal } from "./parts/VaultAddModal";
 import { VaultFilters } from "./parts/VaultFilters";
 import { VaultRow } from "./parts/VaultRow";
 import { vaultTokenLabel } from "./vaultTypes";
+import { useDeferredRemove } from "./useDeferredRemove";
+import { Toast } from "../../components/feedback/Toast";
 
 import { useT } from "../../i18n";
 /**
@@ -24,7 +26,7 @@ import { useT } from "../../i18n";
  * `vaultTypes.ts`; this composes the parts.
  */
 export function VaultView({
-  coffre: vaultTerms,
+  coffre: allTerms,
   conversations,
   onAdd,
   onUpdate,
@@ -68,6 +70,13 @@ export function VaultView({
   const [open, setOpen] = useState<VaultTerm | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<VaultTerm | null>(null);
+  // Delete = deferred (useDeferredRemove): the term leaves the LIST now, the coffre
+  // only when the « Annuler » toast expires — it stays masked until then.
+  const removal = useDeferredRemove<VaultTerm>(onRemove);
+  const vaultTerms = useMemo(
+    () => (removal.pending ? allTerms.filter((x) => x.id !== removal.pending!.id) : allTerms),
+    [allTerms, removal.pending],
+  );
 
   // ONE list, badged (design): personal terms first — wearing the scope of a
   // share of yours when one carries the same id — then the terms shared WITH
@@ -212,7 +221,7 @@ export function VaultView({
                   scope={scope}
                   onOpenUses={() => setOpen(t)}
                   onEdit={mine && onUpdate ? () => setEditing(t) : undefined}
-                  onRemove={mine ? () => onRemove(t.id) : undefined}
+                  onRemove={mine ? () => removal.request(t) : undefined}
                   onShare={mine && scope === "personal" && onShareTerm ? () => onShareTerm(t) : undefined}
                 />
               ))}
@@ -234,6 +243,16 @@ export function VaultView({
           />
         )}
       </AnimatePresence>
+      {removal.pending && (
+        <Toast
+          key={removal.pending.id}
+          tone="info"
+          message={t.lists.vault.deleted}
+          duration={6000}
+          onDone={removal.expire}
+          action={{ label: t.lists.vault.undo, onClick: removal.undo }}
+        />
+      )}
       <AnimatePresence>
         {addOpen && <VaultAddModal onClose={() => setAddOpen(false)} onSubmit={add} />}
         {editing && (

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useT } from "../../../i18n";
-import { PROVIDERS, type ProviderId } from "@openmasq/llm";
+import { type ProviderId } from "@openmasq/llm";
 import { selectableModels } from "../../../prompt/models";
 import { unavailableLabel, visibleModels, type UnavailableReason } from "../../../send/modelAvailability";
 import { favoriteSet } from "../../../components/ModelSelector/simpleList";
@@ -20,6 +20,7 @@ import { filterModels, modelFamilies, modelPriceTier, type PriceTier } from "../
 // The picker's settings (family-chip threshold, group order) live
 // alongside it — `pickerTuning.ts` — with the WHY of each value.
 import { FAMILY_CHIP_MIN, MODEL_PROVIDER_ORDER } from "./pickerTuning";
+import { providerLabel } from "../../../help/providerLabel";
 
 /**
  * The "Modèle" section — a dedicated sidebar screen for the DEFAULT model used by
@@ -160,7 +161,7 @@ export function ModelsTab({
       <DefaultModelSummary
         model={defaultModel}
         onPreview={setPreviewId}
-        unavailable={defaultReason && defaultModel ? unavailableLabel(defaultReason, PROVIDERS[defaultModel.provider].label, t) : undefined}
+        unavailable={defaultReason && defaultModel ? unavailableLabel(defaultReason, providerLabel(defaultModel.provider, t), t) : undefined}
         onFix={defaultReason === "no_key" && defaultModel ? () => setKeyProvider(defaultModel.provider) : undefined}
       />
       <div className="cv-eyebrow mt-4 mb-3">{t.modelsTab.availableEyebrow(pickerModels.length)}</div>

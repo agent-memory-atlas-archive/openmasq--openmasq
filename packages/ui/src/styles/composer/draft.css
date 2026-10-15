@@ -150,6 +150,12 @@
   box-shadow: var(--shadow-lg);
   animation: sel-menu-pop 120ms var(--ease-out, ease);
 }
+/* The category + what the send does to it (« remplacé par un faux avant l'envoi »). */
+.mark-keep-cat {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
 .mark-keep-value {
   font-size: var(--text-xs);
   font-weight: 600;

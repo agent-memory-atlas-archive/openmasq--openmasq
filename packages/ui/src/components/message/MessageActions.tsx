@@ -6,6 +6,7 @@ import {
   RefreshIcon,
   ForkIcon,
   FeedbackIcon,
+  EyeIcon,
 } from "../brand";
 import { useFeedbackOpen } from "../../containers/providers/feedbackOpen";
 import { messageFeedbackDraft } from "../../feedback/feedback";
@@ -21,7 +22,9 @@ import { useT } from "../../i18n";
 const pulsedFeedback = new Set<string>();
 
 /**
- * The row under a finished reply: Copier · Régénérer · Forker · Avis.
+ * The row under a finished reply: Copier · Régénérer · Forker · Voir ce que le modèle a vu · Avis.
+ * « Voir ce que le modèle a vu » is PERMANENT on a turn that masked something (the
+ * transparency card announces it once per conversation; this is where it stays).
  *
  * Split out of `MessageBubble` when the avis action landed — the bubble is already
  * the biggest component in the tree, and this row is a self-contained leaf with its
@@ -35,6 +38,7 @@ export function MessageActions({
   conversationId,
   onRegenerate,
   onFork,
+  onSeeModelView,
 }: {
   messageId: string;
   /** The reply's text — what Copier puts on the clipboard. */
@@ -43,6 +47,8 @@ export function MessageActions({
   conversationId?: string;
   onRegenerate?: (assistantId: string) => void;
   onFork?: (messageId: string) => void;
+  /** Opens the side-by-side comparison. Passed only when this turn masked something. */
+  onSeeModelView?: () => void;
 }) {
   const t = useT();
   const [copied, setCopied] = useState(false);
@@ -91,6 +97,11 @@ export function MessageActions({
           onClick={() => onFork(messageId)}
         >
           <ForkIcon size={16} />
+        </IconButton>
+      )}
+      {onSeeModelView && (
+        <IconButton size="sm" label={t.chat.seeWhatTheModelSaw} onClick={onSeeModelView}>
+          <EyeIcon size={16} />
         </IconButton>
       )}
       {/* Report THIS reply without leaving it. The journal is read at CLICK time

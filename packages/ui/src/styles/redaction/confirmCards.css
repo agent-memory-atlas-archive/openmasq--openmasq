@@ -153,6 +153,13 @@
   font-family: var(--font-mono);
   font-size: 11.5px;
 }
+/* The exact tool id — the allow-list's key — named inside the fold, nowhere else. */
+.write-confirm-tool-id {
+  margin: 8px 0 0;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
 .write-confirm-json pre {
   margin: 8px 0 0;
   max-height: 200px;

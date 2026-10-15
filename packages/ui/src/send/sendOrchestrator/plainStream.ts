@@ -4,7 +4,7 @@ import { reasoningRelay } from "../../state/conversation/reasoningRelay";
 import { noteCliAuthFailure } from "../../state/effects/cliSession";
 import { updateDebug } from "../../state/debug/debug";
 import { httpStatus, requestIdOf, retriesOf } from "../../state/errors/fields";
-import { cleanErrorText, humanizeSendError, sendErrorAction, sendErrorReason } from "../../state/errors";
+import { cleanErrorText, failureKindOf, humanizeSendError, sendErrorAction, sendErrorReason } from "../../state/errors";
 import { uid } from "../../state/storePersistence";
 import { estimateTurnUsage } from "../estimateUsage";
 import type { Routing } from "./platformGate";
@@ -144,6 +144,7 @@ export function runPlainStream(
         error: true,
         errorText: safeMsg,
         ...(act ? { errorAction: act } : {}),
+        errorKind: failureKindOf(message),
         ...(acc ? { usage: turnUsage() } : {}),
       });
       finish();

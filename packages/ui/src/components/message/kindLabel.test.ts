@@ -16,10 +16,10 @@ describe("kindLabel — the copy never shows an engine key", () => {
     expect(kindLabel("COMPANY", fr)).toBe("Entreprise");
   });
 
-  it("keeps « Clés & secrets » when the kind really says so", () => {
-    expect(kindLabel("secret", fr)).toBe("Clés & secrets");
+  it("keeps the secrets label when the kind really says so", () => {
+    expect(kindLabel("secret", fr)).toBe("Mots de passe et codes secrets");
     // `api_token` folds to the FINER `apikey` category — its own, more precise label.
-    expect(kindLabel("api_token", fr)).toBe("Chaînes type clé (générique)");
+    expect(kindLabel("api_token", fr)).toBe("Autres codes qui ressemblent à un mot de passe");
   });
 
   it("does NOT present an unknown kind as a secret (redactionCategory's default)", () => {

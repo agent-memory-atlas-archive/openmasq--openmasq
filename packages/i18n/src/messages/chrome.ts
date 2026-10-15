@@ -25,6 +25,8 @@ export interface ChromeMessages {
   /** The shield: « 12 élément(s) protégé(s) — rapport de confidentialité ». */
   privacyReportTip: (protectedCount: number) => string;
   privacyReport: string;
+  /** The count drawn ON the rail shield (capped, so the badge keeps its size). */
+  privacyBadge: (protectedCount: number) => string;
   account: string;
   /** The conversation list: its read label, and what it says when empty. */
   conversations: string;
@@ -123,11 +125,6 @@ export interface ComposerMessages {
   /** The read label of the Settings level picker. */
   protectionLevel: string;
 
-  /** The input area's prompt. It does NOT REPEAT the redaction promise: the
-   *  home subtitle makes it once, and inside a thread the marks on what you type
-   *  are what demonstrate it. */
-  placeholder: (brand: string) => string;
-
   /** The intent line above the input: chosen skill, blanks to fill,
    *  et l'indice « ceci sera retenu ». */
   editSkill: string;
@@ -146,8 +143,6 @@ export interface ComposerMessages {
   add: string;
   addFile: string;
   attachFile: string;
-  /** Enter pressed while the preview still analyses: the message leaves once it ends. */
-  sendQueued: string;
   addFolder: string;
   addFolderTip: string;
   addConnector: string;

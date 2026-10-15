@@ -1,8 +1,9 @@
-import { PROVIDERS, type ModelInfo } from "@openmasq/llm";
+import { type ModelInfo } from "@openmasq/llm";
 import { AlertIcon, CheckIcon, ModelLogo } from "../../../components/brand";
 import { modelDisplay } from "../../../prompt/models";
 
 import { useT } from "../../../i18n";
+import { providerLabel } from "../../../help/providerLabel";
 /**
  * WHAT ANSWERS WHEN A CONVERSATION IS OPENED — named at the top of the screen.
  *
@@ -54,7 +55,7 @@ export function DefaultModelSummary({
         <span className="model-default-name">
           {display.label}
           {display.free && <span className="model-free-badge">{t.modelsTab.freeBadge}</span>}
-          <span className="model-default-provider">{PROVIDERS[model.provider].label}</span>
+          <span className="model-default-provider">{providerLabel(model.provider, t)}</span>
         </span>
       </span>
     </button>

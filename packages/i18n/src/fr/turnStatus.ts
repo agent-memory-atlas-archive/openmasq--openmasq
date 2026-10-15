@@ -27,6 +27,9 @@ export const turnStatus = {
   empty: "Le modèle n'a rien renvoyé.",
   toolFlowFailed:
     "Une étape d'outil a échoué. Réessayer relance toutes les étapes, et chaque modification redemande votre confirmation.",
+  report: "Signaler le problème",
+  reportTip: "Ouvre « Votre avis » prérempli, avec le journal de cette conversation (déjà masqué).",
+  reportDraft: "Ce message n'a pas pu être envoyé : ",
   credits: {
     title: "Vos crédits offerts sont épuisés",
     // « sans crédits » also read as « sans avoir de crédits » — the opposite meaning.

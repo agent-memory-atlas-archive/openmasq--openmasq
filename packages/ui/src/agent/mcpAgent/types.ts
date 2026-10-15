@@ -23,6 +23,10 @@ export interface WriteConfirmInfo {
   reason: WriteConfirmReason;
   /** The exfil signals that OPENED the card (empty for a plain write). */
   flags: NavExfilFlag[];
+  /** Set by the VIEW from the policy verdict, display only: a FLOOR confirmation (send,
+   *  attachment, possible leak) is asked every time, so the card must not promise « ne vous
+   *  sera plus demandée ». Never read by any gate. */
+  floor?: boolean;
 }
 
 export interface PythonRunResult {

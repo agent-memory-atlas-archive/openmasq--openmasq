@@ -85,7 +85,6 @@ export const conversation = {
   clarify: "Clarify",
 
   writeConfirm: {
-    targetTip: (server, tool) => `${server} · ${tool}`,
     alsoOtherChats: "Also in my other conversations (until I quit the app)",
   },
 
@@ -139,7 +138,7 @@ export const conversation = {
 
   bubble: {
     openAttachment: (name) => `Open ${name}`,
-    plotTip: "Generating a chart (run_python)",
+    plotTip: "Chart request. The computation runs on your computer.",
     plot: "Chart",
     redactionFailedTip: "The masking model failed for this message",
     redactedTip: "Replaced with a substitute before reaching the model, restored in its reply",
@@ -147,7 +146,7 @@ export const conversation = {
     protectedSee: "see",
     autoRoutedTip:
       "Auto mode: the model for this reply was chosen automatically, based on the task.",
-    quotaTip: "This model's provider quota",
+    quotaTip: "Requests left on this model",
     reasoning: "Reasoning",
     imageWithheld: "Image withheld: it may contain a masked value",
     imageWithheldLoad: "Load",
@@ -163,12 +162,12 @@ export const conversation = {
     clipped: (name, max) => `Only the first ${max} characters of ${name} were sent to the model.`,
     others: (n) => `${n} other${n > 1 ? "s" : ""}`,
     weight: (pct, model) =>
-      `The documents in this conversation take up about ${pct}% of ${model}'s context window. Every question sends them again.`,
+      `The documents in this conversation fill about ${pct}% of what ${model} can read at once. Every question sends them again.`,
     weightOver: (model) =>
-      `The documents in this conversation no longer fit ${model}'s context window: the oldest aren't sent anymore.`,
+      `The documents in this conversation are more than ${model} can read at once: the oldest aren't sent anymore.`,
     dropped: (names) =>
-      `The model can no longer see ${names}: the conversation outgrew its context window.`,
-    roomHint: "To keep room, pick a model with a larger window or start a new conversation.",
+      `The model no longer reads ${names}: the conversation got too long for it.`,
+    roomHint: "To keep room, pick a model that accepts longer texts, or start a new conversation.",
   },
 
   trace: {
@@ -191,29 +190,56 @@ export const conversation = {
   },
 
   tokens: {
-    tip: (total, input, output) => `${total} tokens (input ${input} · output ${output})`,
-    line: (input, output) => `↑ ${input} · ↓ ${output} tokens`,
+    line: (read, written) =>
+      `Conversation size: about ${read} page${read === 1 ? "" : "s"} read by the model, about ${written} written`,
+    tip: "The model rereads the whole conversation with every message, so this grows with each exchange. An estimate.",
   },
 
   mark: {
     realValue: "real value",
     seenByModel: "seen by the model",
     seenByModelTip: "Value seen by the model",
-    shownAs: (token) => `Shown as ${token} in the app`,
+    shownAs: (token) => `On screen, this stand-in shows as ${token}`,
     realValueTip: "Real value. Sent unmasked only if you unmask it.",
     orgForced: "Enforced by your organization",
     scopeSend: "this send",
     scopeConversation: "this conversation",
     scopeMessage: "this message",
     leaveClear: (scope) => `Unmask · ${scope}`,
-    leaveClearKind: (scope) => `Unmask category · ${scope}`,
     leaveClearTip:
       "The model will receive the real value in your next sends. Masking again protects the next sends, not the ones already gone.",
     reMask: (scope) => `Mask again · ${scope}`,
-    reMaskKind: (scope) => `Mask category again · ${scope}`,
     reMaskTip: "Mask this value again",
-    remove: (scope) => `Remove masking · ${scope}`,
-    removeTip: "Permanent: this value is no longer masked and is sent as is.",
+    revealOne: {
+      conversation: "Stop masking this term in this conversation",
+      send: "Send this term unmasked with this message",
+    },
+    revealOneTip: {
+      conversation:
+        "Your next messages will send the real value to the model. Messages already sent don't change.",
+      send: "Only this message will send the real value to the model. The term stays masked afterwards.",
+    },
+    reMaskOne: "Mask this term again",
+    revealKind: {
+      message: (label) => `Stop masking the “${label}” category in this message`,
+      document: (label) => `Send the whole “${label}” category in this document unmasked`,
+    },
+    revealKindTip: {
+      message:
+        "Values of this type found in this message will go out unmasked in your next messages. A new value of this type stays masked.",
+      document: "Values of this type in this document will go out unmasked with this message.",
+    },
+    reMaskKind: {
+      message: (label) => `Mask the “${label}” category in this message again`,
+      document: (label) => `Mask the “${label}” category in this document again`,
+    },
+    notSensitive: "This isn't sensitive",
+    notSensitiveTip:
+      "For a detection mistake: the term is no longer masked, in this document and in the whole conversation. To mask it again, select it.",
+    chipMasked: (category) => `${category} · masked before sending. Click to send it unmasked with this message.`,
+    chipClear: (category) => `${category} · sent unmasked with this message. Click to mask it again.`,
+    clearBadge: "unmasked",
+    willBeReplaced: (category) => `${category} · replaced with a fake before sending`,
     reportTip: "Opens “Your feedback”, prefilled. Never paste the real value into it.",
     report: "Report a mistake",
     sheetLabel: "Masking",

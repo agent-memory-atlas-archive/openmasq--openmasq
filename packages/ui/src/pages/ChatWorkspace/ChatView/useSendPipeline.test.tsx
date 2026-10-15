@@ -93,7 +93,7 @@ describe("ChatView submit — a message too big for the model", () => {
     const huge = file({ name: "dossier.pdf", text: "a".repeat(800_000) });
     const { api, spies, ui } = await setup([huge], "résume", "gpt-4o");
     await act(async () => api.current!.submit());
-    expect(spies.setAttachWarning).toHaveBeenCalledWith(t.runtime.send.contextTooLarge("GPT-4o", "200K", "128K", true));
+    expect(spies.setAttachWarning).toHaveBeenCalledWith(t.runtime.send.contextTooLarge("GPT-4o", 320, 205, true));
     nothingCleared(spies);
     await ui.unmount();
   });

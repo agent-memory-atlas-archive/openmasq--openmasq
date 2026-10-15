@@ -1,7 +1,7 @@
 import type { Messages } from "@openmasq/i18n";
 import type { Attachment } from "./Composer";
 import { findModelAny } from "../../prompt/models";
-import { contextOverflow, formatTokenCount } from "../../send/contextFit";
+import { contextOverflow, tokensToPages } from "../../send/contextFit";
 import { ocrShortfall } from "./ocrShortfall";
 
 /** What a composer submit may do with the staged files, decided BEFORE anything is cleared. */
@@ -60,7 +60,7 @@ export function checkSubmit(p: {
   const over = contextOverflow({ modelId: p.modelId, text: p.text, files: withText });
   if (over) {
     const label = findModelAny(over.modelId)?.label ?? over.modelId;
-    const warning = send.contextTooLarge(label, formatTokenCount(over.tokens), formatTokenCount(over.limit), withText.length > 0);
+    const warning = send.contextTooLarge(label, tokensToPages(over.tokens), tokensToPages(over.limit), withText.length > 0);
     return { kind: "refuse", warning };
   }
   const accepted = new Set(p.accepted ?? []);

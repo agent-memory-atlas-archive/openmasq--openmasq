@@ -1,8 +1,9 @@
-import { PROVIDERS, isPlatformProvider, type ModelInfo, type ProviderId } from "@openmasq/llm";
+import { isPlatformProvider, type ModelInfo, type ProviderId } from "@openmasq/llm";
 import { unavailableLabel, type UnavailableReason } from "../../../send/modelAvailability";
 import { BRAND } from "@openmasq/branding";
 import type { Messages } from "@openmasq/i18n";
 import { subscriptionsSold } from "../../../send/platformAccess";
+import { providerLabel } from "../../../help/providerLabel";
 
 /**
  * What a provider GROUP header says about availability, derived once instead of stamped
@@ -37,7 +38,7 @@ export function providerGroupStatus(p: {
   t: Messages;
 }): ProviderGroupStatus {
   const st = p.t.modelsTab.status;
-  const label = PROVIDERS[p.pid].label;
+  const label = providerLabel(p.pid, p.t);
   // Uniform unavailability across the whole group → state it ONCE in the header instead
   // of repeating the same chip on every card.
   const reasons = p.group.map((m) => p.unavailableModels?.get(m.id));

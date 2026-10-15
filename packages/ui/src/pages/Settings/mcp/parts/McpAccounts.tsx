@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Btn } from "../McpBtn";
+import { McpErrorText } from "./McpErrorText";
 import type { McpAccount, McpItem } from "../mcpItems";
 import { MANAGED_CRED_MODE, type CredMode } from "../../../../host";
 
@@ -69,7 +70,7 @@ export function McpAccounts({
               )}
             </span>
           ))}
-          . Si un de ces services refuse aussi l&apos;accès, reconnectez-le depuis sa fiche.
+          {t.mcpTab.sharedAuthTail}
         </p>
       )}
       <div className="mcp-accounts">
@@ -177,13 +178,14 @@ function AccountRow({
     <div className="mcp-account-row">
       <div className="mcp-account-meta">
         <div className="mcp-account-label">{account.label ?? t.mcpTab.mainAccount}</div>
-        <div className={`mcp-account-sub ${account.error ? "error" : ""}`}>
-          {account.error
-            ? account.error
-            : account.toolCount != null
-              ? t.mcpTab.tools(account.toolCount)
-              : t.mcpTab.connected}
-        </div>
+        {/* Through `connectorErrorText`, like the card and the sheet: never the raw text. */}
+        {account.error ? (
+          <McpErrorText raw={account.error} className="mcp-account-sub error" />
+        ) : (
+          <div className="mcp-account-sub">
+            {account.toolCount != null ? t.mcpTab.tools(account.toolCount) : t.mcpTab.connected}
+          </div>
+        )}
       </div>
       <div className="mcp-account-actions">
         <Btn label={t.mcpTab.toolsLabel} onClick={onInspect} subtle />

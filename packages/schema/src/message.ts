@@ -38,6 +38,12 @@ export interface Message {
     | { kind: "upgrade_plan" }
     | { kind: "credit_options"; provider: string; label?: string }
     | { kind: "cli_signin"; provider: string; label?: string };
+  /**
+   * The CLASS of a failed turn, derived from the error CODE when it failed (never from its
+   * text): `blocked` = credits exhausted (the CTA is a proposed way out, not the cause),
+   * `quota` = a periodic quota used up (it resets on its own). Absent ⇒ the CTA decides.
+   */
+  errorKind?: "blocked" | "quota";
   /** The tool the agentic loop is calling right now — drives the "Appel de l'outil…" indicator. */
   toolCall?: string;
   /** The provider's REMAINING request quota as of this turn — numbers only. Transient like

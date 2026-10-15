@@ -144,7 +144,7 @@ describe("runMcpAgentLoop — write confirmation", () => {
     });
     expect(handled).toBe(true);
     expect(completeTools).toHaveBeenCalledTimes(5); // stopped at MAX_CONSECUTIVE_DEAD, not 14
-    expect(finalText).toMatch(/interrompue|Limite d'appels/);
+    expect(finalText).toMatch(/interrompue|tournait en rond|Arrêté après/);
   });
 
   it("does not prompt when no confirmWrite hook is wired", async () => {

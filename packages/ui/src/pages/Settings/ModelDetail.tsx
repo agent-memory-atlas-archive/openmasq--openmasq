@@ -11,6 +11,7 @@ import { ModelLogo } from "../../components/brand";
 import { CountryFlag } from "../../components/media/CountryFlag";
 import { modelCopy, modelTagLabel } from "../../help/catalogCopy";
 import { formatTokenCount } from "../../send/contextFit";
+import { providerLabel } from "../../help/providerLabel";
 
 /** A USD-per-1M-tokens figure, trimmed (2.5 → "2,50 $", 0.04 → "0,04 $"). FR decimal
  *  comma to match the rest of the UI; the raw prices are USD list estimates. */
@@ -59,7 +60,7 @@ export function ModelDetail({ model }: { model: ModelInfo }) {
         <ModelLogo provider={model.provider} modelId={model.id} size={30} tile />
         <div className="model-detail-title">
           <div className="model-detail-name">{model.label}</div>
-          <div className="model-detail-vendor">{PROVIDERS[model.provider].label}</div>
+          <div className="model-detail-vendor">{providerLabel(model.provider, t)}</div>
         </div>
       </div>
 

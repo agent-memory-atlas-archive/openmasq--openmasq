@@ -13,8 +13,10 @@ export const chrome = {
   search: "Rechercher",
   searchShortcut: "Rechercher (⌘K)",
   memoryFresh: "Mémoire mise à jour",
-  privacyReportTip: (n) => `${n} élément(s) masqué(s) · Rapport de confidentialité`,
-  privacyReport: "Rapport de confidentialité",
+  privacyReportTip: (n) =>
+    `${n.toLocaleString("fr-FR")} élément${n > 1 ? "s" : ""} masqué${n > 1 ? "s" : ""} · Ouvrir Réglages → Confidentialité`,
+  privacyReport: "Confidentialité : ce qui a été masqué",
+  privacyBadge: (n) => (n > 99 ? "99+" : String(n)),
   account: "Compte et réglages",
   conversations: "Conversations",
   noConversations: "Aucune conversation pour le moment.",
@@ -63,7 +65,7 @@ export const chat = {
   redactionSummary: (n) =>
     `Masqué dans cette conversation · ${n} élément${n === 1 ? "" : "s"}`,
   seeWhatTheModelSaw: "Voir ce que le modèle a vu",
-  debugLog: "Journal de débogage",
+  debugLog: "Journal technique",
 } satisfies Messages["chat"];
 
 export const composer = {
@@ -82,8 +84,6 @@ export const composer = {
   undo: "Annuler",
   protectionLevel: "Niveau de masquage",
 
-  placeholder: (brand) => `Écrivez à ${brand} ou déposez un fichier…`,
-
   editSkill: "Modifier la compétence",
   slotsToFill: "À préciser dans votre message",
   removeTool: "Retirer l'outil",
@@ -98,7 +98,6 @@ export const composer = {
   add: "Ajouter",
   addFile: "Fichier",
   attachFile: "Joindre un fichier",
-  sendQueued: "Envoi dès la fin de l'analyse…",
   addFolder: "Dossier",
   addFolderTip: "Autoriser l'accès à un dossier de cet ordinateur",
   addConnector: "Connecteur",
@@ -173,7 +172,7 @@ export const composer = {
     stateMaskingLong: (pct, minutes) => `Masquage · ${pct} % · environ ${minutes} min`,
     maskingLong: (minutes) => `Document long : masquage en cours, environ ${minutes} min`,
     tooLongToMask: (pages) =>
-      `Document trop long pour être masqué en entier (≈ ${pages} pages). Découpez-le en plusieurs parties.`,
+      `Document trop long pour être masqué en entier (≈ ${pages} pages). Enregistrez-le en plusieurs fichiers plus petits, puis joignez-les un par un.`,
     stateRedo: "Action requise",
     stateReady: (n) => `${n} valeur${n > 1 ? "s" : ""}`,
     staleTip: "Masqué avec vos anciens réglages. Remasquez pour appliquer les réglages actuels.",

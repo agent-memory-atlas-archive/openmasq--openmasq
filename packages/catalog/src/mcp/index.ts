@@ -26,6 +26,7 @@ export {
   mcpCategoryLabel,
   groupByMcpCategory,
 } from "./categories";
+export { mcpConnectorRank } from "./displayOrder";
 export {
   MCP_CONNECTORS,
   STORAGE_CONNECTORS,

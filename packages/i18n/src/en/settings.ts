@@ -28,8 +28,8 @@ export const settings = {
     },
     models: {
       label: "Models",
-      title: "Model list",
-      sub: () => "Models available with your API keys or plan, plus a model running on your computer.",
+      title: "Models",
+      sub: () => "The models you can use: with your access keys, your subscription, or a model installed on your computer.",
       kw: "model default gpt claude gemini mistral deepseek llm provider api key local ollama lm studio address localhost modeles",
     },
     mcp: {
@@ -45,10 +45,10 @@ export const settings = {
       kw: "web search engine duckduckgo google qwant ecosia brave startpage navigateur",
     },
     audit: {
-      label: "Log",
-      title: "Audit log",
-      sub: () => "A searchable history of what was masked.",
-      kw: "log history security traceability redaction masking export journal",
+      label: "Privacy history",
+      title: "Privacy history",
+      sub: () => "What was masked before sending, and the addresses the app contacted.",
+      kw: "log audit history security traceability redaction masking export journal network addresses",
     },
     usage: {
       label: "Usage",
@@ -58,7 +58,7 @@ export const settings = {
     },
     sync: {
       label: "Your devices",
-      title: "Sync",
+      title: "Your devices",
       sub: () => "Your devices and the sync between them.",
       kw: "devices appareils cloud encryption backup sync",
     },
@@ -94,8 +94,8 @@ export const settings = {
       kw: "analytics telemetry consent anonymous",
     },
     transparencyLog: {
-      label: "Debug log",
-      kw: "transparency debugging debug log wire exact message what the model saw comparison advanced options",
+      label: "Technical log (for support)",
+      kw: "transparency debugging debug log technical support wire exact message what the model saw comparison advanced options",
     },
     linkPreviews: { label: "Link previews", kw: "link preview thumbnail url ip" },
     protectionLevel: {
@@ -103,11 +103,11 @@ export const settings = {
       kw: "level light enhanced strict reinforced standard custom categories rules masking redaction",
     },
     showTokens: {
-      label: "Show placeholders ([PERSON1]) instead of substitutes",
+      label: "Show “Person 1” instead of a made-up name",
       kw: "placeholders substitutes tokens pseudonyms person1 iban display",
     },
     modelSeesTokens: {
-      label: "The model sees placeholders only",
+      label: "Send “Person 1” to the model instead of a made-up name",
       kw: "placeholders markers substitutes tokens pseudonyms model anonymization anonymisation person1 sending",
     },
     memoryAuto: {
@@ -147,7 +147,7 @@ export const settings = {
       kw: "devices sync revoke passphrase",
     },
     environment: {
-      label: "Environment",
+      label: "Test version",
       kw: "environment staging production switch beta test access",
     },
   },

@@ -20,8 +20,7 @@
    Imported from the TOP of styles.css — Lightning CSS silently DROPS an @import
    placed below the @theme block, so partials must be imported up there.
 
-   Owns the `.usage-*` family EXCEPT `.usage-float` (the chat composer's token
-   counter — a different surface, still defined in styles.css). */
+   Owns the `.usage-*` family. */
 
 /* ---------------------------------------------------------------- KPI row */
 .usage-kpis {

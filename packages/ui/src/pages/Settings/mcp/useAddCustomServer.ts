@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { connectorErrorReason } from "./connectorErrorReason";
 import { useHost, type McpServerInfo } from "../../../host";
 import { captureEvent } from "../../../analytics";
+import { useT } from "../../../i18n";
 
 /**
  * Add a USER-DEFINED remote MCP server, then connect it.
@@ -22,25 +23,26 @@ export function useAddCustomServer(deps: {
   refresh: () => void;
 }): (input: { name: string; url: string; apiKey?: string }) => Promise<string | null> {
   const host = useHost();
+  const t = useT();
   const { applyInfo, refresh } = deps;
   return useCallback(
     async (input) => {
-      if (!host.mcp?.addCustom) return "Indisponible sur cette plateforme.";
+      if (!host.mcp?.addCustom) return t.mcpTab.desktopOnly;
       try {
         const info = await host.mcp.addCustom(input);
         if (!info.id || info.error) {
           captureEvent({ name: "connector_error", provider: "custom", reason: connectorErrorReason(info.error) });
-          return info.error || "Ajout impossible.";
+          return info.error || t.mcpTab.addFailed;
         }
         applyInfo(await host.mcp.connect(info.id), "custom");
         return null;
       } catch (e) {
         captureEvent({ name: "connector_error", provider: "custom", reason: connectorErrorReason(e) });
-        return "Ajout impossible.";
+        return t.mcpTab.addFailed;
       } finally {
         refresh();
       }
     },
-    [host, applyInfo, refresh],
+    [host, applyInfo, refresh, t],
   );
 }

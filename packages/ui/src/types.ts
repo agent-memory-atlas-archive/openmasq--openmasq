@@ -174,8 +174,12 @@ export interface Settings {
    *  extraction only — an explicit « retiens que… » runs regardless. */
   memoryAuto?: boolean;
   /** The « activer la mémoire auto ? » card was answered — it offers itself once, ever. */
-  /** « voyez ce que le modèle a vu » card already shown (`privacy/transparency.ts`). */
+  /** LEGACY (once-ever flag) — no longer read: the card now offers itself once PER
+   *  conversation, see `transparencySeenIn`. Kept so older settings still parse. */
   transparencySeen?: boolean;
+  /** Conversations whose « voyez ce que le modèle a vu » card was opened or dismissed
+   *  (`privacy/transparency.ts`), newest last, capped (`markTransparencySeen`). */
+  transparencySeenIn?: string[];
   memoryProposalSeen?: boolean;
   /** « Comprendre mon masquage » closed for good (`privacy/redactionIntro.ts`).
    *  The knowledge stays reachable: the same chapter lives in Aide → guide. */

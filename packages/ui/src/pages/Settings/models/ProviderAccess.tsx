@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { PROVIDERS, isPlatformProvider, type ProviderId } from "@openmasq/llm";
+import { isPlatformProvider, type ProviderId } from "@openmasq/llm";
 import { AnimatePresence } from "framer-motion";
 import { ModelLogo, ArrowRightIcon } from "../../../components/brand";
 import { KEYED_PROVIDERS } from "../shared";
@@ -9,6 +9,7 @@ import { useAgentOptIns } from "../../../hooks/useAgentOptIns";
 import { AgentAccessModal } from "./AgentAccessModal";
 
 import { useT } from "../../../i18n";
+import { providerLabel } from "../../../help/providerLabel";
 /**
  * "Where your models come from" — the head of Réglages → Modèles. Two groups, because
  * they are two different CONNECTIONS and merging them would suggest otherwise:
@@ -105,7 +106,7 @@ export function ProviderAccess({
               <p className="source-group-sub">{t.modelsTab.keysGroupSub}</p>
               <div className="source-chips">
                 {order.map((pid) => {
-                  const label = PROVIDERS[pid].label;
+                  const label = providerLabel(pid, t);
                   const hasKey = !!keyConfigured?.has(pid);
                   // Covered WITHOUT a key: only a platform provider can be, and
                   // only if the account has the means to pay for it.
@@ -142,7 +143,7 @@ export function ProviderAccess({
               <p className="source-group-sub">{t.modelsTab.agentsGroupSub}</p>
               <div className="source-chips">
                 {agents.map((a) => {
-                  const label = PROVIDERS[a.pid].label;
+                  const label = providerLabel(a.pid, t);
                   return (
                     <button
                       key={a.pid}
@@ -185,7 +186,7 @@ export function ProviderAccess({
           <AgentAccessModal
             copy={open.copy}
             cli={open.cli}
-            label={PROVIDERS[open.pid].label}
+            label={providerLabel(open.pid, t)}
             detected={open.detected}
             enabled={open.enabled}
             onEnabled={open.onEnabled}

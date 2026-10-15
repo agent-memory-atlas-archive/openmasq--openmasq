@@ -78,9 +78,9 @@ describe("MessageNotices — the documents the model no longer sees are named on
   it("names them, and says nothing on a turn that dropped none", async () => {
     const msg = { id: "a1", role: "assistant", content: "ok" } as Message;
     const m = await mount(<MessageNotices message={{ ...msg, droppedDocs: ["contrat.pdf", "annexe.docx"] }} />);
-    expect(m.el.textContent).toContain("contrat.pdf et annexe.docx ne sont plus visibles par le modèle");
+    expect(m.el.textContent).toContain("contrat.pdf et annexe.docx ne sont plus lus par le modèle");
     await m.rerender(<MessageNotices message={msg} />);
-    expect(m.el.textContent).not.toContain("visible");
+    expect(m.el.textContent).not.toContain("plus lu");
     await m.unmount();
   });
 });

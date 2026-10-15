@@ -492,7 +492,7 @@ describe("runMcpAgentLoop — la série morte compte des RÉPONSES, jamais des a
     expect(callTool).toHaveBeenCalledTimes(6); // le batch entier a couru
     const final = shown.join("\n");
     expect(final).toContain("Voici ce que j'ai pu lire.");
-    expect(final).not.toContain("Boucle d'outils interrompue");
+    expect(final).not.toContain("le modèle tournait en rond");
   });
 
   it("un modèle qui échoue réponse après réponse est toujours arrêté à 5 (le backstop tient)", async () => {
@@ -507,7 +507,7 @@ describe("runMcpAgentLoop — la série morte compte des RÉPONSES, jamais des a
     const handled = await runMcpAgentLoop({ ...params(host), onText: (c, pending) => { if (!pending) shown.push(c); } });
     expect(handled).toBe(true);
     expect(callTool).toHaveBeenCalledTimes(5); // une frappe par réponse → stop à la 5e
-    expect(shown.join("\n")).toContain("Boucle d'outils interrompue");
+    expect(shown.join("\n")).toContain("le modèle tournait en rond");
   });
 });
 

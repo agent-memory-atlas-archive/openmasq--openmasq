@@ -3,6 +3,7 @@ import { McpTile } from "../../../components/media/McpTile";
 import { authTagOf } from "./mcpAuth";
 import { connectorErrorText } from "./connectorErrorText";
 import { itemComingSoon, type McpItem } from "./mcpItems";
+import { findConnector } from "@openmasq/catalog/mcp";
 
 import { useT } from "../../../i18n";
 /** How many accounts are linked — the card names it only past one. */
@@ -25,6 +26,8 @@ export function McpConnectorCard({ item, onOpen }: { item: McpItem; onOpen: () =
   const t = useT();
   const tag = authTagOf(item, t);
   const accounts = accountsLine(item);
+  const err = item.error ? connectorErrorText(item.error, t) : null;
+  const plan = item.connector?.paidPlan ?? findConnector(item.id)?.paidPlan;
 
   return (
     <button
@@ -55,12 +58,16 @@ export function McpConnectorCard({ item, onOpen }: { item: McpItem; onOpen: () =
             )
           )}
         </span>
-        {/* A failure REPLACES the description — that's deliberate (we don't hide the
-            failure) — but in the user's language: the provider's raw message taught
-            them nothing and erased what the service is (`connectorErrorText`). */}
-        <span className={`mcp-card-desc ${item.error ? "error" : ""}`}>
-          {item.error ? (connectorErrorText(item.error, t)?.text ?? item.error) : item.desc}
-        </span>
+        {/* The description STAYS — a failure must not erase what the service is — and the
+            failure follows it in the user's language (`connectorErrorText`); the raw text is
+            the tooltip, for whoever diagnoses it. */}
+        <span className="mcp-card-desc">{item.desc}</span>
+        {err && (
+          <span className="mcp-card-desc error" title={err.detail}>
+            {err.text}
+          </span>
+        )}
+        {plan && <span className="mcp-card-desc">{t.mcpTab.paidPlan(plan)}</span>}
       </span>
       {/* Right column: the action, and UNDER it how you'll connect — the chip qualifies
           the click you are about to make, so it sits with it rather than in a meta pile. */}

@@ -1,5 +1,6 @@
 import type { HostCountry, HostCode } from "@openmasq/llm";
 import type { Locale } from "@openmasq/i18n";
+import { useT } from "../../i18n";
 
 /**
  * A small hosting-jurisdiction mark shown next to a model's provider — so a
@@ -9,12 +10,16 @@ import type { Locale } from "@openmasq/i18n";
  * hex (a flag IS its colours — data, not theming), while the neutral glyphs
  * (`global` gateway, `local` machine) use `currentColor` to follow the theme.
  *
- * Renders nothing when the provider declares no `hostCountry` (honest = unknown).
+ * Renders nothing when the provider declares no `hostCountry` (honest = unknown). The words
+ * come from the catalogue by CODE (`modelPicker.hostedIn`); the registry's French `label`
+ * is only the fallback for a code the catalogue doesn't name.
  */
 export function CountryFlag({ host, size = 13 }: { host?: HostCountry; size?: number }) {
+  const t = useT();
   if (!host) return null;
+  const label = t.modelPicker.hostedIn[host.code] ?? host.label;
   return (
-    <span className={`country-flag cf-${host.code}`} title={host.label} aria-label={host.label} role="img">
+    <span className={`country-flag cf-${host.code}`} title={label} aria-label={label} role="img">
       <FlagSvg code={host.code} size={size} />
     </span>
   );

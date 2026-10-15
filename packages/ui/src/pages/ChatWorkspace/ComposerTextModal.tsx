@@ -137,6 +137,7 @@ export function ComposerTextModal({
         {markMenu && (
           <MarkKeepMenu
             {...markMenu}
+            kind={items.find((i) => i.value === keepValueOf(markMenu.value))?.kind}
             onKeep={() => onToggleKeep(keepValueOf(markMenu.value))}
             onClose={() => setMarkMenu(null)}
           />

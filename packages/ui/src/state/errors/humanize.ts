@@ -13,6 +13,7 @@ import {
 import { CreditsExhaustedError, MissingApiKeyError, RateLimitError } from "./classes";
 import { BRAND } from "@openmasq/branding";
 import { subscriptionsSold } from "../../send/platformAccess";
+import { providerLabel } from "../../help/providerLabel";
 
 // ── Rules for writing user-facing messages (this file is their home) ──
 // 1. ONE message = ONE action. Alternatives are BUTTONS (the card's CTA,
@@ -65,7 +66,7 @@ const MODEL_RESTRICTED = /only available (?:on|in|via|through|to) (?:agentic|cer
  * `opts.provider` — the provider of the model in flight, when the caller knows it.
  * « Votre compte OpenAI n'a plus de crédits » is a sentence; « le compte de votre clé
  * chez le fournisseur » is a periphrase nobody says out loud. Absent, the wording
- * falls back to « chez le fournisseur ».
+ * falls back to « chez ce service ».
  */
 export function humanizeSendError(
   raw: string,
@@ -75,14 +76,14 @@ export function humanizeSendError(
   const e = t.errors;
   const m = raw || "";
   /** « OpenAI », or null when the caller couldn't say. */
-  const name = opts?.provider ? (PROVIDERS[opts.provider]?.label ?? opts.provider) : null;
+  const name = opts?.provider ? providerLabel(opts.provider, t) : null;
   const chez = name ? e.atProvider(name) : e.theProvider;
   // FIRST: main's wire code for a subscription CLI whose OWN session is gone. The raw CLI
   // text rides after it (debug log only) and would otherwise read as a refused API key —
   // a key this path never had. The cure is a sign-in, never a retry.
   const signedOut = cliAuthOf(m);
   if (signedOut) {
-    const cli = PROVIDERS[SUBSCRIPTION_CLI_PROVIDER[signedOut]].label;
+    const cli = providerLabel(SUBSCRIPTION_CLI_PROVIDER[signedOut], t);
     return SUBSCRIPTION_CLI_IN_APP_LOGIN[signedOut] ? e.cliSessionExpired(cli) : e.cliSessionExpiredExternal(cli);
   }
   if (/CREDITS_EXHAUSTED/.test(m)) return new CreditsExhaustedError(opts?.personal ?? false, t).message;

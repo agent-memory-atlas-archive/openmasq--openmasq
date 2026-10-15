@@ -18,12 +18,13 @@ export const REMOTE: McpConnector[] = [
   { id: "notion", name: "Notion", desc: "Rechercher, lire et créer vos pages et bases Notion", category: "productivity", tone: "sky", transport: "remote", url: "https://mcp.notion.com/mcp", hosts: ["notion.com", "notion.so"] },
   // First-party remote MCP (Streamable HTTP + OAuth/DCR — one-click, like Notion).
   // Search email + calendar, draft/send, threads, labels, reminders, events.
-  // Requires a Superhuman Business plan with Ask AI enabled.
+  // Requires a Superhuman Business plan with Ask AI enabled — declared as `paidPlan` so the
+  // card says it BEFORE the user signs in, instead of discovering it as a failure.
   // desc mirrors Gmail/Outlook's "…envoyer des emails…" wording ON PURPOSE: the terse
   // "Email & agenda" made the model omit Superhuman when suggesting email connectors for
   // "envoie un mail" (it proposed only the household-name Gmail/Outlook) — the suggestion
   // is picked from the desc, so it must name the send-email capability explicitly.
-  { id: "superhuman", name: "Superhuman", desc: "Rechercher, lire et envoyer des emails, agenda", category: "productivity", tone: "violet", transport: "remote", url: "https://mcp.mail.superhuman.com/mcp", hosts: ["mail.superhuman.com"] },
+  { id: "superhuman", name: "Superhuman", desc: "Rechercher, lire et envoyer des emails, agenda", category: "productivity", tone: "violet", transport: "remote", url: "https://mcp.mail.superhuman.com/mcp", hosts: ["mail.superhuman.com"], paidPlan: "Superhuman Business" },
   { id: "linear", name: "Linear", desc: "Créer et suivre issues, projets et cycles", category: "dev", tone: "violet", transport: "remote", url: "https://mcp.linear.app/mcp", hosts: ["linear.app"] },
   { id: "atlassian", name: "Atlassian", desc: "Rechercher et gérer tickets Jira et pages Confluence", category: "dev", tone: "sky", transport: "remote", url: "https://mcp.atlassian.com/v1/mcp", hosts: ["atlassian.net", "atlassian.com"] },
   { id: "asana", name: "Asana", desc: "Gérer tâches, projets et portfolios", category: "productivity", tone: "pink", transport: "remote", url: "https://mcp.asana.com/v2/mcp", hosts: ["asana.com"] },
@@ -34,11 +35,11 @@ export const REMOTE: McpConnector[] = [
   { id: "monday", name: "monday.com", desc: "Lire et mettre à jour vos boards et items", category: "productivity", tone: "pink", transport: "remote", url: "https://mcp.monday.com/mcp", hosts: ["monday.com"] },
   { id: "sentry", name: "Sentry", desc: "Consulter erreurs, issues et releases", category: "dev", tone: "amber", transport: "remote", url: "https://mcp.sentry.dev/mcp", hosts: ["sentry.io"] },
   { id: "vercel", name: "Vercel", desc: "Suivre déploiements, projets et logs", category: "dev", tone: "mint", transport: "remote", url: "https://mcp.vercel.com", hosts: ["vercel.com", "vercel.app"] },
-  { id: "neon", name: "Neon", desc: "Interroger vos bases Postgres serverless", category: "data", tone: "mint", transport: "remote", url: "https://mcp.neon.tech/mcp", hosts: ["neon.tech"] },
+  { id: "neon", name: "Neon", desc: "Interroger vos bases Postgres serverless", category: "dev", tone: "mint", transport: "remote", url: "https://mcp.neon.tech/mcp", hosts: ["neon.tech"] },
   // Hosted remote MCP with OAuth 2.1 + dynamic client registration (one-click, no
   // PAT). `project_ref`/`read_only` are optional URL scopes; mutations are gated by
   // the desktop write-confirmation dialog.
-  { id: "supabase", name: "Supabase", desc: "Base de données, edge functions, logs", category: "data", tone: "mint", transport: "remote", url: "https://mcp.supabase.com/mcp", hosts: ["supabase.com", "supabase.co"] },
+  { id: "supabase", name: "Supabase", desc: "Base de données, edge functions, logs", category: "dev", tone: "mint", transport: "remote", url: "https://mcp.supabase.com/mcp", hosts: ["supabase.com", "supabase.co"] },
   { id: "semgrep", name: "Semgrep", desc: "Analyser la sécurité de votre code", category: "dev", tone: "mint", transport: "remote", url: "https://mcp.semgrep.ai/mcp", hosts: ["semgrep.dev"] },
   { id: "stripe", name: "Stripe", desc: "Consulter paiements, clients et factures", category: "finance", tone: "violet", transport: "remote", url: "https://mcp.stripe.com", hosts: ["stripe.com"] },
   { id: "paypal", name: "PayPal", desc: "Consulter paiements, factures et commandes", category: "finance", tone: "sky", transport: "remote", url: "https://mcp.paypal.com/mcp", hosts: ["paypal.com"] },
@@ -83,7 +84,7 @@ export const REMOTE: McpConnector[] = [
   { id: "brightdata", name: "Bright Data", desc: "Accès temps réel à des données web publiques", category: "search", tone: "sky", transport: "remote", url: "https://mcp.brightdata.com/mcp" },
   { id: "cloudflare", name: "Cloudflare", desc: "Workers, stockage, IA & primitives de calcul", category: "dev", tone: "amber", transport: "remote", url: "https://bindings.mcp.cloudflare.com/mcp", hosts: ["cloudflare.com"] },
   { id: "netlify", name: "Netlify", desc: "Déployer, gérer et sécuriser des sites Netlify", category: "dev", tone: "mint", transport: "remote", url: "https://netlify-mcp.netlify.app/mcp", hosts: ["netlify.com", "netlify.app"] },
-  { id: "prisma-postgres", name: "Prisma Postgres", desc: "Interroger & gérer votre base Prisma Postgres", category: "data", tone: "mint", transport: "remote", url: "https://mcp.prisma.io/mcp", hosts: ["prisma.io"] },
+  { id: "prisma-postgres", name: "Prisma Postgres", desc: "Interroger & gérer votre base Prisma Postgres", category: "dev", tone: "mint", transport: "remote", url: "https://mcp.prisma.io/mcp", hosts: ["prisma.io"] },
   { id: "cloudinary", name: "Cloudinary", desc: "Gestion & transformation d'images et de vidéos", category: "design", tone: "sky", transport: "remote", url: "https://asset-management.mcp.cloudinary.com/mcp", hosts: ["cloudinary.com"] },
   { id: "jotform", name: "Jotform", desc: "Créer des formulaires & analyser les réponses", category: "productivity", tone: "pink", transport: "remote", url: "https://mcp.jotform.com/mcp", hosts: ["jotform.com"] },
   { id: "websitepublisher", name: "WebsitePublisher.ai", desc: "Créer et publier des sites par conversation", category: "design", tone: "violet", transport: "remote", url: "https://mcp.websitepublisher.ai/mcp" },

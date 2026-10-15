@@ -31,7 +31,8 @@ export interface CardsMessages {
     title: (count: number) => string;
     /** The model's name when we have it; otherwise « Le modèle ». */
     theModel: string;
-    desc: (modelName: string) => string;
+    /** Agrees in number with `title(count)`: one value → singular. */
+    desc: (modelName: string, count: number) => string;
   };
 
   /** The offer to turn on automatic memory, when a thread carries durable facts. */
@@ -88,8 +89,13 @@ export interface CardsMessages {
     target: string;
     note: string;
     attachmentsWarning: (count: number) => string;
-    details: (tool: string) => string;
-    scopeNote: (tool: string) => string;
+    /** The collapsed « Détails techniques »: the ONLY place the raw tool id shows. */
+    details: string;
+    toolId: (tool: string) => string;
+    /** What an « Autoriser » covers: this action, this conversation… */
+    scopeNote: string;
+    /** …except a FLOOR confirmation (a send, an attachment, a possible leak): asked every time. */
+    scopeFloor: string;
     navExfil: { eyebrow: string; title: (host: string) => string; titleNoHost: string; desc: string; confirm: string };
     attachments: { eyebrow: string; title: string; desc: (server: string) => string; confirm: string };
     action: { eyebrow: string; title: string; desc: (server: string) => string; confirm: string };

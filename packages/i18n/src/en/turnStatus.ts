@@ -27,6 +27,9 @@ export const turnStatus = {
   empty: "The model returned nothing.",
   toolFlowFailed:
     "A tool step failed. Retrying runs all steps again, and each change asks for your confirmation again.",
+  report: "Report the problem",
+  reportTip: "Opens “Your feedback”, prefilled, with this conversation's log (already masked) attached.",
+  reportDraft: "This message couldn't be sent: ",
   credits: {
     title: "Your free credits are used up",
     desc: (brand, keyName) =>

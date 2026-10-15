@@ -1,8 +1,11 @@
 ## 8. Settings (« Réglages »)
 
-**Access**: the gear in the rail · ⌘K, which indexes the settings themselves. Four visible
-tabs, the rest behind « Avancé » — because a setting one is looking for is found by
-searching, not by a ten-entry list.
+**Access**: the gear in the rail · ⌘K, which indexes the settings themselves. Visible tabs:
+Compte, Confidentialité, « Historique de confidentialité », Modèles, Connecteurs, and
+Paiement on a build that sells; Usage, Navigateur, Vos appareils and Versions sit behind
+« Avancé » (its toggle says what it shows, `title` + `aria-label`) — because a setting one is
+looking for is found by searching, not by a ten-entry list. A tab carries ONE name: the rail,
+the page header and ⌘K read the same label.
 
 ### Account (« Compte »)
 **Access**: Réglages → **Compte**.
@@ -27,7 +30,8 @@ checkboxes: statistics are an explicit consent and carry counters only, never co
 previews are **off by default** because previewing a link means making an outgoing request —
 hence revealing that you received it.
 
-- [x] Device identity, sign-out
+- [x] Device identity, sign-out — « Se déconnecter » asks first (`ConfirmDialog`: back to the
+      sign-in screen, nothing deleted) — `packages/ui/src/pages/Settings/AccountTab.tsx`
 - [x] « **Mode sombre** » (the ground: two themes, light and dark, the indigo accent is not a setting; a theme name persisted by an earlier version is still read, `packages/ui/src/state/settings/theme.ts`)
 - [x] « **Importer des conversations** » (official ChatGPT / Claude exports: pattern rules on
       import, the on-device detector over the whole history the first time it goes back to a
@@ -49,30 +53,36 @@ hence revealing that you received it.
 
 **What it makes possible.** The four tabs that govern what the app protects, what it answers
 with, what it reaches, and what it may do on its own — the last one on **Connecteurs**, under
-« Ce que l'agent peut faire »: the write gate and the agent browser's hardening, one family;
+« Ce que l'assistant peut faire »: the write gate and the agent browser's hardening, one family;
 **Navigateur** keeps only its search engine.
 
 **What it gives you.** Each tab is titled, described and **searchable by construction**: the
 same single source feeds the rail's label, the page header and the ⌘K palette row. So a
 setting cannot exist without being findable.
 
-**What it is worth.** That is what makes it acceptable to fold six tabs behind « Avancé »:
-nothing becomes unreachable, only less cluttered.
+**What it is worth.** That is what makes it acceptable to fold four tabs behind « Avancé »:
+nothing becomes unreachable, only less cluttered. What proves the masking (« Historique de
+confidentialité ») and what you pay (« Paiement ») are never folded.
 
 - [x] Each tab is titled and searchable by construction — `packages/ui/src/pages/Settings/settingsIndex.ts`
 - [x] The settings themselves are indexed in ⌘K, not only the tabs
-- [x] Réglages → Connecteurs → « Ce que l'agent peut faire »: « **Confirmation des actions** »
+- [x] Réglages → Connecteurs → « Ce que l'assistant peut faire »: « **Confirmation des actions** »
       and « **Sécurité du navigateur intégré** » (read-only browsing, allowed domains) in ONE
       section — `packages/ui/src/pages/Settings/mcp/McpAgentPowers.tsx`
-- [x] Réglages → Confidentialité → « **Options avancées** », folded: the technical log, the
-      token display, what the model receives, the memory extraction — one fold for the
-      toggles most accounts never touch — `packages/ui/src/pages/Settings/privacy/PrivacyTab.tsx`
-- [x] Réglages → Modèles: the key lives on the provider CHIP (« Avec une clé API ») — no
-      second gear per group; the price filter is a **dropdown**, hidden when every listed
-      model sits in one tier; the local model waits behind an « **Avancé** » fold —
+- [x] Réglages → Confidentialité → « **Options avancées** », folded, each toggle with a
+      one-line plain explanation, for what most accounts never touch:
+      « **Journal technique (pour le support)** »,
+      « **Afficher « Personne 1 » au lieu d'un faux nom** »,
+      « **Envoyer « Personne 1 » au modèle au lieu d'un faux nom** », the memory extraction —
+      `packages/ui/src/pages/Settings/privacy/PrivacyTab.tsx`
+- [x] Réglages → Modèles: the key lives on the provider CHIP (« Avec votre compte OpenAI,
+      Mistral, Anthropic… ») — no second gear per group; the price filter is a **dropdown**
+      (« Économique / Standard / Haut de gamme », the dollar detail in each tier's tooltip),
+      hidden when every listed model sits in one tier; the local model waits behind an
+      « **Avancé** » fold —
       `packages/ui/src/components/ModelSelector/PriceTierSelect.tsx`,
       `packages/ui/src/pages/Settings/models/LocalModelSection.tsx`
-- [x] Réglages → Modèles → a CLI chip under « Via un agent installé » opens that agent's
+- [x] Réglages → Modèles → a chip under « Avec votre abonnement (application installée) » opens that agent's
       opt-in (the switch + its account/plan card) — `packages/ui/src/pages/Settings/models/AgentAccessModal.tsx`
 - [x] Inside that opt-in (and the onboarding's agent list): **install the CLI from the app**
       (Claude Code, Codex — a pinned, sha256-verified download of the official build that
@@ -86,12 +96,13 @@ nothing becomes unreachable, only less cluttered.
 - [x] Réglages → Confidentialité → « **Extraction automatique de la mémoire** »: the
       Mémoire's silent extraction, off by default; « retiens que… » works either way —
       `packages/ui/src/pages/Settings/privacy/PrivacyTab.tsx`
-- [x] Réglages → Journal → in the redaction table, clicking a masked `•••` cell reveals that
+- [x] Réglages → Historique de confidentialité → in the redaction table, clicking a masked `•••` cell reveals that
       ONE real value beside its token, copyable — `packages/ui/src/pages/Settings/privacy/AuditRevealModal.tsx`
 
-### Log, Usage (« Journal », « Usage »)
-**Access**: Réglages → **Journal** (the redaction audit, then « **Ce qui est sorti de la
-machine** ») · Réglages → **Usage**.
+### Privacy history, Usage (« Historique de confidentialité », « Usage »)
+**Access**: Réglages → **Historique de confidentialité** (a visible tab, right under
+Confidentialité: the redaction view « Masquage », then « Réseau ») · Réglages → Avancé →
+**Usage**.
 
 **What it makes possible.** Going back through the history of what was masked, filterable and
 searchable; seeing the list of **addresses the app actually contacted** and those it refused;
@@ -113,6 +124,8 @@ is read-only: the app writes it, the interface can neither invent nor erase it.
       vault itself — the salt being per conversation, the same real value carries a different
       stand-in there, which a flat list read as an inconsistency —
       `packages/ui/src/pages/Settings/privacy/auditRows.ts`
+- [x] Empty, it says when it fills and what to do (« Écrivez un message contenant un nom, un
+      e-mail ou un IBAN… »), never a bare « aucun »
 - [x] The **date lives on the group header**, never on the row: the vault does not timestamp
       its entries, and a date per value promised a precision no data carries
 - [x] **Network log**: contacted and refused addresses, by origin (browser, connector, link
@@ -121,17 +134,20 @@ is read-only: the app writes it, the interface can neither invent nor erase it.
       endlessly by pages, so the network log placed underneath was out of scrolling reach —
       `packages/ui/src/pages/Settings/privacy/AuditLogTab.tsx`
 - [x] « **Exporter la mémoire (diagnostic)** » under the redaction view: the cards and their
-      semantic links as a local text file, real values — `packages/ui/src/pages/Memory/MemoryExportRow.tsx`
+      links as a local text file, real values — `packages/ui/src/pages/Memory/MemoryExportRow.tsx`
 - [x] The network log keeps the **site name only** (never the page nor the request)
 - [x] Written by the privileged process, read-only for the interface — `apps/desktop/src/main/net/egressLog.ts`
 - [x] Consumption per model and per conversation, estimated cost
 - [x] Separation of "my key" / "subscription", and what is estimated rather than measured
+- [x] The volume KPI reads « **Volume de texte traité** »: the word « tokens » only appears in
+      its note, explained (about ¾ of a word each)
 - [x] The histograms have no y-axis: the **maximum is written** under the title, and
       **hovering a column** (or reaching it by keyboard) gives the day and its value, model by
       model — `packages/ui/src/pages/Settings/billing/ModelTimeline.tsx`
 
 ### Your devices (« Vos appareils »)
-**Access**: Réglages → **Vos appareils** → « **Appareils connectés** ».
+**Access**: Réglages → Avancé → **Vos appareils** (rail and page header carry the same name)
+→ « **Appareils connectés** ».
 
 **What it makes possible.** Finding your conversations, skills and memory again on another
 device, through end-to-end encrypted sync behind a secret phrase only you hold. A device can
@@ -148,7 +164,7 @@ redaction closed.
 - [x] Secret phrase; revoking a device
 - [x] Scope: conversations, skills (routines included), memory
 - [x] Connector credentials do NOT sync (each device redoes its OAuth)
-- [x] **The status line** — Réglages → Synchronisation shows the RESOLVED environment (staging/production, never inferred from the channel) and the last exchange (succeeded X min ago / failed + reason): sync is best-effort, and this line is what stops an outage from being invisible — `packages/ui/src/pages/Settings/syncStatusLine.ts`, `apps/desktop/src/renderer/src/sync/status.ts`
+- [x] **The status line** — Réglages → Vos appareils shows the RESOLVED environment (staging/production, never inferred from the channel) and the last exchange (succeeded X min ago / failed + reason): sync is best-effort, and this line is what stops an outage from being invisible — `packages/ui/src/pages/Settings/syncStatusLine.ts`, `apps/desktop/src/renderer/src/sync/status.ts`
 
 ### Organization (« Organisation »)
 **Access**: Réglages → **Compte** → the « Organisation » block (if the account belongs to an
@@ -189,7 +205,7 @@ risk — a policy that depends on everyone's goodwill is not a policy.
       never swallowed silently
 
 ### Billing (« Paiement »)
-**Access**: Réglages → **Paiement** — **only in a build that sells** (`OPENMASQ_BILLING=1`;
+**Access**: Réglages → **Paiement**, a visible tab — **only in a build that sells** (`OPENMASQ_BILLING=1`;
 off by default, and then the tab, every upsell and the very word « abonnement » are absent:
 `packages/ui/src/send/platformAccess.test.ts`).
 
@@ -221,7 +237,7 @@ publisher.
       billing — `packages/ui/src/send/preflight.test.ts`
 
 ### Versions
-**Access**: Réglages → **Versions**.
+**Access**: Réglages → Avancé → **Versions**.
 
 **What it makes possible.** Choosing your release channel, reading the update notes — and
 going back. The update itself is not a setting: it is **always** automatic.
@@ -274,12 +290,15 @@ stuck with a version that breaks your use.
       withdrawal of a version does not wait for a restart —
       `apps/desktop/src/main/updates/poll.test.ts`
 - [x] Going back to a previous version
-- [x] « **Environnement** » — the card says whether the app talks to production or staging, and
+- [x] « **Version de test** » — the card says whether the app runs the regular version (« Normale »)
+      or the test one (« Test »; production/staging inside), and
       offers the switch to authorized accounts (beta access granted by the team) or to
       privileged devices; from staging, the way back to production is always offered. The
       decision is re-checked outside the UI on every request, and a refusal is shown as-is —
       `packages/ui/src/pages/Settings/updates/parts/EnvCard.tsx`,
       `packages/ui/src/pages/Settings/updates/parts/envView.test.ts`
+- [x] On the build history (privileged device / pre-release only), a row's button says what it
+      does: « **Installer celle-ci** », confirmed — never a bare « Basculer »
 - [x] « **Pile auto-hébergée** » — only in a build made with `OPENMASQ_ALLOW_CUSTOM_STACK=1`
       (never the official one): four fields (API, gateway, Supabase URL + publishable key),
       « Appliquer et redémarrer ». The addresses are validated outside the UI (https only),

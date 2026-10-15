@@ -78,7 +78,7 @@ export interface ConversationMessages {
   clarify: string;
 
   /** The write-confirmation card (the rest lives in `cards`). */
-  writeConfirm: { targetTip: (server: string, tool: string) => string; alsoOtherChats: string };
+  writeConfirm: { alsoOtherChats: string };
 
   /** The skill label under a message. */
   skillTag: {
@@ -183,7 +183,7 @@ export interface ConversationMessages {
   thinking: { writing: string; reflecting: string; preparing: string };
 
   /** The per-conversation token total (counts arrive already formatted). */
-  tokens: { tip: (total: string, input: string, output: string) => string; line: (input: string, output: string) => string };
+  tokens: { line: (readPages: number, writtenPages: number) => string; tip: string };
 
   /**
    * THE lexicon of « letting the model see » — ONE block, for every surface that offers
@@ -191,8 +191,8 @@ export interface ConversationMessages {
    * preview, the pre-search card). Five verbs used to coexist (« Garder en clair »,
    * « Démasquer », « Supprimer le masquage », « Passer en Standard »…) for two gestures:
    *
-   *  - `leaveClear` — REVERSIBLE: the value goes out as-is, the mask comes back on a click;
-   *  - `remove` — DEFINITIVE: the redaction is deleted, the value stays visible for good.
+   *  - `leaveClear` / `revealOne` / `revealKind` — REVERSIBLE: the value goes out as-is, the mask comes back on a click;
+   *  - `notSensitive` — DEFINITIVE: the redaction is deleted, the value stays visible for good.
    *
    * ⚠️ Every verb is a FUNCTION of its scope and renders it as a suffix (« · cet envoi »,
    * « · cette conversation », « · ce message »): a gesture whose reach one has to guess is
@@ -212,13 +212,27 @@ export interface ConversationMessages {
     scopeConversation: string;
     scopeMessage: string;
     leaveClear: (scope: string) => string;
-    leaveClearKind: (scope: string) => string;
     leaveClearTip: string;
     reMask: (scope: string) => string;
-    reMaskKind: (scope: string) => string;
     reMaskTip: string;
-    remove: (scope: string) => string;
-    removeTip: string;
+    /** The hover card's three DISTINCT actions, each saying its consequence: one term
+     *  (`revealOne`, per reach), every term of a category in this container (`revealKind`),
+     *  and the definitive false-positive fix (`notSensitive`, document preview only). */
+    revealOne: { conversation: string; send: string };
+    revealOneTip: { conversation: string; send: string };
+    reMaskOne: string;
+    revealKind: { message: (label: string) => string; document: (label: string) => string };
+    revealKindTip: { message: string; document: string };
+    reMaskKind: { message: (label: string) => string; document: (label: string) => string };
+    notSensitive: string;
+    notSensitiveTip: string;
+    /** The composer chip: category + state in the tooltip, « en clair » painted when kept. */
+    chipMasked: (category: string) => string;
+    chipClear: (category: string) => string;
+    clearBadge: string;
+    /** The composer word popover: no substitute exists before the send, so it names the
+     *  category and what will happen — never an invented fake. */
+    willBeReplaced: (category: string) => string;
     reportTip: string;
     report: string;
     sheetLabel: string;

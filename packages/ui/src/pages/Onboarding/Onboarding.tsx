@@ -1,13 +1,13 @@
 import { BRAND } from "@openmasq/branding";
 import { useRef, useState } from "react";
 import type { Settings } from "../../types";
-import { ArrowRightIcon, ChevLeftIcon } from "../../components/brand";
 import { captureEvent } from "../../analytics";
 import { useDialogFocus } from "../../hooks/useDialogFocus";
 import { RedactionRulesContent } from "../../containers/modals/redaction/RedactionRulesContent";
 import { useT } from "../../i18n";
 import { RedactionDemo } from "../../components/RedactionDemo";
 import { KeyChoice } from "./KeyChoice";
+import { OnboardingFooter } from "./OnboardingFooter";
 import { useAgentOptIns } from "../../hooks/useAgentOptIns";
 import { useOnboardingTelemetry } from "./useOnboardingTelemetry";
 import { platformAccessServed, subscriptionsSold } from "../../send/platformAccess";
@@ -262,33 +262,16 @@ export function Onboarding({ settings, onChange, onDone, onSaveKey, onConnectOpe
           </div>
         </div>
 
-        <div className="ob-footer">
-          {rules ? (
-            <button onClick={() => setRules(false)} className="ob-skip">
-              <ChevLeftIcon size={16} /> {t.onboarding.back}
-            </button>
-          ) : (
-            !gated && (
-              <button onClick={skip} className="ob-skip">
-                {t.onboarding.skip}
-              </button>
-            )
-          )}
-          <div className="flex-spacer" />
-          {rules ? (
-            <button onClick={finish} className="ob-next">
-              {t.onboarding.start} <ArrowRightIcon size={17} />
-            </button>
-          ) : step < STEPS - 1 ? (
-            <button onClick={next} className="ob-next">
-              {t.onboarding.next} <ArrowRightIcon size={17} />
-            </button>
-          ) : (
-            <button onClick={finish} className="ob-next">
-              {t.onboarding.start} <ArrowRightIcon size={17} />
-            </button>
-          )}
-        </div>
+        <OnboardingFooter
+          rules={rules}
+          step={step}
+          last={step >= STEPS - 1}
+          gated={gated}
+          onBack={() => (rules ? setRules(false) : setStep((s) => Math.max(0, s - 1)))}
+          onSkip={skip}
+          onNext={next}
+          onFinish={finish}
+        />
       </div>
     </div>
   );

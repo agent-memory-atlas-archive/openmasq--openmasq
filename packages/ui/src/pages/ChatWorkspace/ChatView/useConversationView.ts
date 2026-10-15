@@ -1,10 +1,9 @@
 import { useMemo, useRef, useState } from "react";
-import { PROVIDERS } from "@openmasq/llm";
 import { vaultDisplayTokens } from "@openmasq/redact";
 import type { Messages } from "@openmasq/i18n";
 import { integrationHostId } from "../../../components/agent/integrationSlot";
 import { isExplicitMemoryAsk, worthExtracting, type ConvSlice } from "../../../memory/extract";
-import { protectedValueCount, shouldShowTransparencyCard } from "../../../privacy/transparency";
+import { protectedValueCount, shouldShowTransparencyCard, transparencySeenFor } from "../../../privacy/transparency";
 import { shouldShowRedactionIntro } from "../../../privacy/redactionIntro";
 import { effectiveDefaultModelId } from "../../../prompt/defaultModel";
 import { ALL_MODELS, findModelAny } from "../../../prompt/models";
@@ -12,6 +11,7 @@ import { isAutoModelId } from "../../../send/autoRoute";
 import { conversationProtectedCount } from "../../../state/redaction/protectedCount";
 import { timeGreeting } from "../greeting";
 import type { ChatViewProps } from "./types";
+import { providerLabel } from "../../../help/providerLabel";
 
 /** Everything the screen DERIVES from the conversation and the settings — no gesture here. */
 export function useConversationView(p: ChatViewProps, t: Messages, memoryOpen: boolean) {
@@ -46,7 +46,7 @@ export function useConversationView(p: ChatViewProps, t: Messages, memoryOpen: b
   // The one-time cards under the composer. Transparency goes first and shows once; the
   // redaction intro never at the same time (two stacked invitations read like advertising).
   const [showComparison, setShowComparison] = useState(false);
-  const showTransparency = !activeStreaming && shouldShowTransparencyCard(conversation, settings?.transparencySeen);
+  const showTransparency = !activeStreaming && shouldShowTransparencyCard(conversation, transparencySeenFor(settings?.transparencySeenIn, conversation?.id));
   const showRedactionIntro =
     !activeStreaming &&
     !showTransparency &&
@@ -83,7 +83,7 @@ export function useConversationView(p: ChatViewProps, t: Messages, memoryOpen: b
   const currentModel = findModelAny(conversation?.modelId ?? "") ?? findModelAny(defaultModelId ?? "") ?? ALL_MODELS[0];
   const currentModelLabel = autoMode ? "Auto" : currentModel?.label;
   const provider = currentModel?.provider;
-  const vendor = provider ? PROVIDERS[provider].label : undefined;
+  const vendor = provider ? providerLabel(provider, t) : undefined;
 
   // DISTINCT protected values from the conversation vault — the single definition shared
   // with the sidebar shield and the confidentialité report (`state/protectedCount.ts`).

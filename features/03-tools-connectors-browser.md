@@ -28,13 +28,27 @@ them.
 - [x] OAuth sign-in in the system browser (the only place an SSO works)
 - [x] Several accounts per connector, labelled
 - [x] **Google connectors (Gmail, Drive, Agenda, Docs, Sheets, Tasks, Analytics) read
-      « Bientôt disponible »** while Google reviews the app: still listed, one-click hidden
-      (and refused by main), connectable with your own Google keys — `packages/catalog/src/mcp/connectors/direct.ts`,
+      « Bientôt en un clic »** (chip « Option avancée ») while Google reviews the app: listed in
+      place, not sorted last, one-click hidden (and refused by main), connectable with
+      « Option avancée : utiliser vos propres clés Google » (a Google Cloud account; Google may
+      ask to reconnect every week) — `packages/catalog/src/mcp/connectors/direct.ts`,
       `packages/catalog/src/mcp/authTag.test.ts`
-- [x] « Ajouter un connecteur », unverified, in its own section — the toolbar button beside
-      the search field opens the name / URL / key form, behind a risk acknowledgement —
+- [x] **Everyday services first**: « Sur votre ordinateur » leads, then the categories, mail /
+      agenda / documents first inside each, « Pour les développeurs » (databases included)
+      last — `packages/catalog/src/mcp/displayOrder.ts`, `displayOrder.test.ts`
+- [x] **A plan the service requires is said on the card** (« Nécessite un abonnement
+      Superhuman Business »), only where the service documents one — `McpConnector.paidPlan`
+- [x] « Connexion manuelle (pour utilisateurs avancés) », a fold at the end of the grid: its
+      button opens the name / address / key form (where to find the address said under the
+      field), behind a risk acknowledgement; what it adds sits in its own unverified section —
       `packages/ui/src/pages/Settings/mcp/McpCustomModal.tsx`
-- [x] See the tools a connector exposes — `packages/ui/src/containers/modals/McpToolsModal.tsx`
+- [x] **« Déconnecter » and « Supprimer ce connecteur » ask first** (the app's confirm dialog,
+      the consequence stated) — `packages/ui/src/pages/Settings/mcp/McpModals.test.tsx`
+- [x] **A failure never replaces the description and never shows raw**: a plain sentence (our
+      own when main wrote one, « La connexion n'a pas abouti… » when unknown), the provider's
+      text folded under « Détail technique » — `packages/ui/src/pages/Settings/mcp/connectorErrorText.test.ts`
+- [x] See the tools a connector exposes, named in words (the technical name inside the opened
+      row) — `packages/ui/src/containers/modals/McpToolsModal.tsx`
 - [x] Choice of access mode when the server offers two — `packages/ui/src/containers/modals/McpAuthChoiceModal.tsx`
 - [x] Connectors from your other devices are offered for connection
 - [x] Connect without leaving the screen: the connector's modal (connect / disconnect,
@@ -46,7 +60,7 @@ them.
       two cards, once per conversation, and never on the turn a once-only card (Transparence,
       « Comprendre mon masquage », Mémoire) takes — `packages/ui/src/agent/integrationRelevance.ts`,
       `packages/ui/src/components/agent/integrationSlot.ts`
-- [x] « Mes clés » inside a connector's modal: your own OAuth client id / secret for that
+- [x] « Mes clés » (an advanced option) inside a connector's modal: your own client id / secret for that
       service, with the per-provider checklist — `packages/ui/src/pages/Settings/byo/ByoKeysModal.tsx`
 - [x] **Every call leaves in the clear and comes back redacted**
 - [x] **An integration's product name is never masked**, at any level, strict included —
@@ -60,8 +74,8 @@ them.
       `packages/ui/src/send/integrationKeep.test.ts`
 - [x] Enter an API key when the service asks for one — `packages/ui/src/containers/modals/ApiKeyModal.tsx`
 
-### Local folders (the Filesystem connector)
-**Access**: Réglages → Connecteurs → Filesystem. Once connected, the card lists the granted
+### Local folders (the « Vos dossiers » connector)
+**Access**: Réglages → Connecteurs → « Sur votre ordinateur » → Vos dossiers. Once connected, the card lists the granted
 folders.
 
 **What it makes possible.** Giving the model access to folders **you designate**, and to
@@ -145,14 +159,18 @@ a weakening cannot come from anywhere but you.
 - [x] **Standard** mode: one card per conversation after a web search, plus the uncapped floors
 - [x] **Confirm every action** mode (« Confirmer chaque action »): every write confirms, the risky ones on a system window
 - [x] The card says **which real values** are leaving, not merely "a write"
-- [x] « Autoriser » is remembered per tool and per conversation
+- [x] « Autoriser » is remembered per tool and per conversation; the card names the connector
+      and the action in words, the raw tool id only inside « Détails techniques »; a send /
+      attachment / leak card says it is asked every time — `packages/ui/src/pages/ChatWorkspace/WriteConfirmCard.tsx`
+- [x] « Tout autoriser sans demander » lasts until the app quits and still asks for sends,
+      attachments and possible leaks (the floors)
 - [x] Going from reinforced to standard confirms itself on the system window
 - [x] The card stays attached to ITS conversation (turns run in parallel)
 
 ### The driven browser
 **Access**: the globe in the right rail of a conversation · Réglages → **Navigateur** (the
-search engine) · Réglages → **Connecteurs** → « Ce que l'agent peut faire » (« **Sécurité du
-navigateur intégré** »: read-only mode, allowed domains).
+search engine) · Réglages → **Connecteurs** → « Ce que l'assistant peut faire » (« **Sécurité du
+navigateur intégré** »: read-only mode, « Sites autorisés »).
 
 **What it makes possible.** Giving the model a real browser — pages, forms, signed-in
 sessions — in an isolated window, next to the conversation, which you watch working and can

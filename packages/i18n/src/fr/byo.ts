@@ -4,7 +4,7 @@
 import type { Messages } from "../messages";
 
 export const byo = {
-  eyebrow: "MES CLÉS",
+  eyebrow: "OPTION AVANCÉE · VOS PROPRES CLÉS",
   connect: "Connecter",
   encryptedNote: "Vos identifiants sont enregistrés chiffrés sur cet ordinateur.",
   existing:
@@ -33,8 +33,8 @@ export const byo = {
     "Les codes secrets Google commencent en général par « GOCSPX- ». Vérifiez que c'est bien le code secret du client.",
   microsoft: {
     intro:
-      "≈ 3 min. Une inscription d'application Microsoft Entra. Les autorisations sont accordées à la connexion.",
-    note: "L'adresse « http://127.0.0.1/callback » désigne votre propre ordinateur. Le port n'a pas d'importance.",
+      "Option avancée, souvent à faire avec votre service informatique : il faut inscrire une application dans Microsoft Entra, le portail d'administration de Microsoft. Les autorisations sont accordées à la connexion.",
+    note: "L'« URI de redirection » est l'adresse où Microsoft vous renvoie après la connexion. « http://127.0.0.1/callback » désigne votre propre ordinateur ; le port n'a pas d'importance.",
     s1: { lead: "Ouvrez le portail Microsoft Entra : ", link: "Inscrire une application" },
     s2: {
       a: "Nommez-la « ",
@@ -57,12 +57,12 @@ export const byo = {
     },
   },
   github: {
-    intro: "≈ 1 min. Aucune vérification d'application nécessaire.",
+    intro: "Option avancée : il faut un compte GitHub. Aucune vérification d'application nécessaire.",
     s1: {
       lead: "Créez une app OAuth GitHub : ",
       link: "Nouvelle OAuth App",
       tail: (brand) =>
-        `. Nom : « ${brand} ». Les champs Homepage et Callback URL acceptent n'importe quelle valeur (ils ne servent pas en device flow).`,
+        `. Nom : « ${brand} ». Les champs Homepage et Callback URL acceptent n'importe quelle valeur (ils ne servent pas pour une connexion par code).`,
     },
     s2: {
       a: "Sur la page de l'app, cochez ",
@@ -78,7 +78,7 @@ export const byo = {
   },
   google: {
     intro:
-      "≈ 3 min. En gardant l'application en mode test, vous avez toutes les fonctionnalités sans la vérification de Google.",
+      "Option avancée : il faut un compte Google Cloud. Tant que votre application reste en mode test, vous avez toutes les fonctionnalités sans attendre la vérification de Google. En contrepartie, Google peut vous demander de vous reconnecter chaque semaine.",
     note: "L'adresse « 127.0.0.1 » (votre ordinateur) est autorisée automatiquement pour une application de bureau.",
     s1: { lead: "Créez ou choisissez un projet : ", link: "Nouveau projet Google Cloud" },
     s2: {

@@ -18,6 +18,9 @@ jargon.
 - [x] Five sections + Réglages, iterated by the rail, the sidebar and the mobile bar from the same list, each with its one mark — `packages/ui/src/help/sections.ts`, `packages/ui/src/components/brand/icons/sections.tsx`
 - [x] Transient notices are ONE toast (« Noté en mémoire », an ignored attachment); a lasting state is the status chip; the first-launch analytics notice is that chip — `packages/ui/src/components/feedback/Toast.tsx`, `packages/ui/src/components/AnalyticsNotice.tsx`
 - [x] ⌘K palette: conversations, sections, settings — `packages/ui/src/containers/modals/SearchModal/`
+- [x] The rail's shield opens Réglages → **Confidentialité** (its tooltip says so: « N éléments
+      masqués · Ouvrir Réglages → Confidentialité ») and wears a small **count badge** once
+      something was masked (« 99+ » past 99) — `packages/ui/src/containers/shell/Rail.tsx`
 - [x] Shared side panel, kept from one section to the next
 - [x] Folding it: click the **active** tab again; closing it: the cross on its item. The
       right rail carries no panel command, and nothing hides the conversation
@@ -33,7 +36,7 @@ jargon.
 - [x] Every modal is a real dialog: focus enters it, Tab stays inside, Escape closes the
       topmost one only, and focus returns to the control that opened it —
       `packages/ui/src/containers/modals/ModalShell.test.tsx`
-- [x] A destructive gesture (deleting a conversation or files, changing plan) asks first in
+- [x] A destructive gesture (deleting a conversation or files, changing plan, signing out) asks first in
       the ONE confirm dialog — focus on the confirm button, Escape cancels —
       `packages/ui/src/components/feedback/ConfirmDialog.tsx`
 
@@ -52,23 +55,31 @@ actually runs rather than a screenshot — and plugging in your key in the first
 have one.
 
 **What it is worth.** The onboarding **shows**, and configures only what it is asked to — with
-one exception: a road to a model. In a hosted build the account is that road, and "Skip" stays.
-Without a gateway (the shipped default), no model answers until a key or a subscription CLI
-exists, so the access step cannot be left without one: "Skip" disappears and "Next" says what
-is missing. A CLI switched on but not found on the machine does not count. It also defuses the two reflexes that would push someone to lower the protection
+one exception: a road to a model. In a hosted build the account is that road, and « Passer
+l'introduction » stays. Without a gateway (the shipped default), no model answers until a key
+or a subscription CLI exists, so the access step cannot be left without one: the skip
+disappears and « Suivant » says what is missing. « Retour » goes back one screen (never a way
+out of that gate). Its title promises only what the screen offers (« Votre accès à un modèle
+d'IA »); a model installed on the computer is pointed to Réglages → Modèles, where its flow
+lives. A CLI switched on but not found on the machine does not count. It also defuses the two reflexes that would push someone to lower the protection
 ("it will mask public figures" — no; "a web search will look for a fake name" — no, it offers
 to reveal first).
 
 - [x] Sign-in by magic link or Google — `packages/ui/src/pages/Login/`
 - [x] Redaction demonstration, replayable afterwards from **Aide** — `packages/ui/src/components/RedactionDemo/`
 - [x] Choice between a subscription CLI (Claude Code, Codex, Antigravity — the same opt-in switches as Réglages → Modèles, listed by `packages/ui/src/hooks/useAgentOptIns.ts`; each row carries the install / sign-in rows of `packages/ui/src/containers/agentSetup/AgentSetupRows.tsx`; **first and « conseillé » whenever the build can offer one**, and choosing the card switches a connected CLI on) ⇄ the built-in subscription ⇄ your own key (OpenRouter or another — the recommendation only when no CLI can be offered), required when the build serves nothing (the one gate: `packages/ui/src/state/auth/modelAccess.ts`) — `packages/ui/src/pages/Onboarding/KeyChoice.tsx`
+- [x] Each option says what it is in plain words: OpenRouter is « un service qui donne accès à
+      plusieurs modèles, avec des modèles gratuits »; the subscription card names Claude /
+      ChatGPT, not the CLI — `packages/i18n/src/fr/onboarding.ts`
+- [x] « Retour » between the three screens, « Passer l'introduction » says what it skips —
+      `packages/ui/src/pages/Onboarding/OnboardingFooter.tsx`
 - [x] A tickable procedure to obtain the chosen provider's key + an alert on paste if the key does not have that provider's shape — `packages/ui/src/pages/Onboarding/KeySteps.tsx`
 - [x] "Get a key for free" (OpenRouter) — OAuth, with no copy-paste; the key is born and stays in the main process — `apps/desktop/src/main/store/openrouterPkce.ts`
 - [x] Fine-tuning the categories from the welcome, without being forced to
 - [x] With the keyboard: focus enters the card and stays there, the rest of the app is inert — `packages/ui/src/hooks/useDialogFocus.ts`
 
 ### Help and feedback
-**Access**: the foot of the right rail, in every section → « Aide » and « Envoyer un feedback ».
+**Access**: the foot of the right rail, in every section → « Aide » and « Envoyer un avis ».
 
 **What it makes possible.** A guide explaining the five sections, a feedback form, and the
 copyable detail of an error.
@@ -90,11 +101,11 @@ would have decided to collect.
       not exist where that source does not exist —
       `packages/ui/src/containers/modals/GuideReleases.tsx`,
       `packages/ui/src/containers/modals/GuideModal.test.tsx`
-- [x] « Votre feedback »: feedback, with what you choose to attach — `packages/ui/src/containers/modals/FeedbackModal.tsx`
+- [x] « Votre avis »: feedback, with what you choose to attach — `packages/ui/src/containers/modals/FeedbackModal.tsx`
 - [x] **Technical context** attachable with one switch: version, channel, screen, system,
       model, protection level — six machine values, never a line of your conversations —
       `packages/ui/src/containers/shell/hooks/useFeedback.ts`
-- [x] On a **bug report**, the debug log is **attached by default** — a verbatim preview on
+- [x] On a **bug report**, the technical log (« Journal technique », the debug log) is **attached by default** — a verbatim preview on
       screen, one gesture removes it (the collection is permanent, and a report without a log
       cost a round trip) — `packages/ui/src/containers/modals/FeedbackModal.test.tsx`
 - [x] **A feedback icon under every reply** (the Copy / Regenerate / Fork bar): the

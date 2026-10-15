@@ -7,6 +7,7 @@ import { BrandLoader } from "../../components/media/BrandLogo";
 import { LayersIcon, XIcon, IconButton, ChevDownIcon } from "../../components/brand";
 
 import { useT } from "../../i18n";
+import { humanToolLabel } from "../../agent/humanToolLabel";
 /** A short, markdown-stripped one-liner for the collapsed preview. */
 function previewOf(desc: string): string {
   const flat = desc
@@ -20,7 +21,7 @@ function previewOf(desc: string): string {
 /**
  * Tool catalogue for one connected MCP integration. Pulls the aggregated tool
  * list from the host and filters to this server (tools are namespaced
- * `${serverId}__${tool}`). Each tool is a COLLAPSIBLE row — the name + a one-line
+ * `${serverId}__${tool}`). Each tool is a COLLAPSIBLE row — its name IN WORDS + a one-line
  * preview, expanding to its full description RENDERED AS MARKDOWN (the connectors
  * ship markdown: bold, lists, ```code``` examples) so a 26-tool server like
  * Firecrawl is scannable instead of a wall of raw text. Read-only.
@@ -117,7 +118,12 @@ export function McpToolsModal({
                     aria-expanded={isOpen}
                   >
                     <span className="mcp-tool-head-text">
-                      <span className="mcp-tool-name mono">{strip(tool.name)}</span>
+                      {/* The tool in words — the server's own title when it declares one,
+                          else the app's one vocabulary (`humanToolLabel`). The raw id is a
+                          technical detail, shown only once the row is opened. */}
+                      <span className="mcp-tool-name">
+                        {tool.annotations?.title?.trim() || humanToolLabel(serverId, strip(tool.name), t)}
+                      </span>
                       {!isOpen && tool.description && (
                         <span className="mcp-tool-preview">{previewOf(tool.description)}</span>
                       )}
@@ -126,9 +132,17 @@ export function McpToolsModal({
                       <ChevDownIcon size={14} />
                     </span>
                   </button>
-                  {isOpen && tool.description && (
+                  {isOpen && (
                     <div className="mcp-tool-md">
-                      <Markdown content={tool.description} />
+                      {tool.description && (
+                        <>
+                          <p className="mcp-tool-by">{t.mcpTab.toolDescBy(serverName)}</p>
+                          <Markdown content={tool.description} />
+                        </>
+                      )}
+                      <p className="mcp-tool-by">
+                        {t.mcpTab.toolTechName} <code>{strip(tool.name)}</code>
+                      </p>
                     </div>
                   )}
                 </div>

@@ -9,6 +9,7 @@ import { pickerBlocks, unavailableLabel, type UnavailableReason } from "../../se
 import { BookOpenIcon, CheckIcon, CoinsIcon, DotsIcon, GaugeIcon, HouseIcon, ModelLogo, StarIcon } from "../brand";
 import { CountryFlag } from "../media/CountryFlag";
 import { freeModelTip } from "../../send/platformAccess";
+import { providerLabel } from "../../help/providerLabel";
 
 /**
  * One model row in the Finder's rightmost column (and the flat search results). An
@@ -62,7 +63,7 @@ export const ModelRow = forwardRef<
   const t = useT();
   const meta = modelMeta(model.id);
   const display = modelDisplay(model);
-  const unavailable = reason ? unavailableLabel(reason, PROVIDERS[model.provider].label, t) : null;
+  const unavailable = reason ? unavailableLabel(reason, providerLabel(model.provider, t), t) : null;
   const hardBlocked = !!reason && pickerBlocks(reason);
   // The context menu (default model). Open state, Escape and outside-click come from
   // `usePopover`; the PLACEMENT is ours — a right-click opens at the pointer, the ⋯
@@ -106,7 +107,7 @@ export const ModelRow = forwardRef<
         // A listed-but-gated model (a key just removed, credits gone): the body answers
         // « comment faire ? » instead of picking a model that cannot send.
         if (reason && onAccessInfo) {
-          onAccessInfo(reason === "no_key" ? "key" : "credits", PROVIDERS[model.provider].label);
+          onAccessInfo(reason === "no_key" ? "key" : "credits", providerLabel(model.provider, t));
           return;
         }
         onChoose(model.id);
@@ -127,6 +128,16 @@ export const ModelRow = forwardRef<
         {unavailable && !suppressChip && (
           <div className="model-option-desc">
             <span className="model-unavailable">{unavailable.chip}</span>
+          </div>
+        )}
+        {/* Compact rows drop price/context/rate, never WHERE the model runs: the flag (or
+            « Sur votre ordinateur ») is a privacy fact, not an arbitration. */}
+        {compact && (
+          <div className="model-option-meta">
+            <CountryFlag host={PROVIDERS[model.provider].hostCountry} size={12} />
+            {PROVIDERS[model.provider].hostCountry?.code === "local" && (
+              <span className="model-meta">{t.modelPicker.onYourComputer}</span>
+            )}
           </div>
         )}
         {!compact && (meta.price || meta.context || meta.tpm) && (

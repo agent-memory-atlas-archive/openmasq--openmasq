@@ -155,6 +155,19 @@ export function messageFeedbackDraft(t: Messages, log?: string): FeedbackDraft {
   };
 }
 
+/** Draft opened by « Signaler le problème » on a FAILED turn: category « Bug », this
+ *  conversation's journal attached when there is one (the no-mapping export). PRIVACY: the
+ *  template names the failure, it never quotes the message. */
+export function failedTurnDraft(t: Messages, log?: string): FeedbackDraft {
+  const attached = capLog(log ?? "");
+  return {
+    ...EMPTY_FEEDBACK,
+    category: "bug",
+    message: t.turnStatus.reportDraft,
+    ...(attached ? { journal: attached, attachLog: true } : {}),
+  };
+}
+
 /** True when this draft actually ships the debug journal (present AND its toggle on). One
  *  home for the question: the send gate, the payload and the modal's copy all ask it.
  *  A PRESENT journal goes by default; the modal's switch is the visible refusal. */

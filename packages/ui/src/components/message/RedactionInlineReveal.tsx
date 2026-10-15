@@ -14,12 +14,11 @@ const DEFAULT_MARK_SEL = ".redaction-mark[data-real]";
 /**
  * The kit's redaction POPOVER (`RedactionPill` menu): hovering a redacted mark opens
  * a small tone-bordered card — a tinted header naming the data type + the COUNTERPART
- * value, then one action per reach: « Laisser en clair · <portée> » (this mark) and
- * « Laisser la catégorie en clair · <portée> » (every mark of that kind in this
- * container), plus the definitive « Retirer le masquage · <portée> ». The verbs come
- * from `conversation.mark`, THE lexicon every reveal surface shares; the `scope` prop
- * picks the suffix (a chat bubble reveals for the CONVERSATION, the before-send document
- * preview for THIS SEND). The rows never repeat the type or the value: the header two
+ * value, then three DISTINCT actions that each say their consequence: this term
+ * (`revealOne`), every term of that category in this container (`revealKind`), and the
+ * definitive false-positive fix (`notSensitive`, document preview only). The words come
+ * from `conversation.mark`; the `scope` prop picks the reach (a chat bubble reveals for the
+ * CONVERSATION, the before-send document preview for THIS SEND). The rows never repeat the type or the value: the header two
  * lines above already carries both, and the tooltips hold the precision. It flips BELOW
  * the mark near the viewport top, and carries the kit's pointer arrow.
  *
@@ -139,12 +138,16 @@ export function RedactionInlineReveal({
   // « Démasquer tous les « company » » in an otherwise French interface (`kindLabel.ts`).
   const label = kindLabel(hov.kind, t);
   const mark = t.conversation.mark;
-  // The two verbs and their reach, from THE lexicon (`conversation.mark`).
-  const reach = scope === "send" ? mark.scopeSend : mark.scopeConversation;
-  // The category action reaches the marks of THIS message only: a value of that kind met
-  // later stays masked, so « cette conversation » promised more than it did.
-  const kindReach = scope === "send" ? mark.scopeSend : mark.scopeMessage;
-  const toggleTitle = isRevealed ? mark.reMaskTip : mark.leaveClearTip;
+  // Three DISTINCT actions, each naming its consequence (`conversation.mark`): this term
+  // (for the conversation in a bubble, for this send in the document preview), every term
+  // of this category in THIS container (a value of that kind met later stays masked), and —
+  // document preview only — the definitive « ce n'est pas une donnée sensible ».
+  const reach = scope === "send" ? "send" : "conversation";
+  const kindReach = scope === "send" ? "document" : "message";
+  const oneLabel = isRevealed ? mark.reMaskOne : mark.revealOne[reach];
+  const oneTitle = isRevealed ? mark.reMaskTip : mark.revealOneTip[reach];
+  const kindAction = isRevealed ? mark.reMaskKind[kindReach](label) : mark.revealKind[kindReach](label);
+  const kindTitle = isRevealed ? mark.reMaskTip : mark.revealKindTip[kindReach];
   // The card + actions — ONE content tree, two presentations (popover / sheet).
   const content = (
     <>
@@ -168,13 +171,12 @@ export function RedactionInlineReveal({
         </span>
       ) : (
         <>
-          <button type="button" className="rmark-pop-btn" onClick={toggleOne} title={toggleTitle}>
-            <EyeIcon size={14} /> {isRevealed ? mark.reMask(reach) : mark.leaveClear(reach)}
+          <button type="button" className="rmark-pop-btn" onClick={toggleOne} title={oneTitle}>
+            <EyeIcon size={14} /> {oneLabel}
           </button>
           {hov.kind && (
-            <button type="button" className="rmark-pop-btn" onClick={toggleKind} title={toggleTitle}>
-              <LayersIcon size={14} />{" "}
-              {isRevealed ? mark.reMaskKind(kindReach) : mark.leaveClearKind(kindReach)}
+            <button type="button" className="rmark-pop-btn" onClick={toggleKind} title={kindTitle}>
+              <LayersIcon size={14} /> {kindAction}
             </button>
           )}
         </>
@@ -187,9 +189,9 @@ export function RedactionInlineReveal({
             onDelete(hov.real);
             close();
           }}
-          title={mark.removeTip}
+          title={mark.notSensitiveTip}
         >
-          <TrashIcon size={14} /> {mark.remove(reach)}
+          <TrashIcon size={14} /> {mark.notSensitive}
         </button>
       )}
       {onReport && (

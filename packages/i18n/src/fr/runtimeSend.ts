@@ -9,15 +9,16 @@ import type { Messages } from "../messages";
 const NOT_MASKED = "Rien n'a été envoyé : les noms n'ont pas pu être masqués.";
 
 export const runtimeSend = {
-  maskingBlocked: (cause) => `Envoi bloqué : ${cause}. Rien n'a été envoyé. Réessayez.`,
+  maskingBlocked: (cause) =>
+    `Envoi bloqué : ${cause}. Rien n'a été envoyé, pour protéger vos données. Réessayez.`,
   maskingCause: {
-    network: "le masquage ne répond pas",
-    auth: "le masquage a échoué de notre côté",
-    unknown: "le masquage n'a pas pu s'exécuter",
-    engine: "le masquage n'a pas pu se terminer de façon sûre",
+    network: "le masquage, qui fonctionne sur votre ordinateur, n'a pas répondu",
+    auth: "le masquage n'a pas pu démarrer",
+    unknown: "le masquage n'a pas pu fonctionner sur votre ordinateur",
+    engine: "le masquage n'a pas pu vérifier qu'il avait tout masqué",
   },
   maskingTimeout:
-    "Envoi bloqué : le masquage a pris trop de temps. Rien n'a été envoyé. Réessayez. Si le texte est long, envoyez-le en plusieurs parties.",
+    "Envoi bloqué : le masquage a pris trop de temps. Rien n'a été envoyé, pour protéger vos données. Réessayez. Si le texte est long, envoyez-le en plusieurs messages.",
   modelBlockedByOrg: (model) => `Votre organisation a désactivé le modèle « ${model} ». Choisissez-en un autre.`,
   creditsSold:
     "Crédits épuisés. Passez à un abonnement supérieur, utilisez votre propre clé, ou attendez le renouvellement.",
@@ -32,8 +33,8 @@ export const runtimeSend = {
   fileStillReading: "Lecture des fichiers en cours. Attendez la fin avant d'envoyer.",
   fileReadInPart: (name, read, total) =>
     `« ${name} » n'a été lu que sur ${read} pages sur ${total}. Relisez-le en entier (« Lire les ${total} pages » sur sa pièce jointe) avant d'envoyer : un document n'est jamais envoyé en partie.`,
-  contextTooLarge: (model, tokens, limit, hasFiles) =>
-    `Trop long pour ${model} : environ ${tokens} tokens, pour une fenêtre de ${limit} qui doit aussi contenir la réponse. Rien n'a été envoyé. Choisissez un modèle à plus grande fenêtre de contexte, ou ${hasFiles ? "joignez moins de fichiers" : "raccourcissez le texte"}.`,
+  contextTooLarge: (model, pages, limitPages, hasFiles) =>
+    `Trop long pour ${model} : environ ${pages} pages, alors qu'il en lit au plus ${limitPages} environ, réponse comprise. Rien n'a été envoyé. ${hasFiles ? "Joignez moins de fichiers" : "Raccourcissez le texte"}, ou choisissez un modèle qui accepte des textes plus longs.`,
   unreadTitle: (n) => (n > 1 ? "Fichiers illisibles" : "Fichier illisible"),
   unreadBody: (n, names) =>
     n > 1
@@ -51,10 +52,10 @@ export const runtimeSend = {
     remoteNetwork: `Masquage en ligne injoignable. ${NOT_MASKED} Vérifiez votre connexion, puis réessayez.`,
     remoteUnknown: `Masquage en ligne indisponible. ${NOT_MASKED} Réessayez plus tard.`,
     local: `Masquage hors ligne indisponible : le modèle de détection n'a pas pu se charger. ${NOT_MASKED} Réessayez, puis réinstallez l'app si le problème persiste.`,
-    modelAuth: `Masquage indisponible : clé manquante ou invalide. ${NOT_MASKED} Renseignez la clé dans Réglages → Confidentialité.`,
-    modelNetwork: `Masquage indisponible : modèle injoignable. Vérifiez qu'Ollama est démarré et que l'adresse est correcte. ${NOT_MASKED}`,
+    modelAuth: `Masquage indisponible : clé d'accès manquante ou refusée. ${NOT_MASKED} Renseignez-la dans Réglages → Confidentialité.`,
+    modelNetwork: `Masquage indisponible : le programme de détection choisi dans Réglages → Confidentialité ne répond pas. Vérifiez qu'il est lancé sur votre ordinateur. ${NOT_MASKED}`,
     modelUnknown: `Masquage indisponible. ${NOT_MASKED}`,
-    timeout: `Le masquage a pris trop de temps. ${NOT_MASKED} Réessayez. Si le document est long, découpez-le.`,
+    timeout: `Le masquage a pris trop de temps. ${NOT_MASKED} Réessayez. Si le document est long, enregistrez-le en plusieurs fichiers plus petits et joignez-les un par un.`,
     engine: `Le masquage n'a pas pu se terminer de façon sûre. ${NOT_MASKED} Réessayez ; si cela se reproduit, signalez-le depuis « Envoyer un avis ».`,
   },
   token: {
@@ -110,10 +111,10 @@ export const runtimeFiles = {
   folderRefused: (message) => `Autorisation refusée : ${message}`,
   importWrongProvider: (p) => `Ce fichier ressemble à un export ${p}. Sélectionnez « ${p} », puis réessayez.`,
   importNothing: (p) =>
-    `Aucune conversation trouvée. Vérifiez qu'il s'agit bien de l'export ${p} (le .zip reçu par e-mail, ou son fichier conversations.json).`,
-  importNotJson: "Ce fichier ne contient pas d'export de conversations lisible (JSON attendu).",
+    `Aucune conversation trouvée. Choisissez le fichier .zip reçu par e-mail lors de votre export ${p}.`,
+  importNotJson: "Ce fichier n'est pas un export de conversations. Choisissez le fichier .zip reçu par e-mail lors de l'export.",
   importZipUnreadable: "Impossible de lire l'archive. Réessayez avec le zip d'export d'origine.",
-  importNoJsonInZip: "Aucun fichier « conversations.json » dans cette archive.",
+  importNoJsonInZip: "Cette archive ne contient pas vos conversations. Choisissez le fichier .zip reçu par e-mail lors de l'export, sans le modifier.",
 } satisfies Messages["runtime"]["files"];
 
 export const runtimeMisc = {

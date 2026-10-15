@@ -73,7 +73,7 @@ export const lists = {
     prompt: {
       label: "Consigne",
       chars: (n) => `${n} car.`,
-      fileName: "PROMPT.md",
+      fileName: "Texte de la consigne",
       placeholder: "Résume le document suivant en trois parties…\n\nDocument :\n",
     },
     picker: {
@@ -104,12 +104,12 @@ export const lists = {
     confirm: "Confirmer",
     removeTip: "Supprimer la fiche (annulable quelques secondes)",
     removeAria: (entity) => `Supprimer la fiche ${entity}`,
-    views: { list: "Liste", graph: "Graphe" },
-    stageCount: (n) => `Graphe de mémoire · ${n} nœuds`,
+    views: { list: "Liste", graph: "Carte" },
+    stageCount: (n) => `Carte de vos fiches · ${n} fiche${n > 1 ? "s" : ""}`,
     stageCountSemantic: (groups, n) =>
-      `Graphe sémantique · ${groups} groupe${groups > 1 ? "s" : ""} · ${n} nœuds`,
+      `Carte de vos fiches · ${groups} sujet${groups > 1 ? "s" : ""} · ${n} fiche${n > 1 ? "s" : ""}`,
     autoBadge: "auto",
-    graphAria: (n) => `Graphe de mémoire : ${n} nœuds`,
+    graphAria: (n) => `Carte de vos fiches : ${n} éléments`,
     coreNode: "Mémoire",
     profileNode: "Profil",
     categories: { personne: "Personne", organisation: "Organisation", projet: "Projet", autre: "Autre" },
@@ -125,7 +125,7 @@ export const lists = {
       sameTopicTip: "Deux fiches sur le même sujet, rapprochées par une analyse locale.",
     },
     panel: {
-      aria: "Détail du nœud",
+      aria: "Détail de la fiche",
       close: "Fermer",
       entity: "Entité",
       category: "Catégorie",
@@ -141,7 +141,7 @@ export const lists = {
       noLinks: "Aucune connexion.",
       links: (n) => `Connexions · ${n}`,
       delete: "Supprimer",
-      kind: { core: "Racine", hub: "Catégorie", group: "Groupe", leaf: "Fiche" },
+      kind: { core: "Votre mémoire", hub: "Catégorie", group: "Sujet", leaf: "Fiche" },
       recalled: (n, day) =>
         `Rappelée dans ${n} conversation${n > 1 ? "s" : ""} · dernière le ${day}`,
       neverRecalled:
@@ -224,12 +224,14 @@ export const lists = {
     search: "Rechercher un terme",
     shareTip: "Partager ce terme",
     share: "Partager",
-    usesTip: "Voir les occurrences",
-    occurrences: (n) => `${n} occ.`,
+    usesTip: "Voir où ce terme a été masqué (conversations et messages)",
+    occurrences: (n) => `Masqué ${n} fois`,
     conversations: (n) => `· ${n} conv.`,
     addTerm: "Ajouter un terme",
     editTip: "Modifier le terme ou sa catégorie",
-    removeTip: "Supprimer",
+    removeTip: "Supprimer (annulable quelques secondes)",
+    deleted: "Terme supprimé du coffre. Il reste masqué tant que ce message est affiché.",
+    undo: "Annuler",
     reveal: "Révéler la valeur",
     hide: "Cacher la valeur",
     add: {

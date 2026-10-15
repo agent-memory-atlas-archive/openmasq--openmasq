@@ -2,6 +2,7 @@ import { ShieldIcon, ActivityIcon, EyeIcon, TrashIcon } from "../../components/b
 import type { Settings } from "../../types";
 import { useT } from "../../i18n";
 import type { RedactLevelApi } from "./ComposerRedactMenu";
+import { ConversationTokens } from "./ConversationTokens";
 
 /**
  * The chat top bar's ⋯ dropdown — extracted from `ChatHeader` (rule 1). Pure
@@ -16,8 +17,11 @@ export function HeaderMenu({
   onOpenTransparency,
   onOpenDebug,
   onAskDelete,
+  conversationId,
 }: {
   protectedCount: number;
+  /** Shows the conversation's size (in pages) as a passive last line. */
+  conversationId?: string;
   /** The level in force here — only its `overridden` flag is read, to tag a thread
    *  that DEVIATES from the default. The level itself is chosen (and named) by the
    *  composer's button, the one place for it; this entry leads to the categories. */
@@ -69,6 +73,7 @@ export function HeaderMenu({
           {t.chrome.deleteConversationAction}
         </button>
       )}
+      {conversationId && <ConversationTokens convId={conversationId} />}
     </div>
   );
 }

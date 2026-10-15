@@ -7,6 +7,7 @@ import { captureEvent } from "../../../analytics";
 
 import { useT } from "../../../i18n";
 import { freeModelTip } from "../../../send/platformAccess";
+import { providerLabel } from "../../../help/providerLabel";
 /**
  * One selectable model card in the default-model picker. Extracted from `ModelsTab`
  * so the grid can be rendered both flat and inside a vendor-family sub-group without
@@ -42,7 +43,7 @@ export function ModelCard({
   onToggleFavorite?: (id: string) => void;
 }) {
   const t = useT();
-  const unavailable = reason ? unavailableLabel(reason, PROVIDERS[model.provider].label, t) : null;
+  const unavailable = reason ? unavailableLabel(reason, providerLabel(model.provider, t), t) : null;
   // Only a HARD reason (nothing to call) disables the card — a subscription/key-gated
   // model stays pickable, the send's inline container explains the escapes.
   const hardBlocked = !!reason && pickerBlocks(reason);
@@ -67,7 +68,7 @@ export function ModelCard({
           <CountryFlag host={PROVIDERS[model.provider].hostCountry} size={12} />
           {/* The provider label is the ELLIPSING part — the badges must never wrap or
               push the card wider (flex row + min-width:0, see `.model-card-vendor`). */}
-          <span className="model-card-provider">{PROVIDERS[model.provider].label}</span>
+          <span className="model-card-provider">{providerLabel(model.provider, t)}</span>
           {display.free && (
             /* The card is a <button> — role=button span + stopPropagation, so the badge
                opens the explainer without picking the model. */

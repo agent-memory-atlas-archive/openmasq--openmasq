@@ -55,6 +55,15 @@
   color: var(--text-body);
   line-height: 1.55;
 }
+/* Who wrote the description, and the tool's technical name — quiet, under the prose. */
+.mcp-tool-by {
+  margin: 8px 0 4px;
+  font-size: var(--text-xs);
+  color: var(--text-faint);
+}
+.mcp-tool-by code {
+  overflow-wrap: anywhere;
+}
 /* Centered loader while the tool list resolves. */
 .mcp-tool-loading {
   display: flex;

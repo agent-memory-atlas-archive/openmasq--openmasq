@@ -34,7 +34,7 @@ export function ComposerAddMenu({
   if (onFile) entries.push({ key: "file", icon: <FileIcon size={14} />, label: t.composer.addFile, title: t.composer.attachFile, run: onFile });
   if (onFolder) entries.push({ key: "folder", icon: <FolderIcon size={14} />, label: t.composer.addFolder, title: t.composer.addFolderTip, run: onFolder });
   if (onConnector) entries.push({ key: "connector", icon: <PlugIcon size={14} />, label: t.composer.addConnector, title: t.composer.addConnectorTip, run: onConnector });
-  if (onSkill) entries.push({ key: "skill", icon: <SparklesIcon size={14} />, label: t.composer.addSkill, title: t.composer.useSkill, run: onSkill });
+  if (onSkill) entries.push({ key: "skill", icon: <SparklesIcon size={14} />, label: t.composer.addSkill, title: `${t.composer.useSkill}. ${t.menus.composerHints.skillShortcut}`, run: onSkill });
 
   // The menu takes the focus on open (first entry), so the keyboard reaches it
   // without a Tab; arrows walk the entries, Home/End jump. Escape + outside click

@@ -50,7 +50,7 @@ export function formatTokenCount(n: number): string {
 /** A page of text in the model's unit: ~2 500 characters, i.e. ~625 at the shared
  *  `chars/4` estimate. The ONE conversion the copy uses to say a size without « tokens »
  *  (the refusal above, the conversation size in the ⋯ menu). An order of magnitude, said so. */
-export const TOKENS_PER_PAGE = 625;
+const TOKENS_PER_PAGE = 625;
 
 /** « ≈ N pages » — never 0 for a non-empty count. */
 export function tokensToPages(tokens: number): number {

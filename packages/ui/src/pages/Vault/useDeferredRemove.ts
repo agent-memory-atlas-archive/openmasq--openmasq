@@ -25,7 +25,9 @@ export function useDeferredRemove<T extends { id: string }>(commit: (id: string)
     if (p) commitRef.current(p.id);
   };
 
-  useEffect(() => flush, []);
+  useEffect(() => {
+    return flush;
+  }, []);
 
   return {
     /** The term waiting for its window to close — hidden from the list, still masked. */

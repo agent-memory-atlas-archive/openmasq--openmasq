@@ -28,4 +28,4 @@ export const PROVIDER_ORDER: ProviderId[] = [
 ];
 
 /** Moved to `help/providerLabel.ts` (the one user-facing vocabulary); re-exported for the pickers. */
-export { providerGroupLabel, providerLabel } from "../../help/providerLabel";
+export { providerGroupLabel } from "../../help/providerLabel";

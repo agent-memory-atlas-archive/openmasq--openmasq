@@ -111,7 +111,7 @@ export function shouldShowTransparencyCard(
 }
 
 /** How many conversation ids `Settings.transparencySeenIn` keeps (oldest dropped). */
-export const TRANSPARENCY_SEEN_CAP = 300;
+const TRANSPARENCY_SEEN_CAP = 300;
 
 /** Has this conversation's card already been answered? */
 export function transparencySeenFor(seenIn: readonly string[] | undefined, convId: string | undefined): boolean {

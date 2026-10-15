@@ -318,7 +318,7 @@ function MessageBubbleImpl({
         <TurnStatus
           message={message}
           onRegenerate={onRegenerate}
-          onErrorAction={onErrorAction}
+          onErrorAction={onErrorAction} conversationId={conversationId}
           credits={credits}
           creditsResetIso={creditsResetIso}
         />
@@ -386,7 +386,7 @@ function MessageBubbleImpl({
             content={message.content}
             conversationId={conversationId}
             onRegenerate={onRegenerate}
-            onFork={onFork}
+            onFork={onFork} onSeeModelView={onOpenTransparency}
           />
         )}
         {fileViewer}

@@ -87,10 +87,10 @@ export const protectedValueCount = conversationProtectedCount;
 /**
  * Should the card show?
  *
- * Four conditions, and the first is what makes it bearable: it shows
- * ONLY ONCE, never per conversation. A reassurance banner that comes back on every
- * new chat stops being read by the third time, and becomes the noise the user
- * learns to get rid of — the opposite of what the audit asks for.
+ * Four conditions. The first keeps it bearable: it shows ONCE PER CONVERSATION (the
+ * first redacted turn of each), dismissible — a once-ever card left every later
+ * conversation without the invitation, and a card on every turn becomes noise. After it,
+ * the permanent « Voir ce que le modèle a vu » under each masked reply carries the proof.
  *
  * It ALSO waits for the first reply: before it, the user has not yet seen anything
  * go out, and "voyez ce que le modèle a vu" points at nothing. A REFUSED turn is not a
@@ -108,4 +108,18 @@ export function shouldShowTransparencyCard(
   const settledReply = (conv.messages ?? []).some((m) => m.role === "assistant" && !m.pending && !m.error);
   if (!settledReply) return false;
   return transparencyPairs(conv).length > 0;
+}
+
+/** How many conversation ids `Settings.transparencySeenIn` keeps (oldest dropped). */
+const TRANSPARENCY_SEEN_CAP = 300;
+
+/** Has this conversation's card already been answered? */
+export function transparencySeenFor(seenIn: readonly string[] | undefined, convId: string | undefined): boolean {
+  return !!convId && !!seenIn?.includes(convId);
+}
+
+/** The list once `convId`'s card was opened or dismissed — idempotent, capped. */
+export function markTransparencySeen(seenIn: readonly string[] | undefined, convId: string): string[] {
+  const rest = (seenIn ?? []).filter((id) => id !== convId);
+  return [...rest, convId].slice(-TRANSPARENCY_SEEN_CAP);
 }

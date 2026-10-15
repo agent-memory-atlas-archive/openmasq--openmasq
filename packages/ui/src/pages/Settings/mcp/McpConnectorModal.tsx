@@ -11,7 +11,8 @@ import { McpLocalFields } from "./McpLocalFields";
 import { McpGrantedDirs } from "./McpGrantedDirs";
 import { apiKeyHelp } from "./mcpApiKeyHelp";
 import { connectorInfo } from "./mcpConnectorInfo";
-import { connectorErrorText } from "./connectorErrorText";
+import { McpErrorText } from "./parts/McpErrorText";
+import { findConnector } from "@openmasq/catalog/mcp";
 import { McpModalHead } from "./parts/McpModalHead";
 import { McpHint } from "./parts/McpHint";
 import { McpAccounts } from "./parts/McpAccounts";
@@ -109,6 +110,7 @@ export function McpConnectorModal({
   const t = useT();
   const info = connectorInfo(item.id, t);
   const c = item.connector;
+  const plan = c?.paidPlan ?? findConnector(item.id)?.paidPlan;
   // API-key connector (Exa/Tavily via URL query param; Fireflies via Bearer header)
   // that isn't connected/configured yet → show the key tutorial + input instead of
   // the raw URL field. A documented `apiKeyHelp` is required (else fall back to URL).
@@ -144,14 +146,10 @@ export function McpConnectorModal({
             </a>
           </div>
         )}
-        {/* The provider's message is TRANSLATED into a gesture (`connectorErrorText`); the
-            raw one stays in the debug log. Unknown ⇒ we keep the raw one, rather than
-            inventing a reassuring sentence about a failure we don't understand. */}
-        {item.error && (
-          <div className="mcp-modal-error">
-            {connectorErrorText(item.error, t)?.text ?? item.error}
-          </div>
-        )}
+        {/* The provider's message is TRANSLATED into a gesture (`connectorErrorText`); an
+            unknown one gets a plain « n'a pas abouti », the raw text folded under it. */}
+        {item.error && <McpErrorText raw={item.error} className="mcp-modal-error" />}
+        {plan && <p className="mcp-modal-note">{t.mcpTab.paidPlan(plan)}</p>}
         <McpHint item={item} />
 
         {/* A connector's OWN masking level — offered only once it is connected, because it

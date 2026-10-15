@@ -1,14 +1,19 @@
-import { PROVIDERS } from "@openmasq/llm";
+
+import { useMemo } from "react";
 import { MessageBubble } from "../../../../components/message/MessageBubble";
 import { estimateCharsOf } from "../../../../components/message/bubbleFold";
 import { VirtualMessageList } from "../../../../components/VirtualMessageList";
 import { findModelAny } from "../../../../prompt/models";
 import type { ChatViewModel } from "../model";
+import { redactedReplyIds } from "../redactedTurns";
+import { providerLabel } from "../../../../help/providerLabel";
 
 /** The windowed thread. Keyed per conversation so the windowing resets on open. */
 export function MessageThread({ m }: { m: ChatViewModel }) {
   const { p, view, scroll, gates, keys, intents } = m;
   const { conversation } = p;
+  const redactedReplies = useMemo(() => redactedReplyIds(view.messages), [view.messages]);
+  const openComparison = () => view.setShowComparison(true);
   return (
     <div className="messages-inner" ref={scroll.innerRef}>
       <VirtualMessageList
@@ -34,7 +39,7 @@ export function MessageThread({ m }: { m: ChatViewModel }) {
               provider={msgProvider}
               modelId={msgModel?.id ?? view.currentModel?.id}
               modelName={msgModel?.label ?? view.currentModel?.label}
-              vendor={msgProvider ? PROVIDERS[msgProvider].label : view.vendor}
+              vendor={msgProvider ? providerLabel(msgProvider, m.t) : view.vendor}
               vault={conversation?.redactionVault}
               kinds={view.spanKinds}
               displayTokens={view.displayTokens}
@@ -57,7 +62,9 @@ export function MessageThread({ m }: { m: ChatViewModel }) {
               linkPreviews={!!p.settings?.linkPreviews}
               onConnectIntegration={m.handleConnectIntegration}
               hideIntegrations={msg.id !== view.integrationHost}
-              onOpenTransparency={() => view.setShowComparison(true)}
+              // A user bubble's « N masqués · voir », and a reply's permanent « Voir ce que
+              // le modèle a vu » — the latter only under a turn that masked something.
+              onOpenTransparency={msg.role === "user" || redactedReplies.has(msg.id) ? openComparison : undefined}
               connectedMcpIds={m.connectedMcpIds}
               credits={p.credits}
               creditsResetIso={p.creditsResetIso}

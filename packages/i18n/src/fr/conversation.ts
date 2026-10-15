@@ -92,8 +92,7 @@ export const conversation = {
   clarify: "Préciser",
 
   writeConfirm: {
-    targetTip: (server, tool) => `${server} · ${tool}`,
-    alsoOtherChats: "Aussi dans mes autres conversations (jusqu'à la fermeture de l'app)",
+    alsoOtherChats: "Aussi dans mes autres conversations (jusqu'à la fermeture de l'application)",
   },
 
   skillTag: {
@@ -146,7 +145,7 @@ export const conversation = {
 
   bubble: {
     openAttachment: (name) => `Consulter ${name}`,
-    plotTip: "Génération d'un graphique (run_python)",
+    plotTip: "Demande de graphique. Le calcul se fait sur votre ordinateur.",
     plot: "Graphique",
     redactionFailedTip: "Le modèle de masquage a échoué pour ce message",
     redactedTip:
@@ -155,7 +154,7 @@ export const conversation = {
     protectedSee: "voir",
     autoRoutedTip:
       "Mode Auto : le modèle de cette réponse a été choisi automatiquement selon la tâche.",
-    quotaTip: "Quota du fournisseur de ce modèle",
+    quotaTip: "Nombre de demandes restantes sur ce modèle",
     reasoning: "Réflexion",
     imageWithheld: "Image retenue : elle peut contenir une valeur masquée",
     imageWithheldLoad: "Charger",
@@ -171,12 +170,12 @@ export const conversation = {
     clipped: (name, max) => `Seuls les ${max} premiers caractères de ${name} ont été envoyés au modèle.`,
     others: (n) => `${n} autre${n > 1 ? "s" : ""}`,
     weight: (pct, model) =>
-      `Les documents de cette conversation occupent environ ${pct} % de la fenêtre de ${model}. Chaque question les renvoie au modèle.`,
+      `Les documents de cette conversation remplissent environ ${pct} % de ce que ${model} peut lire d'un coup. Chaque question les lui renvoie.`,
     weightOver: (model) =>
-      `Les documents de cette conversation dépassent la fenêtre de ${model} : les plus anciens ne lui sont plus envoyés.`,
+      `Les documents de cette conversation dépassent ce que ${model} peut lire d'un coup : les plus anciens ne lui sont plus envoyés.`,
     dropped: (names, n) =>
-      `${names} ${n > 1 ? "ne sont plus visibles" : "n'est plus visible"} par le modèle : la conversation dépasse sa fenêtre de contexte.`,
-    roomHint: "Pour garder de la place, choisissez un modèle à plus grande fenêtre ou ouvrez une nouvelle conversation.",
+      `${names} ${n > 1 ? "ne sont plus lus" : "n'est plus lu"} par le modèle : la conversation est devenue trop longue pour lui.`,
+    roomHint: "Pour garder de la place, choisissez un modèle qui accepte des textes plus longs, ou ouvrez une nouvelle conversation.",
   },
 
   trace: {
@@ -199,29 +198,56 @@ export const conversation = {
   },
 
   tokens: {
-    tip: (total, input, output) => `${total} tokens (entrée ${input} · sortie ${output})`,
-    line: (input, output) => `↑ ${input} · ↓ ${output} tokens`,
+    line: (read, written) =>
+      `Volume de la conversation : ≈ ${read} page${read > 1 ? "s" : ""} lue${read > 1 ? "s" : ""} par le modèle, ≈ ${written} rédigée${written > 1 ? "s" : ""}`,
+    tip: "Le modèle relit toute la conversation à chaque message : ce volume grandit à chaque échange. Estimation.",
   },
 
   mark: {
     realValue: "valeur réelle",
     seenByModel: "vu par le modèle",
     seenByModelTip: "Valeur vue par le modèle",
-    shownAs: (token) => `Affiché ${token} dans l'app`,
+    shownAs: (token) => `À l'écran, ce faux apparaît comme ${token}`,
     realValueTip: "Valeur réelle. Envoyée non masquée seulement si vous la démasquez.",
     orgForced: "Imposé par l'organisation",
     scopeSend: "cet envoi",
     scopeConversation: "cette conversation",
     scopeMessage: "ce message",
     leaveClear: (scope) => `Démasquer · ${scope}`,
-    leaveClearKind: (scope) => `Démasquer la catégorie · ${scope}`,
     leaveClearTip:
       "Le modèle recevra la valeur réelle dans vos prochains envois. Remasquer protège les envois suivants, pas ceux déjà partis.",
     reMask: (scope) => `Remasquer · ${scope}`,
-    reMaskKind: (scope) => `Remasquer la catégorie · ${scope}`,
     reMaskTip: "Masquer à nouveau cette valeur",
-    remove: (scope) => `Retirer le masquage · ${scope}`,
-    removeTip: "Définitif : cette valeur n'est plus masquée et est envoyée telle quelle.",
+    revealOne: {
+      conversation: "Ne plus masquer ce terme dans cette conversation",
+      send: "Envoyer ce terme en clair avec ce message",
+    },
+    revealOneTip: {
+      conversation:
+        "Vos prochains messages enverront la vraie valeur au modèle. Les messages déjà envoyés ne changent pas.",
+      send: "Seul ce message enverra la vraie valeur au modèle. Le terme reste masqué ensuite.",
+    },
+    reMaskOne: "Masquer à nouveau ce terme",
+    revealKind: {
+      message: (label) => `Ne plus masquer la catégorie « ${label} » dans ce message`,
+      document: (label) => `Envoyer en clair toute la catégorie « ${label} » de ce document`,
+    },
+    revealKindTip: {
+      message:
+        "Les valeurs de ce type présentes dans ce message partiront en clair dans vos prochains messages. Une nouvelle valeur de ce type restera masquée.",
+      document: "Les valeurs de ce type, dans ce document, partiront en clair avec ce message.",
+    },
+    reMaskKind: {
+      message: (label) => `Masquer à nouveau la catégorie « ${label} » dans ce message`,
+      document: (label) => `Masquer à nouveau la catégorie « ${label} » dans ce document`,
+    },
+    notSensitive: "Ce n'est pas une donnée sensible",
+    notSensitiveTip:
+      "Pour une erreur de détection : le terme n'est plus masqué, dans ce document et dans toute la conversation. Pour le masquer à nouveau, sélectionnez-le.",
+    chipMasked: (category) => `${category} · masqué avant l'envoi. Cliquez pour l'envoyer en clair avec ce message.`,
+    chipClear: (category) => `${category} · envoyé en clair avec ce message. Cliquez pour le masquer à nouveau.`,
+    clearBadge: "en clair",
+    willBeReplaced: (category) => `${category} · remplacé par un faux avant l'envoi`,
     reportTip: "Ouvre « Votre avis » prérempli. N'y collez jamais la valeur réelle.",
     report: "Signaler une erreur",
     sheetLabel: "Masquage",

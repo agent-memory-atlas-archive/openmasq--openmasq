@@ -1,7 +1,4 @@
-import { PROVIDERS, type ProviderId } from "@openmasq/llm";
-import { BRAND } from "@openmasq/branding";
-import type { Messages } from "@openmasq/i18n";
-import { subscriptionsSold } from "../../send/platformAccess";
+import type { ProviderId } from "@openmasq/llm";
 
 /**
  * Shared provider presentation for the model pickers (the chat Finder + the Settings
@@ -30,15 +27,5 @@ export const PROVIDER_ORDER: ProviderId[] = [
   "openai-compat",
 ];
 
-/** The group header a provider shows: Scaleway (the subscription-only platform) wears
- *  the brand name; everyone else uses the registry label. */
-export function providerGroupLabel(pid: ProviderId, t: Messages): string {
-  const m = t.modelPicker;
-  if (pid === "scaleway") {
-    return subscriptionsSold() ? m.groupIncludedSub(BRAND.name) : m.groupIncludedAccount(BRAND.name);
-  }
-  if (pid === "claude-cli") return m.groupClaudeCli;
-  if (pid === "codex-cli") return m.groupCodexCli;
-  if (pid === "antigravity-cli") return m.groupAntigravityCli;
-  return PROVIDERS[pid].label;
-}
+/** Moved to `help/providerLabel.ts` (the one user-facing vocabulary); re-exported for the pickers. */
+export { providerGroupLabel } from "../../help/providerLabel";

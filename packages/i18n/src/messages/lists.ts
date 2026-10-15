@@ -224,6 +224,9 @@ export interface ListsMessages {
     addTerm: string;
     editTip: string;
     removeTip: string;
+    /** The deferred-delete toast: the term stays in the coffre (masked) until it expires. */
+    deleted: string;
+    undo: string;
     reveal: string;
     hide: string;
     /** The add / edit modal. `type` reads « Catégorie », the Réglages' word. */

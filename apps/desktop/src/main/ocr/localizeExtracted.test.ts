@@ -29,8 +29,12 @@ describe("an extraction failure, worded by its code", () => {
 
   it("a PDF past the page cap says its size, the cap and what to do, in both languages", () => {
     const f = file({ error: "x", errorCode: "pdf_too_many_pages", errorParams: { pages: 2400, max: 2000 } });
-    expect(localizeExtracted(f, fr).error).toBe("PDF trop long (2400 pages, 2000 maximum). Découpez-le en plusieurs parties.");
-    expect(localizeExtracted(f, en).error).toBe("PDF too long (2400 pages, 2000 max). Split it into smaller parts.");
+    expect(localizeExtracted(f, fr).error).toBe(
+      "PDF trop long (2400 pages, 2000 maximum). Enregistrez-le en plusieurs PDF plus petits, puis joignez-les un par un.",
+    );
+    expect(localizeExtracted(f, en).error).toBe(
+      "PDF too long (2400 pages, 2000 max). Save it as several smaller PDFs, then attach them one at a time.",
+    );
     expect(localizeExtracted({ ...f, errorParams: {} }, en).error).toBe("x");
   });
 
@@ -48,7 +52,7 @@ describe("an extraction failure, worded by its code", () => {
 
   it("a PDF too long to mask in full is refused in both languages, still blocked", () => {
     const f = file({ kind: "pdf", error: "x", errorCode: "too_long_to_mask", errorParams: { pages: 400 }, blocked: true });
-    expect(localizeExtracted(f, fr).error).toBe("Document trop long pour être masqué en entier (≈ 400 pages). Découpez-le en plusieurs parties.");
+    expect(localizeExtracted(f, fr).error).toBe(fr.refused.tooLongToMask(400));
     expect(localizeExtracted(f, en)).toMatchObject({ error: en.refused.tooLongToMask(400), blocked: true });
   });
 
@@ -75,10 +79,10 @@ describe("an extraction failure, worded by its code", () => {
 
 describe("the OCR markers, per language", () => {
   it("French keeps its wording", () => {
-    expect(fr.markers.pageTooLarge(4)).toBe("[… page 4 non océrisée : dimensions excessives]");
+    expect(fr.markers.pageTooLarge(4)).toBe("[… page 4 non lue : image trop grande]");
   });
 
   it("English", () => {
-    expect(en.markers.pageTooLarge(4)).toBe("[… page 4 not OCR'd: dimensions too large]");
+    expect(en.markers.pageTooLarge(4)).toBe("[… page 4 not read: image too large]");
   });
 });

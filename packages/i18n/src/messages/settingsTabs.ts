@@ -14,6 +14,9 @@ export interface AccountTabMessages {
   signedInFallback: string;
   signedInHint: (brand: string) => string;
   signOut: string;
+  /** The confirm before signing out (`ConfirmDialog`). */
+  signOutConfirmTitle: string;
+  signOutConfirmBody: string;
   createOrgTip: string;
   createOrg: string;
   createOrgHint: string;
@@ -39,6 +42,9 @@ export interface AccountTabMessages {
   /** The settings rail: back, and the « Avancé » fold. */
   backToChats: string;
   advanced: string;
+  /** The rail's « Avancé » toggle: what it shows or hides. */
+  advancedShow: string;
+  advancedHide: string;
 }
 
 export interface PrivacyTabMessages {

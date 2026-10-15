@@ -12,10 +12,13 @@ import type { Messages } from "@openmasq/i18n";
  * user's language and we name the action. The raw text isn't lost: it stays in the
  * debug journal, where it serves whoever is diagnosing.
  *
- * ⚠️ An UNKNOWN family returns `null`: the caller then shows the original message.
- * Making up a reassuring sentence about a failure we don't understand would be worse than
- * raw English — that's the "a real failure gets said" rule.
+ * An UNKNOWN failure is still SAID — « La connexion n'a pas abouti. Réessayez ; si ça
+ * continue, signalez-le. » — never dressed up as a success, and its raw text stays one click
+ * away (`detail`, behind « Détail technique »): that is what a support conversation needs. A
+ * sentence the desktop main already wrote for the user (`connectorOwnSentence.ts`) is shown
+ * as it is. Only an EMPTY message returns `null`.
  */
+import { isOwnSentence, stripIpcEnvelope } from "./connectorOwnSentence";
 
 /** Dead authorization: the one case the user fixes themselves, in one click. */
 const EXPIRED_RE =
@@ -77,25 +80,37 @@ export interface ConnectorErrorText {
   text: string;
   /** `true` when reconnecting IS the action — the UI then emphasizes it. */
   reconnect: boolean;
+  /** The raw message, for « Détail technique » — absent when `text` already IS it. */
+  detail?: string;
 }
 
-/** Renders the user-facing text, or `null` if unknown (⇒ keep the raw one). */
+/** Microsoft's refusals (`AADSTS…`, or main's `microsoftRefused` around one): not a family
+ *  of their own for measurement — the user still reads ONE plain sentence. */
+const MICROSOFT_RE = /AADSTS\d+|connexion microsoft refusée|microsoft sign-in refused/i;
+
+/** Renders the user-facing text, or `null` for an empty message. */
 export function connectorErrorText(
   raw: string | undefined | null,
   t: Messages,
 ): ConnectorErrorText | null {
-  const family = connectorErrorFamily(raw);
-  if (!family) return null;
+  const clean = stripIpcEnvelope(raw ?? "");
+  if (!clean) return null;
   const e = t.mcpTab.errors;
-  const text: Record<ConnectorErrorFamily, string> = {
-    apikey: e.apikey,
-    unsupported: e.unsupported,
-    missing: e.missing,
-    cancelled: e.cancelled,
-    rate_limit: e.rateLimit,
-    forbidden: e.forbidden,
-    expired: e.expired,
-    network: e.network,
-  };
-  return { text: text[family], reconnect: RECONNECTS.has(family) };
+  const family = connectorErrorFamily(clean);
+  if (family) {
+    const text: Record<ConnectorErrorFamily, string> = {
+      apikey: e.apikey,
+      unsupported: e.unsupported,
+      missing: e.missing,
+      cancelled: e.cancelled,
+      rate_limit: e.rateLimit,
+      forbidden: e.forbidden,
+      expired: e.expired,
+      network: e.network,
+    };
+    return { text: text[family], reconnect: RECONNECTS.has(family), detail: clean };
+  }
+  if (isOwnSentence(clean)) return { text: clean, reconnect: false };
+  if (MICROSOFT_RE.test(clean)) return { text: t.mcpTab.errorMicrosoft, reconnect: false, detail: clean };
+  return { text: t.mcpTab.errorGeneric, reconnect: false, detail: clean };
 }

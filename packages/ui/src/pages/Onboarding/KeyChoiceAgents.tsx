@@ -1,9 +1,10 @@
-import { PROVIDERS } from "@openmasq/llm";
+
 import { useRef } from "react";
 import { ModelLogo, Switch } from "../../components/brand";
 import { AgentSetupRows, type AgentConnectedCause } from "../../containers/agentSetup/AgentSetupRows";
 import { useT } from "../../i18n";
 import type { AgentOptIn } from "../../hooks/useAgentOptIns";
+import { providerLabel } from "../../help/providerLabel";
 
 /**
  * The panel under the « Mon abonnement Claude Code / Codex » card: one row per agent
@@ -55,7 +56,7 @@ export function KeyChoiceAgents({
             </div>
             <AgentSetupRows
               cli={a.cli}
-              label={PROVIDERS[a.pid].label}
+              label={providerLabel(a.pid, t)}
               onConnected={(_s, cause) => enableConnected(a, cause)}
             />
           </div>

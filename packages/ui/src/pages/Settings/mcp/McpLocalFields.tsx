@@ -80,7 +80,9 @@ export function McpLocalFields({
       {entry.note && (
         <div className="mcp-rownote">
           {entry.note}
-          {entry.setupUrl && (
+          {/* A setup guide only for a SPAWNED server: an in-process one has nothing to set
+              up, and the link pointed at a developer repository. */}
+          {entry.setupUrl && !entry.inProcess && (
             <>
               {" "}
               <a href={entry.setupUrl} target="_blank" rel="noreferrer">

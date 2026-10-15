@@ -1,8 +1,5 @@
 {
-  "apps/desktop/src/main/db/schema.ts::/** Embedding dimension. Must match your embedding model (OpenAI 3-small = 1536). */": "/** Embedding dimension. Must match your embedding model (OpenAI 3-small = 1536). */",
-  "apps/desktop/src/main/mcp/connectors/index.ts::* prefixes (kept in sync with `credGroupOf`'s `/^(gmail|google-)/`). */": "*  prefixes (kept in sync with `credGroupOf`'s `/^(gmail|google-)/`). */",
   "apps/desktop/src/preload/browserStealth.ts::// permissions: Notification query must agree with Notification.permission — a": "// permissions: Notification query must agree with Notification.permission — a",
-  "apps/mcp-broker/src/oauth/redirectUri.ts::* port. Everything else must match a registered URI EXACTLY (no prefix tricks).": "* port. Everything else must match a registered URI EXACTLY (no prefix tricks).",
   "packages/catalog/src/mcp/authTag.ts::// modal only shows \"Mes clés\" here, and the chip must agree with the buttons.": "// modal only shows \"Mes clés\" here, and the chip must agree with the buttons.",
   "packages/llm/src/models/openrouterCatalog.ts::* consume it and MUST agree (rule 9): the desktop merges it into the picker's registry": "* consume it and MUST agree (rule 9): the desktop merges it into the picker's registry",
   "packages/redact/scripts/gen-places.ts::// Countries we ship fakes for (extend as tables are added). Keep in sync with": "// Countries we ship fakes for (extend as tables are added). Keep in sync with",

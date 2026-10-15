@@ -258,9 +258,10 @@ export function MemoryView({
                 )}
               </div>
               <div className="cv-eyebrow om-mem-stage-count">
+                {/* The count names FICHES: hubs and the root are drawing, not content. */}
                 {clustered
-                  ? t.lists.memory.stageCountSemantic(clustered.clusters.length, graph.nodes.length)
-                  : t.lists.memory.stageCount(graph.nodes.length)}
+                  ? t.lists.memory.stageCountSemantic(clustered.clusters.length, memoryData.cards.length)
+                  : t.lists.memory.stageCount(memoryData.cards.length)}
               </div>
               {panel}
             </div>

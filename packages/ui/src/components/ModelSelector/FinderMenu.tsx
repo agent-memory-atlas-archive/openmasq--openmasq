@@ -1,4 +1,4 @@
-import { PROVIDERS, type ModelInfo } from "@openmasq/llm";
+import type { ModelInfo } from "@openmasq/llm";
 import { modelPriceTier } from "../../prompt/modelFilter";
 import type { UnavailableReason } from "../../send/modelAvailability";
 import { FamilyLogo, SearchIcon, SettingsIcon } from "../brand";
@@ -172,7 +172,7 @@ export function FinderMenu({
                   {/* The provider's REAL logo (the family key equals the provider id, so
                       familyKey={pid} resolves OpenAI→ChatGPT, Scaleway→Scaleway, OpenRouter
                       Zen→its mark, Local→Ollama…; OpenRouter falls back to a monogram). */}
-                  <FamilyLogo familyKey={pid} label={PROVIDERS[pid].label} size={18} />
+                  <FamilyLogo familyKey={pid} label={providerGroupLabel(pid, t)} size={18} />
                   <span className="model-finder-label">{providerGroupLabel(pid, t)}</span>
                   <span className="model-finder-count">{count}</span>
                 </button>

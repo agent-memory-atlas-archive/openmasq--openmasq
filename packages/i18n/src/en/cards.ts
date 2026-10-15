@@ -22,8 +22,11 @@ export const cards = {
     open: "See what the model saw",
     title: (n) => `${n} item${n === 1 ? "" : "s"} masked in this exchange`,
     theModel: "The model",
-    desc: (modelName) =>
-      `${modelName} never received these values. They were replaced with substitutes before sending, then restored in the reply you are reading. Open the comparison to see your message and what was actually sent, side by side.`,
+    desc: (modelName, n) =>
+      (n === 1
+        ? `${modelName} never received this value. It was replaced with a substitute value before sending, then restored in the reply you are reading.`
+        : `${modelName} never received these values. They were replaced with substitute values before sending, then restored in the reply you are reading.`) +
+      " Open the comparison to see your message and what was actually sent, side by side.",
   },
 
   memoryProposal: {
@@ -46,7 +49,8 @@ export const cards = {
 
   integration: {
     manySuggested: (n) => `${n} suggested connectors`,
-    secureNote: "Secure connection · encrypted access · revoke any time",
+    secureNote:
+      "The model only sees masked values; the service gets the real ones when it acts. Disconnect any time.",
     connectTools: "Connect your tools to continue",
     tileConnected: (name) => `${name} · connected`,
     tileConnect: (name) => `Connect ${name}`,
@@ -74,8 +78,11 @@ export const cards = {
       n === 1
         ? "1 file will be attached and sent unmasked:"
         : `${n} files will be attached and sent unmasked:`,
-    details: (tool) => `Technical details (${tool})`,
-    scopeNote: (tool) => `Once allowed, “${tool}” will not ask again in this conversation.`,
+    details: "Technical details",
+    toolId: (tool) => `Technical name of the action: ${tool}`,
+    scopeNote: "If you allow it, this action won't be asked again in this conversation.",
+    scopeFloor:
+      "Every send, attachment or possible leak is asked each time, even after a first approval.",
     navExfil: {
       eyebrow: "Web browsing",
       title: (host) => `Open ${host}?`,

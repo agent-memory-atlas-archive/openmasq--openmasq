@@ -2,6 +2,7 @@ import { AnimatePresence } from "framer-motion";
 import { PROVIDERS, type ProviderId } from "@openmasq/llm";
 import { ApiKeyModal, ModelAccessModal } from "../../../containers/modals";
 import { useT } from "../../../i18n";
+import { providerLabel } from "../../../help/providerLabel";
 
 /**
  * The two modals the Modèles tab can open — the free-models explainer (from a card's
@@ -49,7 +50,7 @@ export function ModelsTabModals({
         {keyProvider && (
           <ApiKeyModal
             provider={keyProvider}
-            label={PROVIDERS[keyProvider].label}
+            label={providerLabel(keyProvider, t)}
             keyUrl={PROVIDERS[keyProvider].keyUrl}
             saveLabel={t.common.save}
             hasKey={!!keyConfigured?.has(keyProvider)}

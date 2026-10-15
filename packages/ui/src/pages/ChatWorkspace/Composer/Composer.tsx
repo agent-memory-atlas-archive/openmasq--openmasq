@@ -43,6 +43,7 @@ export function Composer(p: ComposerProps) {
   const [previewCid, setPreviewCid] = useState<string | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [markMenu, setMarkMenu] = useState<MarkMenu | null>(null);
+  const [chipFocus, setChipFocus] = useState(0);
   // Resolved LIVE (by cid) so a re-run's fresh redaction shows in the open modal.
   const preview = previewCid ? attachments.find((a) => a.cid === previewCid) ?? null : null;
 
@@ -147,7 +148,7 @@ export function Composer(p: ComposerProps) {
             value={input}
             onChange={pasteUndo.onInlineChange}
             segments={segments}
-            placeholder={t.composer.placeholder(BRAND.name)}
+            placeholder={t.menus.composerHints.placeholder(BRAND.name)}
             grow={200}
             onKeyDown={onKeyDown}
             onMouseUp={onTaMouseUp}
@@ -157,6 +158,7 @@ export function Composer(p: ComposerProps) {
         {markMenu && (
           <MarkKeepMenu
             {...markMenu}
+            kind={detection.items.find((i) => i.value === chipValueFor(detection.items, markMenu.value))?.kind}
             onKeep={() => toggleKeep(chipValueFor(detection.items, markMenu.value))}
             onClose={() => setMarkMenu(null)}
           />
@@ -181,7 +183,9 @@ export function Composer(p: ComposerProps) {
         )}
       </div>
       <UtilityRiskNote util={utilRisk} t={t} />
-      {detection.items.length > 0 && <DetectChips items={detection.items} keepSet={keepSet} onToggle={toggleKeep} />}
+      {detection.items.length > 0 && (
+        <DetectChips items={detection.items} keepSet={keepSet} onToggle={toggleKeep} focusSignal={chipFocus} />
+      )}
       <div className="composer-row">
         {/* With no conversation yet it shows the new-chat default, never a blank picker. */}
         <ModelSelector
@@ -202,17 +206,20 @@ export function Composer(p: ComposerProps) {
           }
         />
         {p.redactLevel && <ComposerRedactButton api={p.redactLevel} />}
-        {queued && <span className="protected-pill sm">{t.composer.sendQueued}</span>}
-        {/* Idle-only count; the LIVE state (running → done) is shown IN the send button. */}
+        {queued && <span className="protected-pill sm">{t.menus.composerHints.sendQueued}</span>}
+        {/* Idle-only count; the LIVE state (running → done) is shown IN the send button.
+            A click unfolds and focuses the chips: the count is also the way to them. */}
         {!busy && !showDone && scanState.kind === "count" && (
-          <span
+          <button
+            type="button"
             key="count"
-            className={`protected-pill sm kx-pill-in${scanState.partial ? " partial" : ""}`}
-            title={scanState.hint}
+            className={`protected-pill sm kx-pill-in is-button${scanState.partial ? " partial" : ""}`}
+            title={scanState.hint ?? t.menus.composerHints.countTip}
+            onClick={() => setChipFocus((n) => n + 1)}
           >
             <ShieldIcon size={12} />
             {scanState.label}
-          </span>
+          </button>
         )}
         <div className="flex-spacer" />
         {/* ONE door for everything that joins the message; "/" stays the keyboard way to the compétences. */}

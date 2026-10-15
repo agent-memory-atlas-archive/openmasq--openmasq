@@ -13,12 +13,15 @@
  *  - **connecteurs** — the services one plugs in. Never *serveurs MCP* on a title, an
  *    eyebrow or a navigation label (« MCP » stays where it is the technical term: the
  *    custom-server form, an advanced hint).
+ *  - **valeur de substitution** — what the model receives instead. Never the bare noun
+ *    *substitut(s)* (« substitution » itself stays: « date de substitution »).
  */
 export const RETIRED_VOCAB: readonly { word: string; replacement: string; pattern: RegExp }[] = [
   { word: "workflow", replacement: "routine", pattern: /\bworkflows?\b/i },
   { word: "paramètres", replacement: "réglages", pattern: /\bparam[èe]tres?\b/i },
   { word: "redact", replacement: "masquage", pattern: /redact/i },
   { word: "serveurs MCP", replacement: "connecteurs", pattern: /\bserveurs?\s+MCP\b/i },
+  { word: "substitut", replacement: "valeur de substitution", pattern: /\bsubstituts?\b/i },
 ];
 
 /**
@@ -47,12 +50,12 @@ export const VOCAB_EXEMPT_FILES: readonly { file: string; why: string }[] = [
 
 /** Every string literal of a TypeScript source, comments and code excluded. Literals
  *  that are bare identifiers (`"redactTypes"` in a `satisfies`) are code, and skipped;
- *  so are ⌘K `keywords`, whose whole job is to catch the words people still type. */
+ *  so are ⌘K `keywords` (and the settings entries' `kw`), whose whole job is to catch the words people still type. */
 export function copyLiterals(source: string): string[] {
   // Comments first: a doc header quoting `@openmasq/redact` in backticks is not copy.
   const withoutComments = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
   const withoutKeywords = withoutComments.replace(
-    /\bkeywords:\s*(?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`[^`]*`)/g,
+    /\b(?:keywords|kw):\s*(?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`[^`]*`)/g,
     "",
   );
   const out: string[] = [];

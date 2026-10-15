@@ -7,7 +7,7 @@
 import type { Messages } from "../messages";
 
 export const onboarding = {
-  skip: "Skip",
+  skip: "Skip the introduction",
   back: "Back",
   next: "Next",
   start: "Start",
@@ -34,15 +34,16 @@ export const onboarding = {
     eyebrow: "MODEL ACCESS",
     titleServed: "A subscription, or your key",
     titleIncluded: "Your account, or your key",
-    titleUnserved: "Your key, or a local model",
+    titleUnserved: "Your access to an AI model",
     subServed:
       "You can change this later.",
     subUnserved:
-      "Your Claude Code / Codex subscription or an API key. You can change this later.",
+      "An access key is all you need to start. A model installed on your computer (Ollama, LM Studio…) can be connected too, later, in Settings → Models.",
     titleAgents: "Your subscription, or a key",
     subAgents:
-      "With Claude Code or Codex, your messages go through the subscription you already pay for, no key. Otherwise, an API key.",
-    required: "Add an API key or switch on your subscription to continue: without access, no model can answer you.",
+      "With your Claude or ChatGPT subscription, your messages go through what you already pay for, no key. Otherwise, an access key.",
+    required:
+      "Pick one of the options above to continue: without access to a model, nothing can answer you.",
   },
 
   ready: {
@@ -51,9 +52,9 @@ export const onboarding = {
     subServed: (brand) =>
       `Masking needs no key and applies from your first message. A free model is already selected and works with your ${brand} account.`,
     subUnserved:
-      "Masking needs no account and applies from your first message. You only need access to a model: an API key, a local server, or your CLI.",
+      "Masking applies from your first message, with no account. To get answers, you need access to a model: an access key, your Claude or ChatGPT subscription, or a model installed on your computer. You set it all up in Settings → Models.",
     subAgent: "Your messages go through your subscription, masked before each send.",
-    subKey: "Your messages go out with your API key, masked before each send.",
+    subKey: "Your messages go out with your access key, masked before each send.",
     subLocal: "Your messages stay on your computer, masked before each send.",
     modelHint: "The model name is under the message box: click it to switch.",
     slashHint: {
@@ -84,16 +85,16 @@ export const onboarding = {
       sub: "No key to manage: included models run under your account, most of them hosted in France.",
     },
     ownKey: {
-      title: "My own API key",
-      sub: "An OpenRouter key gives access to every model, including free ones, billed to your account. Get one in a click. It stays encrypted on this machine.",
+      title: "My own access key",
+      sub: "OpenRouter is a service that gives access to many models (ChatGPT, Claude, Mistral…), including free ones. You get its key in one click, and it stays encrypted on this computer. Paid use, if you choose it, is billed by OpenRouter.",
     },
     agent: {
-      title: "My Claude Code / Codex subscription",
-      sub: "Uses the subscription you already pay for, no key. The app installs and connects Claude Code or Codex for you if needed.",
+      title: "My existing subscription (Claude, ChatGPT…)",
+      sub: "Uses the subscription you already pay for, no key. If needed, the app installs and connects the matching app for you (Claude Code, Codex…).",
       hint: "Each message counts against your subscription. Its quota is shown in Settings → Models.",
     },
     recommended: "recommended",
-    otherProvider: "Another provider",
+    otherProvider: "Another service (OpenAI, Mistral…)",
     savedKey: (provider) => `${provider} key saved. You're ready.`,
     connect: "Get a key for free",
     connecting: "Waiting for approval in your browser…",

@@ -12,6 +12,7 @@ import { buildModelLatencyEvent } from "../modelLatency";
 import { redactRefusedTurn } from "../refusedTurnRedaction";
 import { noteOutcome, outcomeOfPatch, type SendRefusal, type SendResult } from "../sendResult";
 import type { SendMessageDeps, SendOptions } from "./types";
+import { refusalFailureKind } from "../../state/errors/failureKind";
 
 export type Dbg = (e: Parameters<typeof pushDebug>[0]) => string;
 
@@ -213,7 +214,14 @@ export function setupTurn(
       host, settings, orgForced: d.orgProfileRef.current?.forcedCategories,
       conv, text, userMsgId: userMsg.id, patchConversation,
     });
-    updateAssistant({ pending: false, error: true, errorText, ...(errorAction ? { errorAction } : {}) });
+    const errorKind = refusalFailureKind(refusal);
+    updateAssistant({
+      pending: false,
+      error: true,
+      errorText,
+      ...(errorAction ? { errorAction } : {}),
+      ...(errorKind ? { errorKind } : {}),
+    });
   };
 
   return {

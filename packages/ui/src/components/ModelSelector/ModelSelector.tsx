@@ -6,6 +6,7 @@ import { AUTO_MODEL_LABEL, isAutoModelId } from "../../send/autoRoute";
 import { ChevDownIcon, ModelLogo, ZapIcon } from "../brand";
 import { FinderMenu, type MenuPos } from "./FinderMenu";
 import { SimpleMenu } from "./SimpleMenu";
+import { useT } from "../../i18n";
 
 const MARGIN = 12;
 const GAP = 8;
@@ -54,6 +55,7 @@ interface Props {
  * search live in `FinderMenu`; this owns only the chip and open/close.
  */
 export function ModelSelector({ value, onChange, disabled, allowedModelIds, unavailableModels, onAccessInfo, onOpenModelSettings, simple, onSimpleChange, favoriteModels, onToggleFavorite, defaultModelId, onSetDefault }: Props) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   // Fixed-viewport placement, measured on open. The menu is PORTALED to <body> (below) so
@@ -104,8 +106,8 @@ export function ModelSelector({ value, onChange, disabled, allowedModelIds, unav
     // behind it drifts the fixed menu from its chip. So ignore scrolls that originate
     // inside the portaled `.model-finder`.
     const onScroll = (e: Event) => {
-      const t = e.target;
-      if (t instanceof Element && t.closest(".model-finder")) return;
+      const target = e.target;
+      if (target instanceof Element && target.closest(".model-finder")) return;
       setOpen(false);
     };
     const onResize = () => setOpen(false);
@@ -124,6 +126,10 @@ export function ModelSelector({ value, onChange, disabled, allowedModelIds, unav
       <button
         className={`model-chip ${open ? "open" : ""}`}
         disabled={disabled}
+        title={t.modelPicker.chooseModel}
+        aria-label={`${t.modelPicker.chooseModel} · ${auto ? AUTO_MODEL_LABEL : current.label}`}
+        aria-haspopup="menu"
+        aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
         {auto ? (

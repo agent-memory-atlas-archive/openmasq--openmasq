@@ -135,13 +135,13 @@ export const BASE: {
   },
   {
     key: "secret",
-    label: "Clés & secrets",
+    label: "Mots de passe et codes secrets",
     detail:
       "Clés d'accès (OpenAI, AWS, Stripe, GitHub, Slack…), jetons de connexion, clés privées, mots de passe, codes OTP/PIN, portefeuilles crypto.",
   },
   {
     key: "apikey",
-    label: "Chaînes type clé (générique)",
+    label: "Autres codes qui ressemblent à un mot de passe",
     detail:
       "Heuristique large : toute chaîne qui RESSEMBLE à une clé (mélange lettres/chiffres long). Active à tous les niveaux de protection — une clé manquée part en clair. En contrepartie elle attrape aussi des références produit inoffensives.",
   },

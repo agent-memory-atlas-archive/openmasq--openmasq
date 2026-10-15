@@ -3,6 +3,7 @@ import {
   ActivityIcon,
   BrowserIcon,
   CardIcon,
+  ClockIcon,
   GridIcon,
   LayersIcon,
   RefreshIcon,
@@ -24,8 +25,8 @@ import { tabAvailable, type SettingsCapabilities, type SettingsTabId as TabId } 
  * `main` is what a rail shows by default; `advanced` sits behind one « Avancé » toggle.
  *
  * The split is not by importance but by ANSWERABILITY: a `main` tab answers « où je règle
- * ceci ? », an `advanced` one is either a read-only VIEW (Audit, Usage, Versions — nothing
- * to set) or a capability most accounts never touch. Eleven equal entries made the four
+ * ceci ? » or « où je vois ce qui a été masqué / ce que je paie ? », an `advanced` one is a
+ * read-only VIEW (Usage, Versions — nothing to set) or a capability most accounts never touch. Eleven equal entries made the four
  * that matter as hard to find as the seven that don't; ⌘K reaches every one of them
  * either way (`searchSettings`).
  */
@@ -40,11 +41,14 @@ export type SettingsGroup = "main" | "advanced";
 const SETTINGS_NAV_SHAPE: { id: TabId; icon: ReactNode; group: SettingsGroup }[] = [
   { id: "account", icon: <UserIcon size={19} />, group: "main" },
   { id: "privacy", icon: <ShieldIcon size={19} />, group: "main" },
+  // The history of what was masked sits RIGHT under the setting it proves: it is the
+  // document a professional is asked for, never a capability to hide.
+  { id: "audit", icon: <ClockIcon size={19} />, group: "main" },
   { id: "models", icon: <ZapIcon size={19} />, group: "main" },
   { id: "mcp", icon: <GridIcon size={19} />, group: "main" },
-  { id: "billing", icon: <CardIcon size={19} />, group: "advanced" },
+  // Only drawn on a build that sells (host.billing, `tabAvailable`): the gate is unchanged.
+  { id: "billing", icon: <CardIcon size={19} />, group: "main" },
   { id: "usage", icon: <ActivityIcon size={19} />, group: "advanced" },
-  { id: "audit", icon: <ShieldIcon size={19} />, group: "advanced" },
   { id: "browser", icon: <BrowserIcon size={19} />, group: "advanced" },
   { id: "sync", icon: <RefreshIcon size={19} />, group: "advanced" },
   { id: "versions", icon: <LayersIcon size={19} />, group: "advanced" },

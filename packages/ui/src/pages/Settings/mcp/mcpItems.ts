@@ -262,7 +262,7 @@ export function matchesSearch(item: McpItem, needle: string): boolean {
   return item.name.toLowerCase().includes(n) || item.desc.toLowerCase().includes(n);
 }
 
-/** Not connected AND not offered in one click yet: the card says « Bientôt », sorts last. */
+/** Not connected AND not offered in one click yet: the card says « Bientôt en un clic ». */
 export function itemComingSoon(item: McpItem): boolean {
   return !item.connected && !!item.connector && isComingSoon(item.connector);
 }

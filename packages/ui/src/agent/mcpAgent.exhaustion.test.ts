@@ -32,11 +32,11 @@ describe("exhaustionMessage — une PANNE d'outil n'accuse pas le modèle", () =
         distinctInputs: 6,
       },
     }, fr);
-    expect(msg).toContain("sur des entrées différentes");
-    expect(msg).toContain("C'est l'outil qui ne répond pas");
+    expect(msg).toContain("des demandes différentes");
+    expect(msg).toContain("Le problème vient de l'outil");
     expect(msg).toContain("404");
     // The three false pieces of advice are gone.
-    expect(msg).not.toContain("relançait le même appel");
+    expect(msg).not.toContain("répétait la même demande");
     expect(msg).not.toContain("modèle plus capable");
     expect(msg).not.toContain("propose bien cette action");
   });
@@ -46,13 +46,13 @@ describe("exhaustionMessage — une PANNE d'outil n'accuse pas le modèle", () =
       ...base,
       repeatedFailure: { tool: "gmail__get_message", error: "404 notFound", distinctInputs: 1 },
     }, fr);
-    expect(msg).toContain("sur le même appel");
-    expect(msg).not.toContain("entrées différentes");
+    expect(msg).toContain("sur la même demande");
+    expect(msg).not.toContain("demandes différentes");
   });
 
   it("sans panne, garde le diagnostic « le modèle tourne en rond »", () => {
     const msg = exhaustionMessage(base, fr);
-    expect(msg).toContain("relançait le même appel");
+    expect(msg).toContain("répétait la même demande");
   });
 });
 
@@ -72,7 +72,7 @@ describe("exhaustionMessage", () => {
       repeatedResult: new Map([["stripe__stripe_api_search", 5]]),
       succeeded: new Set(["stripe__stripe_api_search"]),
     }, fr);
-    expect(msg).toContain("Limite d'appels d'outils atteinte (8 tours, 7 appels)");
+    expect(msg).toContain("Arrêté après 7 actions et 8 étapes");
     // The tool is NAMED, but in the product's language: `stripe__stripe_api_search`
     // designates nothing to whoever reads this message (13/08).
     expect(msg).toContain("(Stripe)");
@@ -88,8 +88,8 @@ describe("exhaustionMessage", () => {
       repeatedResult: new Map([["stripe__stripe_api_search", 2]]),
       succeeded: new Set(["stripe__stripe_api_search"]),
     }, fr);
-    expect(msg).toContain("Boucle d'outils interrompue");
-    expect(msg).not.toContain("Limite d'appels d'outils atteinte");
+    expect(msg).toContain("le modèle tournait en rond");
+    expect(msg).not.toContain("sans réponse finale");
     expect(msg).toMatch(/3 fois/); // repeats(2) + 1
   });
 
@@ -99,7 +99,7 @@ describe("exhaustionMessage", () => {
       callCounts: new Map([["webflow__update", 2]]),
       argErrored: new Set(["webflow__update"]),
     }, fr);
-    expect(msg).toContain("appel valide");
+    expect(msg).toContain("utiliser correctement");
     expect(msg).toContain("Mise à jour");
     expect(msg).not.toContain("webflow__update");
   });
@@ -111,7 +111,7 @@ describe("exhaustionMessage", () => {
       argErrored: new Set(["t"]),
       succeeded: new Set(["t"]),
     }, fr);
-    expect(msg).not.toContain("appel valide");
+    expect(msg).not.toContain("utiliser correctement");
     expect(msg).toContain("sans parvenir à une réponse");
   });
 
@@ -128,7 +128,7 @@ describe("exhaustionMessage", () => {
     expect(msg).toContain("20 pages consultées");
     expect(msg).toContain("précisez la cible");
     expect(msg).not.toMatch(/modèle plus capable/);
-    expect(msg).not.toContain("Boucle d'outils interrompue");
+    expect(msg).not.toContain("le modèle tournait en rond");
   });
 
   it("nomme l'outil martelé quand ce n'est PAS une lecture web", () => {
@@ -140,7 +140,7 @@ describe("exhaustionMessage", () => {
       hammered: { tool: "posthog__exec", web: false },
     }, fr);
     // Named — in the product's language, never in `snake_case` (13/08).
-    expect(msg).toContain("8 appels à **Exécution** (PostHog)");
+    expect(msg).toContain("**Exécution** (PostHog) a été utilisé 8 fois");
     expect(msg).not.toContain("posthog__exec");
     expect(msg).toContain("modèle plus capable"); // the usual advice stays
   });

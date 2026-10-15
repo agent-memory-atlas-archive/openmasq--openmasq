@@ -4,6 +4,7 @@ import { McpToolsModal } from "../../../containers/modals";
 import { ByoKeysModal } from "../byo";
 import { McpConnectorModal } from "./McpConnectorModal";
 import { groupPeers } from "./credGroup";
+import { useRemovalConfirm } from "./parts/useRemovalConfirm";
 import type { useMcpConnectors } from "./useMcpConnectors";
 import type { PrivacyLevel } from "../../../privacy/privacyLevel";
 import type { ConnectorLevel } from "../../../privacy/connectorMasking";
@@ -38,6 +39,17 @@ export function McpModals({ c, masking }: { c: McpConnectors; masking?: MaskingP
     addAccountApiKey, setDirs, byoConnector, byoItem, byoId, byoAdd, items, inspecting,
   } = c;
 
+  // Browser → full opt-out (stop the process + clear the flag). An account-bearing
+  // connector (direct OR remote) removes the account (drops its token/oauth/key) so
+  // nothing silently reconnects; one without accounts (custom/local) just disconnects.
+  const removal = useRemovalConfirm((kind, serverId) => {
+    const item = items.find((i) => i.serverId === serverId || i.accounts?.some((a) => a.serverId === serverId));
+    if (kind === "forget") void remove(serverId);
+    else if (item?.kind === "browser") void disableBrowser();
+    else if (item?.accounts?.length) void remove(serverId);
+    else void disconnect(serverId);
+  });
+
   return (
     <>
       <AnimatePresence>
@@ -60,18 +72,9 @@ export function McpModals({ c, masking }: { c: McpConnectors; masking?: MaskingP
             onConnectDirect={() => connectDirect(openItem, { mode: MANAGED_CRED_MODE })}
             onConnectLocal={(env, params) => connectLocal(openItem, env, params)}
             onConnectBrowser={host.mcp?.enableBrowser ? () => void enableBrowser() : undefined}
-            onDisconnect={(serverId) =>
-              // Browser → full opt-out (stop the process + clear the flag). An
-              // account-bearing connector (direct OR remote) removes the account
-              // (drops its token/oauth/key) so nothing silently reconnects; a
-              // connector without accounts (custom/local) just disconnects.
-              openItem.kind === "browser"
-                ? void disableBrowser()
-                : openItem.accounts?.length
-                  ? remove(serverId)
-                  : disconnect(serverId)
-            }
-            onRemove={() => remove(openItem.serverId)}
+            // Both ASK first (`useRemovalConfirm`); the removal itself runs below.
+            onDisconnect={(serverId) => removal.ask("disconnect", serverId, openItem.name)}
+            onRemove={() => removal.ask("forget", openItem.serverId, openItem.name)}
             onByo={() => {
               setByoId(openItem.id);
               setByoAdd(false);
@@ -142,6 +145,8 @@ export function McpModals({ c, masking }: { c: McpConnectors; masking?: MaskingP
           />
         )}
       </AnimatePresence>
+      {/* After the sheet in the DOM: the question stacks OVER the connector it is about. */}
+      <AnimatePresence>{removal.dialog}</AnimatePresence>
     </>
   );
 }

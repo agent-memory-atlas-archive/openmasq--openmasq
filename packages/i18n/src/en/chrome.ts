@@ -13,8 +13,10 @@ export const chrome = {
   search: "Search",
   searchShortcut: "Search (⌘K)",
   memoryFresh: "Memory updated",
-  privacyReportTip: (n) => `${n} item(s) masked · Privacy report`,
-  privacyReport: "Privacy report",
+  privacyReportTip: (n) =>
+    `${n.toLocaleString("en-US")} item${n === 1 ? "" : "s"} masked · Open Settings → Privacy`,
+  privacyReport: "Privacy: what was masked",
+  privacyBadge: (n) => (n > 99 ? "99+" : String(n)),
   account: "Account and settings",
   conversations: "Conversations",
   noConversations: "No conversations yet.",
@@ -62,7 +64,7 @@ export const chat = {
   splitRight: "Split right",
   redactionSummary: (n) => `Masked in this conversation · ${n} item${n === 1 ? "" : "s"}`,
   seeWhatTheModelSaw: "See what the model saw",
-  debugLog: "Debug log",
+  debugLog: "Technical log",
 } satisfies Messages["chat"];
 
 export const composer = {
@@ -80,7 +82,6 @@ export const composer = {
   undo: "Undo",
   protectionLevel: "Masking level",
 
-  placeholder: (brand) => `Message ${brand} or drop a file…`,
 
   editSkill: "Edit skill",
   slotsToFill: "Fill in your message",
@@ -95,7 +96,6 @@ export const composer = {
   add: "Add",
   addFile: "File",
   attachFile: "Attach a file",
-  sendQueued: "Sending once the analysis ends…",
   addFolder: "Folder",
   addFolderTip: "Give access to a folder on this computer",
   addConnector: "Connector",
@@ -169,7 +169,7 @@ export const composer = {
     stateMaskingPct: (pct) => `Masking · ${pct}%`,
     stateMaskingLong: (pct, minutes) => `Masking · ${pct}% · about ${minutes} min`,
     maskingLong: (minutes) => `Long document: masking, about ${minutes} min`,
-    tooLongToMask: (pages) => `Too long to mask in full (≈ ${pages} pages). Split it into smaller parts.`,
+    tooLongToMask: (pages) => `Too long to mask in full (≈ ${pages} pages). Save it as several smaller files and attach them one at a time.`,
     stateRedo: "Needs action",
     stateReady: (n) => `${n} value${n > 1 ? "s" : ""}`,
     staleTip: "Masked with your previous settings. Mask again to apply the current ones.",

@@ -17,6 +17,8 @@ export interface DbMessage {
   /** Why the turn failed (provider/tool message), persisted so the reason
    *  survives a reload instead of degrading to a generic "failed" line. */
   errorText?: string;
+  /** The failed turn's class (`blocked` | `quota`), from the error CODE — the card's eyebrow. */
+  errorKind?: "blocked" | "quota";
   /** Sensitive spans + their kind, so the value->kind map can be persisted. */
   redactedSpans?: { value: string; kind: string }[];
   /** Attached-file references (chips) — restored so files survive a reload. */

@@ -129,6 +129,8 @@ export function SettingsView({
                 type="button"
                 className={`settings-rail-btn settings-rail-more${advOpen ? " on" : ""}`}
                 aria-expanded={advOpen}
+                title={advOpen ? t.accountTab.advancedHide : t.accountTab.advancedShow}
+                aria-label={advOpen ? t.accountTab.advancedHide : t.accountTab.advancedShow}
                 onClick={() => setAdvOpen((o) => !o)}
               >
                 <span className="settings-rail-ico">

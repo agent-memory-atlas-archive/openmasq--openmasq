@@ -196,7 +196,7 @@ export function UsageTab({
           ) : (
             <div className="usage-models">
               {rows.map((r) => {
-                const { vendor } = modelStyle(r.model);
+                const { vendor } = modelStyle(r.model, t);
                 const pct = Math.round((r.total / maxTotal) * 100);
                 return (
                   <div className="usage-mrow" key={r.model}>

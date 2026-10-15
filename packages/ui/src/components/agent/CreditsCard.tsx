@@ -5,6 +5,8 @@ import { AgentCard, GlyphTile, AgentCardTitle, AgentCardDesc } from "./AgentCard
 import { BRAND } from "@openmasq/branding";
 
 import { useT } from "../../i18n";
+import { providerLabel } from "../../help/providerLabel";
+import type { ProviderId } from "@openmasq/llm";
 /** Eurocents → "1,20 €". */
 function euros(cents: number): string {
   return `${(cents / 100).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
@@ -60,7 +62,8 @@ export function CreditsCard({
   onAction: (assistantId: string, action: NonNullable<Message["errorAction"]>) => void;
 }) {
   const t = useT();
-  const name = label ?? provider;
+  // Named from the id at render, in the current language: a stored `label` is registry text.
+  const name = providerLabel(provider as ProviderId, t);
   const reset = resetLabel(resetIso);
   const pct = usedPct(credits);
 

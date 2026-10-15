@@ -9,7 +9,9 @@
  *
  * A SLICE of the contract (`../messages.ts`), which stays the only list of namespaces.
  */
-export interface McpTabMessages {
+import type { McpTabMoreMessages } from "./mcpTabMore";
+
+export interface McpTabMessages extends McpTabMoreMessages {
   eyebrow: string;
   unavailable: string;
   search: string;
@@ -140,11 +142,9 @@ export interface McpTabMessages {
     cancelled: string;
     missing: string;
   };
-  /** Where to find the key of the three key-based connectors. */
+  /** Where to find the key of the key-based connectors (only Exa still takes one). */
   apiKeys: {
     exa: { label: string; steps: readonly string[] };
-    tavily: { label: string; steps: readonly string[] };
-    fireflies: { label: string; steps: readonly string[] };
   };
 }
 

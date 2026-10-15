@@ -4,7 +4,7 @@
 import type { Messages } from "../messages";
 
 export const byo = {
-  eyebrow: "MY KEYS",
+  eyebrow: "ADVANCED OPTION · YOUR OWN KEYS",
   connect: "Connect",
   encryptedNote: "Your credentials are stored encrypted on this computer.",
   existing:
@@ -32,8 +32,8 @@ export const byo = {
     "Google client secrets usually start with “GOCSPX-”. Check that this really is the client secret.",
   microsoft: {
     intro:
-      "≈ 3 min. A Microsoft Entra app registration. Permissions are granted at sign-in.",
-    note: "The address “http://127.0.0.1/callback” points to your own computer. The port does not matter.",
+      "Advanced option, often done with your IT team: you register an app in Microsoft Entra, Microsoft's admin portal. Permissions are granted at sign-in.",
+    note: "The “Redirect URI” is the address Microsoft sends you back to after sign-in. “http://127.0.0.1/callback” points to your own computer; the port does not matter.",
     s1: { lead: "Open the Microsoft Entra portal: ", link: "Register an application" },
     s2: {
       a: "Name it “",
@@ -56,12 +56,12 @@ export const byo = {
     },
   },
   github: {
-    intro: "≈ 1 min. No app verification needed.",
+    intro: "Advanced option: you need a GitHub account. No app verification needed.",
     s1: {
       lead: "Create a GitHub OAuth app: ",
       link: "New OAuth App",
       tail: (brand) =>
-        `. Name: “${brand}”. The Homepage and Callback URL fields accept any value (device flow does not use them).`,
+        `. Name: “${brand}”. The Homepage and Callback URL fields accept any value (sign-in by code does not use them).`,
     },
     s2: { a: "On the app's page, check ", b: "“Enable Device Flow”", c: ", then save." },
     s3: {
@@ -73,7 +73,7 @@ export const byo = {
   },
   google: {
     intro:
-      "≈ 3 min. Keeping the app in test mode gives you every feature without Google's verification review.",
+      "Advanced option: you need a Google Cloud account. While your app stays in test mode, you get every feature without waiting for Google's review. The trade-off: Google may ask you to sign in again every week.",
     note: "The address “127.0.0.1” (your computer) is allowed automatically for a desktop app.",
     s1: { lead: "Create or pick a project: ", link: "New Google Cloud project" },
     s2: {

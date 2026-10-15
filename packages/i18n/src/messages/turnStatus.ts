@@ -34,6 +34,11 @@ export interface TurnStatusMessages {
   interrupted: string;
   empty: string;
   toolFlowFailed: string;
+  /** « Signaler le problème » on a failed turn: opens « Votre avis » prefilled, with this
+   *  conversation's journal (already masked) attached. */
+  report: string;
+  reportTip: string;
+  reportDraft: string;
   /** The amber credits card: real figures only, never an invented amount or date. */
   credits: {
     title: string;

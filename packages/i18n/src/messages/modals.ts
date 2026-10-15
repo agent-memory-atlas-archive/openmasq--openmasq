@@ -185,6 +185,8 @@ export interface ModalsMessages {
     reading: string;
     dropTitle: string;
     nothingFound: string;
+    /** The footer's confirm, with the number chosen (0 ⇒ the bare verb). */
+    submit: (chosen: number) => string;
   };
 
   /** « Comment accéder à ce modèle ? » */

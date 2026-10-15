@@ -149,6 +149,9 @@ export interface DesktopMainMessages {
     accountAlreadyConnected: string;
     missingClientId: string;
     builtinKeysMissing: string;
+    /** A one-click connector with NO « Mes clés » fallback (Slack) whose sign-in relay this
+     *  build does not configure. */
+    oneClickNotConfigured: string;
     missingGoogleSecret: string;
     byoRequired: string;
     unknownConnector: (id: string) => string;

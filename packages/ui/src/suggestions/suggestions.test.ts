@@ -14,6 +14,7 @@ import {
   suggestedRoutines,
 } from "./routineSuggestions";
 import { genericRoutineFor } from "./routineGeneric";
+import { connectorCopy } from "../help/catalogCopy";
 import { offeredTemplates, isRoutineTemplate, templateCategory } from "./offered";
 import { SKILL_CATEGORIES } from "../skills/skills";
 import { makeSkill } from "../skills/skills";
@@ -306,7 +307,8 @@ describe("genericRoutineFor", () => {
     ).not.toBeNull();
     expect(g.prompt).toContain("Lecture seule");
     expect(g.prompt).toContain("{"); // a value to fill at launch, like every template
-    expect(g.desc).toContain(findConnector("microsoft-outlook")!.desc.slice(1));
+    // The routine speaks the SHOWN copy (the Réglages card), not the model-facing catalog desc.
+    expect(g.desc).toContain(connectorCopy("microsoft-outlook", findConnector("microsoft-outlook")!, fr).desc.slice(1));
   });
 
   it("hérite du catalogue : Google marqué « vos clés », les autres non", () => {

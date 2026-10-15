@@ -1,6 +1,6 @@
 import { captureError, captureEvent } from "../../analytics";
 import { httpStatus, requestIdOf, retriesOf } from "../../state/errors/fields";
-import { cleanErrorText, humanizeSendError, isRateLimitError, sendErrorAction, sendErrorReason } from "../../state/errors";
+import { cleanErrorText, failureKindOf, humanizeSendError, isRateLimitError, sendErrorAction, sendErrorReason } from "../../state/errors";
 import { noteCliAuthFailure } from "../../state/effects/cliSession";
 import { estimateTurnUsage } from "../estimateUsage";
 import type { ChatMessage } from "@openmasq/llm";
@@ -89,6 +89,7 @@ export function failAgentTurn(ctx: TurnContext, r: RedactionSetup, routing: Rout
     error: true,
     errorText: friendly,
     ...(act ? { errorAction: act } : {}),
+    errorKind: failureKindOf(detail),
     ...(f.usageReported
       ? {}
       : {

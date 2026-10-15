@@ -77,7 +77,9 @@ describe("extractDroppedFiles — bytes, never a path", () => {
   it("refuses an oversized file BEFORE reading it into memory — at main's own cap, limit stated", async () => {
     const d = deps();
     const out = await extractDroppedFiles([f("image.dmg", "", MAX_FILE_BYTES + 1)], d);
-    expect(out[0]!.error).toBe("Fichier trop volumineux (50 Mo maximum). Découpez-le en plusieurs parties.");
+    expect(out[0]!.error).toBe(
+      "Fichier trop volumineux (50 Mo maximum). Enregistrez-le en plusieurs fichiers plus petits, puis joignez-les un par un.",
+    );
     expect(out[0]!.blocked).toBe(true);
     expect(d.extractBytes).not.toHaveBeenCalled();
     // The SAME constant as the pre-parse gate: a file main accepts is never refused here.

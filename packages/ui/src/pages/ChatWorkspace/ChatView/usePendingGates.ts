@@ -97,7 +97,9 @@ export function usePendingGates(p: ChatViewProps, activeStreaming: boolean) {
     // "defer-to-main": main's un-spoofable window is the single confirmation. "auto": nothing required.
     if (decision !== "card") return Promise.resolve(true);
     recordConfirmationShown(convId);
-    return new Promise<boolean>((resolve) => setPendingWrites((m) => ({ ...m, [convId]: { info, resolve } })));
+    // Built ONCE, before the await: the card's `info` ref stays stable while it is up.
+    const shown = verdict.floor ? { ...info, floor: true } : info;
+    return new Promise<boolean>((resolve) => setPendingWrites((m) => ({ ...m, [convId]: { info: shown, resolve } })));
   };
   const reviewWebNav = (categories: RedactCategoryKey[], convId: string) =>
     new Promise<RedactCategoryKey[]>((resolve) =>

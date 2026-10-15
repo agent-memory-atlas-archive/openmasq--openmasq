@@ -147,6 +147,7 @@ export function ChatHeader({
             {menuOpen && (
               <HeaderMenu
                 protectedCount={protectedCount}
+                conversationId={conversation?.id}
                 redactLevel={redactLevel}
                 settings={settings}
                 onOpenRules={() => {

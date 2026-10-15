@@ -28,7 +28,7 @@ export const modals = {
   error: {
     eyebrow: "ERROR",
     title: "Error details",
-    sub: "The raw message from the provider or the tool. It is not added to the conversation.",
+    sub: "The original message, as returned by the service or the tool. It is not added to the conversation.",
     copy: "Copy",
     copied: "Copied",
     retry: "Retry",
@@ -78,7 +78,7 @@ export const modals = {
     sub: "Tell us what works and what doesn't.",
     thanks: "Thank you!",
     thanksWithLog:
-      "Message received, with the debug log. It doesn't include your real values.",
+      "Message received, with the technical log. It doesn't include your real values.",
     thanksPlain: "Message received. None of your conversation content was attached.",
     close: "Close",
     moodLabel: "How is it going?",
@@ -89,14 +89,14 @@ export const modals = {
     attachContext: "Attach technical context",
     attachContextSub:
       "App version, current screen and install identifier. Never the content of your conversations.",
-    attachLog: "Attach debug log",
+    attachLog: "Attach the technical log",
     inDocument: "in a document",
     inReply: "in a reply",
     inMessage: "in a message",
     problemKind: (kind) => ` (kind: ${kind})`,
     problemBody: (where, kind) =>
       `Incorrect masking${kind} ${where}.\nWhat went wrong (without pasting the real value): `,
-    logDraft: "Report from the debug log.\nWhat went wrong: ",
+    logDraft: "Report from the technical log.\nWhat went wrong: ",
     replyDraft: "About this reply: ",
     attachLogSub:
       "The text sent to the model (already masked), tools and errors, without your real values. Preview below.",
@@ -136,9 +136,9 @@ export const modals = {
 
   debug: {
     emptyFiltered: "No entry matches this filter.",
-    empty: "No entries yet. Send a message with the debug log on (Settings → Advanced).",
-    eyebrow: "DEVELOPER",
-    title: "Debug log",
+    empty: "No entries yet. Turn the log on in Settings → Privacy → Advanced options, then send a message.",
+    eyebrow: "FOR SUPPORT",
+    title: "Technical log",
     subLead: "What was really sent and received for ",
     thisConversation: "this conversation",
     subCount: (n) => ` — ${n} entr${n > 1 ? "ies" : "y"}.`,
@@ -174,6 +174,7 @@ export const modals = {
     reading: "Reading skills…",
     dropTitle: "Drop your skills here",
     nothingFound: "Nothing found automatically on this device.",
+    submit: (n) => (n > 0 ? `Import ${n} skill${n > 1 ? "s" : ""}` : "Import"),
   },
 
   modelAccess: {
@@ -182,23 +183,23 @@ export const modals = {
     titleCreditsSold: "This model needs a subscription",
     titleCreditsClosed: "This model isn't available on your account",
     titleFree: "Free, with limits",
-    thisProvider: "This provider",
+    thisProvider: "This service",
     leadUnserved: (provider) =>
-      `${provider} requires your own API key. This version has no hosted service. You can also use a local model or your subscription's CLI.`,
-    leadKey: (provider) => `${provider} requires your own API key. You can also pick another model.`,
+      `${provider} requires your own access key. This version of the app doesn't provide models itself. You can also use a model installed on your computer, or your Claude or ChatGPT subscription.`,
+    leadKey: (provider) => `${provider} requires your own access key. You can also pick another model.`,
     leadCreditsSold: (brand) => `This model goes through ${brand}, and your account has no credits left.`,
     leadCreditsClosed: (brand) =>
       `This model goes through ${brand}, and it is not available on your account for now.`,
     leadFreeSold: (brand) =>
-      `Free models don't use your credits. You only need to be signed in to ${brand}, no subscription. Speed and availability depend on the provider.`,
+      `Free models don't use your credits. You only need to be signed in to ${brand}, no subscription. Speed and availability depend on the service that runs the model.`,
     leadFreeServed: (brand) =>
-      `A free model is included with your ${brand} account, no key needed. Speed and availability depend on the provider.`,
+      `A free model is included with your ${brand} account, no key needed. Speed and availability depend on the service that runs the model.`,
     freeModels: "Free models",
     includedModels: "Included models",
     freeDescSold: (brand) =>
       `Included with your ${brand} account, no subscription or key. Usage is limited. Selected by default.`,
     freeDescServed: (brand) =>
-      `Served on your ${brand} account, no key to manage. A free model is selected by default. Its speed depends on the provider.`,
+      `Served on your ${brand} account, no key to manage. A free model is selected by default. Its speed depends on the service that runs it.`,
     subscription: (brand) => `A ${brand} subscription`,
     subscriptionDesc: (brand) =>
       `Models provided by ${brand}, no key to manage. Your monthly credits pay for usage.`,
@@ -206,9 +207,9 @@ export const modals = {
     subscriptionCoversDesc: "Pick any model that isn't free.",
     ownKey: "Your own key",
     ownKeyDesc: (soldSuffix) =>
-      `Add your OpenAI, Anthropic or Mistral key: your provider bills you${soldSuffix}. Protection is the same.`,
+      `Add your OpenAI, Anthropic or Mistral key: that service bills you${soldSuffix}. Protection is the same.`,
     ownKeyWithoutCredits: ", without using your credits",
-    ownKeyStatic: "Add it with the provider's button at the top of this page.",
+    ownKeyStatic: "Add it with the service's button at the top of this page.",
     openRouterNote: (brand) =>
       `Exception: in the extended OpenRouter catalog, only models offered by ${brand} work without a key. The others need your own OpenRouter key.`,
   },

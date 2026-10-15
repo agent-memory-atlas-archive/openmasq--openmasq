@@ -16,13 +16,19 @@ a Coffre term appearing in an e-mail fetched by a connector is masked as if it c
 Without that, the promise would have a hole exactly where nobody looks.
 
 - [x] A dictionary of values masked on **every** send, whatever the conversation — screen `packages/ui/src/pages/Vault/`, logic `packages/ui/src/send/vaultTerms.ts`
-- [x] Occurrence count computed on the real vaults; clicking a term's row opens
+- [x] Occurrence count computed on the real vaults (« Masqué N fois · N conv. », a pill with a
+      chevron and a tooltip saying what it opens); clicking it opens
       **« Occurrences »** — where and when it was masked, each row jumping to its
       conversation — `packages/ui/src/pages/Vault/VaultUsesModal.tsx`
 - [x] Holds inside a tool result too (not only in what you type)
 - [x] Add a term from a selection inside a conversation
 - [x] « **Ajouter un terme** » in the page header; the **category is guessed** from the value's shape with the engine's own detectors (e-mail, phone, IBAN, card…), so a paste + Enter is enough; five frequent categories shown, the other nine behind « Plus de catégories » — `packages/ui/src/pages/Vault/vaultTypes.ts`
 - [x] **Edit** a term (rename it, change its category) from its row; deletion says « Supprimer », like everywhere else
+- [x] **Deletion is undoable**: the « Annuler » toast (the Mémoire's, `components/feedback/Toast`)
+      lives 6 s, and the deletion is DEFERRED until it expires — the term leaves the list at
+      once but stays in the coffre, hence masked on every send, until then (fail-closed);
+      leaving the page commits it — `packages/ui/src/pages/Vault/useDeferredRemove.ts`,
+      `packages/ui/src/pages/Vault/VaultView.undo.test.tsx`
 - [x] The empty state says what the Coffre is for, against the categories: known shapes for them, **your own words** for it
 - [x] **« Ajouter au coffre »** from the filter bar's add button or the empty screen's call:
       term, type, optional note — `packages/ui/src/pages/Vault/parts/VaultAddModal.tsx`

@@ -7,27 +7,27 @@
 import type { Messages } from "../messages";
 
 export const errors = {
-  theProvider: "chez le fournisseur",
+  theProvider: "chez ce service",
   atProvider: (provider) => `chez ${provider}`,
 
   creditsUnverifiable: "Impossible de vérifier vos crédits. Rien n'a été envoyé. Réessayez.",
   modelNotAllowed: (brand) =>
     `Ce modèle n'est pas disponible avec votre compte ${brand}. Choisissez-en un autre.`,
   upstreamUnavailable: (brand) =>
-    `${brand} n'a pas pu joindre le fournisseur. Réessayez, ou changez de modèle.`,
+    `${brand} n'a pas pu joindre le service qui fait tourner ce modèle. Réessayez, ou changez de modèle.`,
   modelRestricted: (brand) =>
-    `Ce modèle n'est pas utilisable dans ${brand} : son fournisseur le réserve à certaines applications. Choisissez-en un autre.`,
+    `Ce modèle n'est pas utilisable dans ${brand} : le service qui le propose le réserve à certaines applications. Choisissez-en un autre.`,
   providerCreditsNamed: (provider) =>
     `Votre compte ${provider} n'a plus de crédits. Rechargez-le chez ${provider}, ou changez de modèle.`,
   providerCredits:
-    "Votre compte chez le fournisseur n'a plus de crédits. Rechargez-le, ou changez de modèle.",
+    "Votre compte chez le service de ce modèle n'a plus de crédits. Rechargez-le, ou changez de modèle.",
   invalidKeyNamed: (provider) =>
     `Votre clé ${provider} a été refusée. Vérifiez-la, ou renseignez-en une nouvelle.`,
-  invalidKey: "Votre clé a été refusée par le fournisseur. Vérifiez-la, ou renseignez-en une nouvelle.",
+  invalidKey: "Votre clé d'accès a été refusée par le service. Vérifiez-la, ou renseignez-en une nouvelle.",
   cliSessionExpired: (cli) => `Votre session ${cli} a expiré. Reconnectez-vous pour continuer.`,
   cliSessionExpiredExternal: (cli) =>
     `Votre session ${cli} a expiré. Reconnectez-vous depuis ${cli}, puis réessayez.`,
-  rateBurst: (wait) => `Trop de requêtes d'un coup. Attendez ${wait} et réessayez.`,
+  rateBurst: (wait) => `Trop de demandes d'un coup. Attendez ${wait} et réessayez.`,
   someSeconds: "quelques secondes",
   freeCap: (limit) => `${limit} requêtes gratuites`,
   freeCapPlain: "requêtes gratuites",

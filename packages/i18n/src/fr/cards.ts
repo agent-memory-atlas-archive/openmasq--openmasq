@@ -22,8 +22,11 @@ export const cards = {
     open: "Voir ce que le modèle a vu",
     title: (n) => `${n} élément${n === 1 ? "" : "s"} masqué${n === 1 ? "" : "s"} dans cet échange`,
     theModel: "Le modèle",
-    desc: (modelName) =>
-      `${modelName} n'a jamais reçu ces valeurs. Elles ont été remplacées par des substituts avant l'envoi, puis rétablies dans la réponse que vous lisez. Ouvrez le comparatif pour voir votre message et ce qui a réellement été envoyé, côte à côte.`,
+    desc: (modelName, n) =>
+      (n === 1
+        ? `${modelName} n'a jamais reçu cette valeur. Elle a été remplacée par une valeur de substitution avant l'envoi, puis rétablie dans la réponse que vous lisez.`
+        : `${modelName} n'a jamais reçu ces valeurs. Elles ont été remplacées par des valeurs de substitution avant l'envoi, puis rétablies dans la réponse que vous lisez.`) +
+      " Ouvrez le comparatif pour voir votre message et ce qui a réellement été envoyé, côte à côte.",
   },
 
   memoryProposal: {
@@ -46,7 +49,8 @@ export const cards = {
 
   integration: {
     manySuggested: (n) => `${n} connecteurs suggérés`,
-    secureNote: "Connexion sécurisée · accès chiffré · révocable à tout moment",
+    secureNote:
+      "Le modèle ne voit que des valeurs masquées ; le service reçoit les vraies quand il agit. Déconnectable à tout moment.",
     connectTools: "Connectez vos outils pour continuer",
     tileConnected: (name) => `${name} · connecté`,
     tileConnect: (name) => `Connecter ${name}`,
@@ -74,8 +78,11 @@ export const cards = {
       n === 1
         ? "1 fichier sera joint et envoyé non masqué :"
         : `${n} fichiers seront joints et envoyés non masqués :`,
-    details: (tool) => `Détails techniques (${tool})`,
-    scopeNote: (tool) => `Une fois autorisé, « ${tool} » ne redemandera plus dans cette conversation.`,
+    details: "Détails techniques",
+    toolId: (tool) => `Nom technique de l'action : ${tool}`,
+    scopeNote: "Si vous autorisez, cette action ne vous sera plus demandée dans cette conversation.",
+    scopeFloor:
+      "Chaque envoi, pièce jointe ou fuite possible vous est demandé, même après une première autorisation.",
     navExfil: {
       eyebrow: "Navigation web",
       title: (host) => `Ouvrir ${host} ?`,

@@ -21,10 +21,10 @@ describe("humanizeSendError", () => {
 
   it("maps MODEL_NOT_ALLOWED and UPSTREAM_ERROR / UPSTREAM_UNAVAILABLE", () => {
     expect(humanizeSendError('… {"error":"MODEL_NOT_ALLOWED"}', t)).toMatch(/pas disponible/);
-    expect(humanizeSendError('… {"error":"UPSTREAM_ERROR"}', t)).toMatch(/joindre le fournisseur/);
+    expect(humanizeSendError('… {"error":"UPSTREAM_ERROR"}', t)).toMatch(/joindre le service qui fait tourner ce modèle/);
     // The gateway's bounded upstream-throw code (never leaks the internal message).
     expect(humanizeSendError('Anthropic tools request failed (502): {"error":"UPSTREAM_UNAVAILABLE"}', t)).toMatch(
-      /joindre le fournisseur/,
+      /joindre le service qui fait tourner ce modèle/,
     );
   });
 
@@ -61,23 +61,26 @@ describe("RedactionUnavailableError — the user reads a sentence, the log keeps
     const e = new RedactionUnavailableError("ECONNREFUSED 127.0.0.1:9", t);
     expect(e.reason).toBe("ECONNREFUSED 127.0.0.1:9");
     expect(e.message).not.toContain("ECONNREFUSED");
-    expect(e.message).toBe("Envoi bloqué\u00a0: le masquage ne répond pas. Rien n'a été envoyé. Réessayez.");
+    expect(e.message).toBe(t.runtime.send.maskingBlocked(t.runtime.send.maskingCause.network));
+    // The masking runs on the device: the block says so, and why nothing left.
+    expect(e.message).toContain("sur votre ordinateur");
+    expect(e.message).toContain("Rien n'a été envoyé, pour protéger vos données");
     expect(e.message).not.toMatch(/\ble redaction\b/);
   });
 
   it("speaks the UI language", () => {
     const e = new RedactionUnavailableError("boom", getMessages("en"));
-    expect(e.message).toBe("Send blocked: masking could not run. Nothing was sent. Try again.");
+    expect(e.message).toBe("Send blocked: masking couldn't run on your computer. Nothing was sent, to protect your data. Try again.");
   });
 
   it("a pass that ran out of time says so — not « ne répond pas » — and keeps the block", () => {
     const e = new RedactionUnavailableError("détection des couches document échouée (timed out after 45s)", t);
     expect(e.message).toBe(t.runtime.send.maskingTimeout);
     expect(e.message).toContain("Rien n'a été envoyé");
-    expect(e.message).toMatch(/plusieurs parties/);
+    expect(e.message).toMatch(/plusieurs messages/);
     expect(e.message).not.toContain("ne répond pas");
     const en = new RedactionUnavailableError("timed out after 45s", getMessages("en"));
-    expect(en.message).toBe("Send blocked: masking took too long. Nothing was sent. Try again. If the text is long, send it in several parts.");
+    expect(en.message).toBe(getMessages("en").runtime.send.maskingTimeout);
     expect(en.message).not.toMatch(/redact/i);
   });
 });
@@ -178,7 +181,7 @@ describe("humanizeSendError — un compte fournisseur à sec (la clé de l'utili
     expect(humanizeSendError(OPENAI, t, { provider: "openai" })).toContain("Votre compte OpenAI");
     expect(humanizeSendError(ANTHROPIC, t, { provider: "anthropic" })).toContain("Votre compte Anthropic");
     // Without a provider, the fallback stays honest and generic.
-    expect(humanizeSendError(OPENAI, t)).toContain("chez le fournisseur");
+    expect(humanizeSendError(OPENAI, t)).toContain("chez le service de ce modèle");
   });
 
   it("offre la modale de clé quand l'appelant nomme le fournisseur", () => {
@@ -248,7 +251,7 @@ describe("humanizeSendError — « gratuit » n'est dit que quand le corps le di
       'google tools request failed (429): {"error":{"message":"Daily request quota exceeded for this project"}}',
       t,
     )!;
-    expect(msg).toMatch(/^Votre quota chez le fournisseur est épuisé/);
+    expect(msg).toMatch(/^Votre quota chez ce service est épuisé/);
     expect(msg).not.toMatch(/gratuit/i);
   });
 });

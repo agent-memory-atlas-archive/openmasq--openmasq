@@ -45,3 +45,30 @@ describe("RedactionInlineReveal — what the model saw", () => {
     await m.unmount();
   });
 });
+
+describe("RedactionInlineReveal — three distinct actions, each with its consequence", () => {
+  function DocHarness() {
+    const ref = useRef<HTMLDivElement>(null);
+    return (
+      <div ref={ref}>
+        <mark className="redaction-mark" data-real="Camille Martin" data-fake="Léa Dumont" data-kind="name" data-tone="violet">
+          Léa Dumont
+        </mark>
+        <RedactionInlineReveal containerRef={ref} scope="send" show="real" onReveal={() => {}} onDelete={() => {}} />
+      </div>
+    );
+  }
+  it("names the reach of each action, never three synonyms", async () => {
+    const m = await mount(<DocHarness />);
+    await hover(m.find(".redaction-mark"));
+    const labels = [...document.querySelectorAll(".rmark-pop-btn")].map((b) => b.textContent?.trim() ?? "");
+    expect(labels).toHaveLength(3);
+    expect(new Set(labels).size).toBe(3);
+    expect(labels[0]).toContain("avec ce message");
+    expect(labels[1]).toContain("de ce document");
+    expect(labels[2]).toContain("pas une donnée sensible");
+    expect(labels.join(" ")).not.toMatch(/Démasquer|Retirer le masquage/);
+    await m.unmount();
+  });
+});
+

@@ -29,7 +29,7 @@ describe("connectorErrorText — l'utilisateur lit une phrase, et le geste à fa
   it("distingue les gestes : une clé refusée ne se « reconnecte » pas", () => {
     const k = connectorErrorText("clé API refusée", fr);
     expect(k?.reconnect).toBe(false);
-    expect(k?.text).toContain("clé API");
+    expect(k?.text).toContain("clé d'accès");
     const n = connectorErrorText("fetch failed", fr);
     expect(n?.reconnect).toBe(false);
     expect(n?.text).toContain("injoignable");
@@ -46,9 +46,41 @@ describe("connectorErrorText — l'utilisateur lit une phrase, et le geste à fa
     expect(f?.reconnect).toBe(true);
   });
 
-  it("INCONNU ⇒ null : on garde le message brut plutôt que d'inventer une phrase", () => {
-    expect(connectorErrorText("Kaboom v2 subsystem misaligned", fr)).toBeNull();
+  it("INCONNU ⇒ une phrase simple qui DIT l'échec, le texte brut gardé en détail", () => {
+    const u = connectorErrorText("Kaboom v2 subsystem misaligned", fr);
+    expect(u?.text).toBe(fr.mcpTab.errorGeneric);
+    expect(u?.text).toContain("n'a pas abouti");
+    expect(u?.detail).toBe("Kaboom v2 subsystem misaligned");
+    expect(u?.reconnect).toBe(false);
     expect(connectorErrorText("", fr)).toBeNull();
     expect(connectorErrorText(undefined, fr)).toBeNull();
+  });
+
+  it("une phrase déjà écrite pour l'utilisateur par le main passe telle quelle, dans les deux langues", () => {
+    for (const m of [getMessages("fr"), getMessages("en")]) {
+      const blocked = connectorErrorText(m.desktopMain.mcp.blockedByOrg, fr);
+      expect(blocked).toEqual({ text: m.desktopMain.mcp.blockedByOrg, reconnect: false });
+      // A template matches whatever its parameter was.
+      const folder = m.desktopMain.mcp.folderNotAllowed("Dossiers autorisés");
+      expect(connectorErrorText(folder, fr)?.text).toBe(folder);
+    }
+    // …even wrapped by Electron's IPC envelope, which the user never reads.
+    const wrapped = `Error invoking remote method 'mcp:connect-direct': Error: ${fr.desktopMain.mcp.oneClickNotConfigured}`;
+    expect(connectorErrorText(wrapped, fr)).toEqual({ text: fr.desktopMain.mcp.oneClickNotConfigured, reconnect: false });
+  });
+
+  it("un refus Microsoft (AADSTS…) devient une phrase, le code reste en détail", () => {
+    const raw = fr.desktopMain.oauth.microsoftRefused("AADSTS50020: User account from identity provider does not exist");
+    const out = connectorErrorText(raw, fr);
+    expect(out?.text).toBe(fr.mcpTab.errorMicrosoft);
+    expect(out?.text).not.toContain("AADSTS");
+    expect(out?.detail).toContain("AADSTS50020");
+  });
+
+  it("le code HTTP d'un échec d'échange ne s'affiche qu'en détail", () => {
+    const raw = fr.desktopMain.oauth.tokenExchangeFailed("Google", 400);
+    const out = connectorErrorText(raw, fr);
+    expect(out?.text).not.toContain("400");
+    expect(out?.detail).toContain("400");
   });
 });

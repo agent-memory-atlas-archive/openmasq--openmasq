@@ -1,3 +1,4 @@
+import { isComingSoon } from "@openmasq/catalog/mcp";
 import { ShieldIcon } from "../../../../components/brand";
 import { authTagOf } from "../mcpAuth";
 import { connectorErrorText } from "../connectorErrorText";
@@ -21,13 +22,16 @@ import { useT } from "../../../../i18n";
 export function McpHint({ item }: { item: McpItem }) {
   const t = useT();
   const expired = item.error ? connectorErrorText(item.error, t)?.reconnect : false;
+  // « Bientôt » connectors: the paragraph under this block already says how to connect —
+  // repeating it here made the window say the same thing twice.
+  const soon = !!item.connector && isComingSoon(item.connector);
   return (
     <div className="mcp-hint">
       <span className="mcp-hint-icon" aria-hidden="true">
         <ShieldIcon size={16} />
       </span>
       <p className="mcp-hint-text">
-        {expired ? t.mcpTab.reconnectKeepsConfig : authTagOf(item, t).title}{" "}
+        {expired ? `${t.mcpTab.reconnectKeepsConfig} ` : soon ? null : `${authTagOf(item, t).title} `}
         {t.mcpTab.maskedAsEverywhere}
       </p>
     </div>

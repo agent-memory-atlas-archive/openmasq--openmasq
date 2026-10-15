@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { subscriptionCliOfProvider, type ProviderId, type SubscriptionCli } from "@openmasq/llm";
 import { useHost } from "../../../host";
+import { providerLabel } from "../../../help/providerLabel";
+import { useT } from "../../../i18n";
 import type { ChatViewProps, Message } from "./types";
 
 /**
@@ -17,13 +19,14 @@ export function useKeyRetry(p: ChatViewProps) {
   // « Se reconnecter »: the subscription CLI to sign in again, and the turn to replay after.
   const [reconnect, setReconnect] = useState<{ cli: SubscriptionCli; label: string; msgId: string } | null>(null);
   const host = useHost();
+  const t = useT();
   const pendingRetryRef = useRef(false);
   const keyRetryMsgIdRef = useRef<string | null>(null);
 
   function handleErrorAction(assistantId: string, action: NonNullable<Message["errorAction"]>) {
     if (action.kind === "missing_key") {
       keyRetryMsgIdRef.current = assistantId;
-      setKeyTarget({ provider: action.provider as ProviderId, label: action.label ?? action.provider });
+      setKeyTarget({ provider: action.provider as ProviderId, label: providerLabel(action.provider as ProviderId, t) });
       setKeyModalOpen(true);
     } else if (action.kind === "upgrade_plan") {
       onOpenSettings("billing");
@@ -31,7 +34,7 @@ export function useKeyRetry(p: ChatViewProps) {
       const cli = subscriptionCliOfProvider(action.provider);
       // A host that cannot run the sign-in (web preview): the agent's card in Réglages.
       if (!cli || !host.loginSubscriptionCli) return onOpenSettings("models");
-      setReconnect({ cli, label: action.label ?? action.provider, msgId: assistantId });
+      setReconnect({ cli, label: providerLabel(action.provider as ProviderId, t), msgId: assistantId });
     }
   }
 

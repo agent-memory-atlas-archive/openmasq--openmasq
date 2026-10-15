@@ -7,21 +7,21 @@
 import type { Messages } from "../messages";
 
 export const errors = {
-  theProvider: "at the provider",
+  theProvider: "at this service",
   atProvider: (provider) => `at ${provider}`,
 
   creditsUnverifiable: "We couldn't check your credits. Nothing was sent. Try again.",
   modelNotAllowed: (brand) =>
     `This model isn't available with your ${brand} account. Pick another one.`,
   upstreamUnavailable: (brand) =>
-    `${brand} couldn't reach the provider. Try again, or switch models.`,
+    `${brand} couldn't reach the service that runs this model. Try again, or switch models.`,
   modelRestricted: (brand) =>
-    `This model can't be used in ${brand}: its provider reserves it for some apps only. Pick another one.`,
+    `This model can't be used in ${brand}: the service that offers it reserves it for some apps only. Pick another one.`,
   providerCreditsNamed: (provider) =>
     `Your ${provider} account is out of credits. Add credits at ${provider}, or switch models.`,
-  providerCredits: "Your provider account is out of credits. Add credits, or switch models.",
+  providerCredits: "Your account with this model's service is out of credits. Add credits, or switch models.",
   invalidKeyNamed: (provider) => `Your ${provider} key was refused. Check it, or enter a new one.`,
-  invalidKey: "Your key was refused by the provider. Check it, or enter a new one.",
+  invalidKey: "Your access key was refused by the service. Check it, or enter a new one.",
   cliSessionExpired: (cli) => `Your ${cli} session has expired. Sign in again to continue.`,
   cliSessionExpiredExternal: (cli) => `Your ${cli} session has expired. Sign in again from ${cli}, then try again.`,
   rateBurst: (wait) => `Too many requests at once. Wait ${wait} and try again.`,

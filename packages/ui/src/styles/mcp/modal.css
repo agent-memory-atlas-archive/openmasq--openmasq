@@ -13,9 +13,11 @@
   font-size: var(--text-sm);
   color: var(--text-muted);
   line-height: 1.45;
+  /* The window is where the full sentence is read: it wraps (two lines at most), never « … ». */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .mcp-modal-body {
   display: flex;
@@ -169,4 +171,19 @@
 .mcp-modal-masking-label {
   font-size: var(--text-xs);
   color: var(--text-muted);
+}
+/* A failure's raw text, folded under its plain sentence (`parts/McpErrorText.tsx`). */
+.mcp-error-detail {
+  margin-top: 4px;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+.mcp-error-detail > summary {
+  cursor: pointer;
+}
+.mcp-error-detail > code {
+  display: block;
+  margin-top: 4px;
+  white-space: pre-wrap;
+  word-break: break-word;
 }

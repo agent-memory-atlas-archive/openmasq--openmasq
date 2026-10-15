@@ -4,14 +4,14 @@ import type { McpCategory } from "./types";
  *  (mail, agenda, documents) leads, the developer tools close it. */
 export const MCP_CATEGORIES: McpCategory[] = [
   { id: "productivity", label: "Productivité" },
-  { id: "data", label: "Données & stockage" },
-  { id: "crm", label: "CRM & support" },
+  { id: "data", label: "Fichiers & données" },
+  { id: "crm", label: "Clients & support" },
   { id: "finance", label: "Finance & paiements" },
   { id: "search", label: "Recherche & web" },
   { id: "design", label: "Design & sites" },
   { id: "automation", label: "Automatisation" },
   { id: "ai", label: "IA & modèles" },
-  { id: "dev", label: "Développement" },
+  { id: "dev", label: "Pour les développeurs" },
 ];
 /** The id used for connectors with no (or an unknown) category. */
 export const MCP_CATEGORY_OTHER = "other";

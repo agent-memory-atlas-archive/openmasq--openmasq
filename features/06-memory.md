@@ -26,7 +26,8 @@ version, restorable.
 - [x] Cards per entity + a preferences profile — screen `packages/ui/src/pages/Memory/`, CRUD `packages/ui/src/state/memory/useMemory.ts`
 - [x] **Silent** extraction — a SETTING, « **Extraction automatique de la mémoire** » in Réglages → Confidentialité (`packages/ui/src/pages/Settings/privacy/PrivacyTab.tsx`, indexed in ⌘K), not a switch on the page — and **explicit** extraction (always on, 12 languages) — `packages/ui/src/memory/extractExplicit.ts`
 - [x] **Graph first** (drag/zoom/reframe), the list as the second view — the choice remembered per screen like the Bibliothèque's (`packages/ui/src/hooks/useViewMode.ts`); a card's « Connexions » reach the graph from the list — `packages/ui/src/pages/Memory/MemoryGraph.tsx`, `MemoryList.tsx`
-- [x] The page keeps five things — profile, search, « À revoir », Liste/Graphe, « Nouvelle fiche » (header) — and no setting; the diagnostic export moved to Réglages → Journal
+- [x] The page keeps five things — profile, search, « À revoir », Liste/Carte, « Nouvelle fiche » (header) — and no setting; the diagnostic export moved to Réglages → Historique de confidentialité
+- [x] The graph speaks plainly: « Carte de vos fiches · N sujets · N fiches » (cards counted, not drawing nodes), roles « Votre mémoire / Catégorie / Sujet / Fiche »
 - [x] Selecting a node **brings the view closer** to its neighbourhood — labels readable — and deselecting widens it again — `packages/ui/src/pages/Memory/graphFrame.test.ts`
 - [x] Grouping + merge suggestions between nearby cards, computed on the device — `packages/ui/src/memory/cluster.ts`, `dedupe.ts`
 - [x] « Mémoire utilisée » under a sent message, and a non-recall explained when it could surprise — ONE line per message, whatever memory has to say about it — `packages/ui/src/components/message/MemoryCaption.tsx`

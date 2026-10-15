@@ -45,7 +45,7 @@ export const redactTypes = {
   ip: "IP address",
   path: "File path",
   dob: "Date of birth",
-  secret: "Secret / key",
+  secret: "Passwords and secret codes",
 } satisfies Messages["redactTypes"];
 
 export const webNav = {

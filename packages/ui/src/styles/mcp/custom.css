@@ -91,3 +91,23 @@
   font-size: var(--text-sm);
   color: var(--coral-700);
 }
+/* Where to find the address, under its field (the manual connection form). */
+.mcp-field-hint {
+  margin: 4px 0 0;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+/* « Connexion manuelle (pour utilisateurs avancés) »: the fold at the bottom of the grid. */
+.mcp-manual-fold > summary {
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-strong);
+}
+.mcp-manual-fold > p {
+  margin: 8px 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  line-height: 1.5;
+}

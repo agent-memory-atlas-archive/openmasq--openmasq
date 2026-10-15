@@ -19,11 +19,11 @@ export const desktopMain = {
     titleLeaveStrict: "Ne plus confirmer chaque action ?",
     noParams: "(aucun détail)",
     paramsUnreadable: "(détails impossibles à afficher)",
-    allowLead: "L'assistant veut exécuter cette action avec",
+    allowLead: "L'assistant veut exécuter l'action",
     allowTail: ". Elle peut créer, modifier ou supprimer des données sur votre compte connecté.",
     technicalDetails: "Détails techniques",
-    scopeLead: "« Toujours pour cet outil » n'autorise que",
-    scopeTail: ", jusqu'à la fermeture de l'application.",
+    scopeLead: "« Toujours pour cet outil » : l'action",
+    scopeTail: " ne vous sera plus demandée, dans toutes vos conversations, jusqu'à la fermeture de l'application.",
     disableGateLead: "Les écritures (e-mail, création ou modification sur un compte connecté) s'exécuteront",
     disableGateStrong: "sans vous demander",
     disableGateTail: ", jusqu'au prochain redémarrage. Ne le faites que si vous surveillez l'assistant.",
@@ -103,20 +103,20 @@ export const desktopMain = {
     allFiles: "Tous les fichiers",
   },
   python: {
-    downloading: (pct) => `Téléchargement de l'environnement Python…${pct != null ? ` ${pct} %` : ""}`,
-    extracting: "Décompression de l'environnement Python…",
-    installing: "Installation des bibliothèques Python…",
-    ready: "Environnement Python prêt.",
-    running: "Exécution du code…",
+    downloading: (pct) => `Préparation de l'outil de calcul (une seule fois, environ 1 min)…${pct != null ? ` ${pct} %` : ""}`,
+    extracting: "Préparation de l'outil de calcul (une seule fois)…",
+    installing: "Installation des modules de calcul (une seule fois)…",
+    ready: "Outil de calcul prêt.",
+    running: "Calcul en cours sur votre ordinateur…",
   },
   subscription: {
     notEnabled: (label) => `${label} n'est pas activé (Réglages → Modèles).`,
     missingClaude:
-      "La CLI Claude Code est introuvable sur cet ordinateur. Installez-la et connectez-la à votre abonnement Claude, ou choisissez un autre modèle.",
+      "Claude Code n'est pas installé sur cet ordinateur. Réglages → Modèles vous guide pour l'installer et vous connecter avec votre abonnement Claude. Vous pouvez aussi choisir un autre modèle.",
     missingCodex:
-      "La CLI Codex est introuvable sur cet ordinateur. Installez-la (`npm i -g @openai/codex`), connectez-la à votre compte ChatGPT (`codex login`), ou choisissez un autre modèle.",
+      "L'application Codex n'est pas installée sur cet ordinateur. Réglages → Modèles vous guide pour l'installer et vous connecter avec votre compte ChatGPT. Vous pouvez aussi choisir un autre modèle. (Pour les experts : `npm i -g @openai/codex`, puis `codex login`.)",
     missingAntigravity:
-      "La CLI Antigravity (`agy`) est introuvable sur cet ordinateur. Installez Antigravity, connectez-la à votre compte Google, ou choisissez un autre modèle.",
+      "Antigravity n'est pas installé sur cet ordinateur. Réglages → Modèles vous guide pour l'installer et vous connecter avec votre compte Google. Vous pouvez aussi choisir un autre modèle.",
   },
   oauth: {
     pageTitle: (brand) => `${brand} : connexion réussie`,
@@ -137,7 +137,7 @@ export const desktopMain = {
     microsoftRefused: (detail) => `Connexion Microsoft refusée${detail ? ` : ${detail}` : ""}.`,
     microsoftAdminConsent: (brand) =>
       `Votre organisation demande l'approbation d'un administrateur pour connecter ${brand}. Transmettez-lui le lien ci-dessous : une seule approbation vaut pour tous les comptes de l'organisation, et la connexion se fera ensuite en un clic.`,
-    tokenExchangeFailed: (provider, status) => `La connexion ${provider} n'a pas abouti (${status}).`,
+    tokenExchangeFailed: (provider, status) => `La connexion ${provider} n'a pas abouti (code ${status}).`,
   },
   mcp: {
     folderNotAllowed: (label) => `${label} : dossier non autorisé. Choisissez-le avec le bouton.`,
@@ -148,12 +148,14 @@ export const desktopMain = {
     urlRefused: (reason) => `URL refusée (hôte interne ou privé) : ${reason}`,
     apiKeyRefused: "Clé API refusée",
     noDynamicRegistration:
-      "Ce serveur refuse l'inscription OAuth automatique : la connexion en un clic est impossible. Utilisez son équivalent par jeton dans « Serveurs locaux ».",
+      "Ce service ne permet pas la connexion en un clic. S'il vous fournit une clé d'accès, ajoutez-le avec « Connexion manuelle », en bas de la liste des connecteurs. Sinon, il n'est pas encore pris en charge.",
     accountAlreadyConnected: "Ce compte est déjà connecté.",
-    missingClientId: "Client ID manquant (mode « Mes clés »).",
+    missingClientId: "Il manque l'ID client (option « Mes clés »).",
     builtinKeysMissing:
-      "Les clés intégrées ne sont pas configurées pour ce connecteur. Utilisez « Mes clés » ou réessayez plus tard.",
-    missingGoogleSecret: "Client secret Google manquant.",
+      "La connexion en un clic n'est pas disponible pour ce connecteur dans cette version de l'application. Utilisez l'option « Mes clés », ou réessayez après une mise à jour.",
+    oneClickNotConfigured:
+      "La connexion en un clic à ce service n'est pas disponible dans cette version de l'application. Réessayez après une mise à jour ; si ça continue, signalez-le.",
+    missingGoogleSecret: "Il manque le code secret du client Google.",
     byoRequired: "Ce connecteur demande vos propres clés (« Mes clés »).",
     unknownConnector: (id) => `Connecteur inconnu : ${id}`,
   },
@@ -162,7 +164,7 @@ export const desktopMain = {
     onedriveNotProvisioned:
       "Ce compte Microsoft n'a pas encore d'espace OneDrive. Ouvrez OneDrive une fois avec ce compte (onedrive.com), ou vérifiez qu'il dispose d'une licence OneDrive, puis réessayez.",
     folderNotListed: "Ce dossier n'a pas pu être listé.",
-    filesystemNotConnected: "Le connecteur Filesystem n'est pas connecté.",
+    filesystemNotConnected: "Le connecteur « Vos dossiers » n'est pas connecté.",
   },
   byoKeysBlocked:
     "Votre organisation a désactivé les clés API personnelles. Les modèles qu'elle a ouverts fonctionnent sans clé. Votre administrateur gère la liste.",

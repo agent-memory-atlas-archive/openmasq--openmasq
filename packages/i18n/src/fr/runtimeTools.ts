@@ -106,20 +106,20 @@ export const runtimeLoop = {
     "Le modèle a continué à chercher sans trouver de réponse. Elle n'était sur aucune des pages ouvertes.",
   webTips:
     "Pistes : précisez la cible (nom exact, site officiel, ville…), posez une question plus précise, ou donnez directement l'adresse à consulter.",
-  hammered: (n, tool) => `⚠️ Limite atteinte : ${n} appels à ${tool} dans le même tour.`,
-  stuck: (n) => `⚠️ Boucle d'outils interrompue après ${n} ${plural(n, "appel", "appels")}.`,
+  hammered: (n, tool) => `⚠️ Arrêté : ${tool} a été utilisé ${n} fois pour une seule demande.`,
+  stuck: (n) => `⚠️ Arrêté après ${n} ${plural(n, "action", "actions")} : le modèle tournait en rond.`,
   cap: (turns, n) =>
-    `⚠️ Limite d'appels d'outils atteinte (${turns} tours, ${n} ${plural(n, "appel", "appels")}) sans réponse finale.`,
+    `⚠️ Arrêté après ${n} ${plural(n, "action", "actions")} et ${turns} étapes, sans réponse finale.`,
   failedVaried: (tool, times) =>
-    `${tool} a échoué ${times} fois de suite, sur des entrées différentes. Le modèle a bien varié ses appels. C'est l'outil qui ne répond pas :`,
+    `${tool} a échoué ${times} fois de suite, alors que le modèle a essayé des demandes différentes. Le problème vient de l'outil, pas du modèle :`,
   failedVariedTips:
-    "Pistes : l'action existe (d'autres appels ont abouti), changer de modèle n'y ferait donc rien. Vérifiez que les éléments visés existent encore et que le connecteur a le droit de les lire, puis relancez.",
-  failedSame: (tool, times) => `${tool} a échoué ${times} fois sur le même appel :`,
+    "Pistes : cette action a déjà fonctionné, changer de modèle n'y ferait donc rien. Vérifiez que les éléments visés existent encore et que le connecteur a le droit de les lire, puis relancez.",
+  failedSame: (tool, times) => `${tool} a échoué ${times} fois sur la même demande :`,
   sameResult: (tool, times) =>
-    `${tool} a renvoyé le même résultat ${times} fois. Le modèle relançait le même appel au lieu de changer d'approche.`,
-  invalidCall: (tools) => `Le modèle n'a pas réussi à former un appel valide pour : ${tools}.`,
-  noConverge: "Le modèle a enchaîné les appels d'outils sans parvenir à une réponse.",
-  tips: "Pistes : précisez la demande, essayez un modèle plus capable (Claude, GPT-5.x…), ou vérifiez que le connecteur propose bien cette action.",
+    `${tool} a renvoyé ${times} fois le même résultat : le modèle répétait la même demande au lieu de changer d'approche.`,
+  invalidCall: (tools) => `Le modèle n'a pas réussi à utiliser correctement : ${tools}.`,
+  noConverge: "Le modèle a enchaîné les actions sans parvenir à une réponse.",
+  tips: "Pistes : précisez la demande, essayez un modèle plus capable (Claude, GPT-5…), ou vérifiez que le connecteur propose bien cette action.",
   interrupted: "_(Interrompu.)_",
   refusedFakeAddress: (brand) => `Refusé par ${brand} : adresse construite à partir d'une valeur de substitution`,
   refusedDomain: (brand) => `Refusé par ${brand} : domaine non autorisé`,

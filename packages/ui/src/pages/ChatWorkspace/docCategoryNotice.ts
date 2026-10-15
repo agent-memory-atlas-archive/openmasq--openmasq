@@ -3,6 +3,7 @@ import {
   REDACTION_CATEGORIES,
   RETIRED_CATEGORIES,
 } from "@openmasq/catalog/redaction";
+import type { Messages } from "@openmasq/i18n";
 import { effectiveRedactCategories } from "../../send/redactionOptions";
 
 /**
@@ -24,12 +25,14 @@ import { effectiveRedactCategories } from "../../send/redactionOptions";
  *
  * Same precedence as the send (`effectiveRedactCategories`: global ⊕ conversation ⊕
  * org-forced), seeded with `CATEGORY_DEFAULTS`. Retired categories are excluded:
- * "désactivé" would suggest they can be turned on.
+ * "désactivé" would suggest they can be turned on. Labels in the READER's language
+ * (`redactionCatalog.categories`); the catalogue's French label is only the fallback.
  */
 export function inactiveCategoryLabels(
   settingsCats: Record<string, boolean> | undefined,
   convCats: Record<string, boolean> | undefined,
   orgForcedCategories: string[] | undefined,
+  t?: Messages,
 ): string[] {
   const eff = {
     ...CATEGORY_DEFAULTS,
@@ -43,5 +46,7 @@ export function inactiveCategoryLabels(
   );
   // AI categories first: the display caps the list, and names/addresses/companies are
   // the ones whose absence actually hurts in a document.
-  return [...off.filter((c) => c.ai), ...off.filter((c) => !c.ai)].map((c) => c.label);
+  return [...off.filter((c) => c.ai), ...off.filter((c) => !c.ai)].map(
+    (c) => t?.redactionCatalog.categories[c.key]?.label ?? c.label,
+  );
 }

@@ -1,12 +1,13 @@
 import { BRAND } from "@openmasq/branding";
 import { useT } from "../../i18n";
 import { useState } from "react";
-import { PROVIDERS, type ProviderId } from "@openmasq/llm";
+import { type ProviderId } from "@openmasq/llm";
 import { CheckIcon } from "../../components/brand";
 import { KeySteps } from "./KeySteps";
 import { KeyChoiceAgents } from "./KeyChoiceAgents";
 import type { AgentOptIn } from "../../hooks/useAgentOptIns";
 import { platformAccessServed, subscriptionsSold } from "../../send/platformAccess";
+import { providerLabel } from "../../help/providerLabel";
 
 /** The providers the onboarding offers a key slot for — OpenRouter first (one key,
  *  every model), then the majors. Labels/key URLs come from the single-source
@@ -234,7 +235,7 @@ export function KeyChoice({
                 onClick={() => pickProvider(p)}
                 aria-pressed={provider === p}
               >
-                {keyConfigured.has(p) && <CheckIcon size={12} />} {PROVIDERS[p].label}
+                {keyConfigured.has(p) && <CheckIcon size={12} />} {providerLabel(p, t)}
                 {/* A single key reaches every model: that's the reason for the recommendation,
                     and it's worth saying right where you choose, not in a footnote. */}
                 {p === "openrouter" && (
@@ -254,7 +255,7 @@ export function KeyChoice({
           </div>
           {keyConfigured.has(provider) ? (
             <div className="ob-access-saved">
-              <CheckIcon size={14} /> {t.onboarding.keyChoice.savedKey(PROVIDERS[provider].label)}
+              <CheckIcon size={14} /> {t.onboarding.keyChoice.savedKey(providerLabel(provider, t))}
             </div>
           ) : canConnect && !manual ? (
             <>

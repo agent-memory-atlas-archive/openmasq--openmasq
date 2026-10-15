@@ -107,6 +107,10 @@ export interface McpConnector {
    *  one-click (`byoReason` without `byoOnly`); a `byoOnly` connector needs none — keys
    *  unlock all of it. */
   byoAdds?: string;
+  /** The paid plan of the SERVICE this connector needs (« Superhuman Business »), when the
+   *  service documents one: the card and the modal say « Nécessite un abonnement … » before
+   *  the user signs in. Only set from the service's own documentation — never guessed. */
+  paidPlan?: string;
   /** The server exposes its many tools behind ONE CLI-style `exec {command}`
    *  meta-tool (PostHog). The app expands the high-value sub-tools DIRECTLY (the
    *  desktop wraps the connection with `wrapExecMeta`), because small models fail

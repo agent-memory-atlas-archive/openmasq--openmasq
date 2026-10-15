@@ -1,5 +1,5 @@
 import { hueForKind } from "@openmasq/redact";
-import { EditIcon, ModelLogo, ShieldIcon, TrashIcon } from "../../../components/brand";
+import { ChevRightIcon, EditIcon, ModelLogo, ShieldIcon, TrashIcon } from "../../../components/brand";
 import { ScopeBadge } from "../../../components/brand/ScopeBadge";
 import { findModelAny } from "../../../prompt/models";
 import type { VaultTermOccurrences } from "../../../send/vaultTerms";
@@ -76,14 +76,18 @@ export function VaultRow({
           {t.lists.vault.share}
         </button>
       )}
+      {/* A pill that OPENS something: the chevron says so, the tip says what. */}
       <button
+        type="button"
         className={`om-vault-occ${occ.totalCount ? "" : " empty"}`}
         onClick={onOpenUses}
         title={t.lists.vault.usesTip}
+        aria-label={`${t.lists.vault.occurrences(occ.totalCount)} ${t.lists.vault.conversations(occ.convCount)} · ${t.lists.vault.usesTip}`}
       >
         <ShieldIcon size={13} />
         {t.lists.vault.occurrences(occ.totalCount)}
         <span className="om-vault-occ-conv">{t.lists.vault.conversations(occ.convCount)}</span>
+        <ChevRightIcon size={12} />
       </button>
       {onEdit && (
         <button

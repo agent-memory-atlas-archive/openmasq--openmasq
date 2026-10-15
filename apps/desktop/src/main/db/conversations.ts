@@ -91,6 +91,8 @@ export async function dbLoad(): Promise<{
       error: r.error ? true : undefined,
       incomplete: r.incomplete ? true : undefined,
       errorText: r.error_text || undefined,
+      // Allow-listed: an unknown value reads as absent (the card then follows its CTA).
+      errorKind: r.error_kind === "blocked" || r.error_kind === "quota" ? r.error_kind : undefined,
       attachments: attachments?.length ? attachments : undefined,
       usage,
       model: r.model ?? undefined,

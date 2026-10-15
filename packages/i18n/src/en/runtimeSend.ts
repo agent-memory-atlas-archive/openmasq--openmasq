@@ -9,14 +9,15 @@ import type { Messages } from "../messages";
 const NOT_MASKED = "Nothing was sent: names could not be masked.";
 
 export const runtimeSend = {
-  maskingBlocked: (cause) => `Send blocked: ${cause}. Nothing was sent. Try again.`,
+  maskingBlocked: (cause) => `Send blocked: ${cause}. Nothing was sent, to protect your data. Try again.`,
   maskingCause: {
-    network: "masking is not responding",
-    auth: "masking failed on our side",
-    unknown: "masking could not run",
-    engine: "masking could not finish safely",
+    network: "masking, which runs on your computer, didn't respond",
+    auth: "masking couldn't start",
+    unknown: "masking couldn't run on your computer",
+    engine: "masking couldn't confirm it had masked everything",
   },
-  maskingTimeout: "Send blocked: masking took too long. Nothing was sent. Try again. If the text is long, send it in several parts.",
+  maskingTimeout:
+    "Send blocked: masking took too long. Nothing was sent, to protect your data. Try again. If the text is long, send it in several messages.",
   modelBlockedByOrg: (model) => `Your organization turned off the model "${model}". Choose another one.`,
   creditsSold: "You are out of credits. Upgrade your plan, use your own API key, or wait for the renewal.",
   creditsUnsold: "This model is not available on your account right now. Use your own API key, or choose another model.",
@@ -28,8 +29,8 @@ export const runtimeSend = {
   fileStillReading: "Files are still being read. Wait until they're done before sending.",
   fileReadInPart: (name, read, total) =>
     `"${name}" was only read up to page ${read} of ${total}. Read it in full ("Read all ${total} pages" on its attachment) before sending: a document is never sent in part.`,
-  contextTooLarge: (model, tokens, limit, hasFiles) =>
-    `Too long for ${model}: about ${tokens} tokens, for a ${limit} window that must also hold the reply. Nothing was sent. Choose a model with a larger context window, or ${hasFiles ? "attach fewer files" : "shorten the text"}.`,
+  contextTooLarge: (model, pages, limitPages, hasFiles) =>
+    `Too long for ${model}: about ${pages} pages, when it reads about ${limitPages} at most, reply included. Nothing was sent. ${hasFiles ? "Attach fewer files" : "Shorten the text"}, or choose a model that accepts longer texts.`,
   unreadTitle: (n) => (n > 1 ? "Unreadable files" : "Unreadable file"),
   unreadBody: (n, names) =>
     n > 1
@@ -47,10 +48,10 @@ export const runtimeSend = {
     remoteNetwork: `Online masking is unreachable. ${NOT_MASKED} Check your connection, then try again.`,
     remoteUnknown: `Online masking is unavailable. ${NOT_MASKED} Try again later.`,
     local: `Offline masking is unavailable: the detection model could not load. ${NOT_MASKED} Try again, then reinstall the app if it keeps happening.`,
-    modelAuth: `Masking is unavailable: the API key is missing or invalid. ${NOT_MASKED} Add the key in Settings → Privacy.`,
-    modelNetwork: `Masking is unavailable: the model is unreachable. Check that Ollama is running and the address is correct. ${NOT_MASKED}`,
+    modelAuth: `Masking is unavailable: the access key is missing or was refused. ${NOT_MASKED} Add it in Settings → Privacy.`,
+    modelNetwork: `Masking is unavailable: the detection program chosen in Settings → Privacy isn't responding. Check that it's running on your computer. ${NOT_MASKED}`,
     modelUnknown: `Masking is unavailable. ${NOT_MASKED}`,
-    timeout: `Masking took too long. ${NOT_MASKED} Try again. If the document is long, split it.`,
+    timeout: `Masking took too long. ${NOT_MASKED} Try again. If the document is long, save it as several smaller files and attach them one at a time.`,
     engine: `Masking could not finish safely. ${NOT_MASKED} Try again; if it happens again, report it from "Send feedback".`,
   },
   token: {
@@ -103,10 +104,10 @@ export const runtimeFiles = {
   folderRefused: (message) => `Access not granted: ${message}`,
   importWrongProvider: (p) => `This file looks like a ${p} export. Select "${p}", then try again.`,
   importNothing: (p) =>
-    `No conversations found. Check that this is the ${p} export (the .zip you received by email, or its conversations.json file).`,
-  importNotJson: "This file does not contain a readable conversation export (JSON expected).",
+    `No conversations found. Choose the .zip file you received by email when you exported from ${p}.`,
+  importNotJson: "This file isn't a conversation export. Choose the .zip file you received by email when you exported.",
   importZipUnreadable: "Could not read the archive. Try again with the original export zip.",
-  importNoJsonInZip: 'No "conversations.json" file in this archive.',
+  importNoJsonInZip: "This archive doesn't contain your conversations. Choose the .zip file you received by email when you exported, unchanged.",
 } satisfies Messages["runtime"]["files"];
 
 export const runtimeMisc = {

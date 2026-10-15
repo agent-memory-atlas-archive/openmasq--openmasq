@@ -175,7 +175,8 @@
   font-size: 12.5px;
   font-weight: 500;
   text-align: left;
-  white-space: nowrap;
+  /* Wraps: the actions say their consequence, and the card is capped at 320px. */
+  white-space: normal;
 }
 .rmark-pop-btn.danger {
   color: var(--danger, #b3261e);

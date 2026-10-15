@@ -32,7 +32,7 @@ export const redactionCatalog = {
     email: {
       label: "E-mail",
       detail:
-        "Adresses e-mail. Le substitut garde un prénom cohérent, pour qu'une formule comme « Bonjour X » soit bien rétablie.",
+        "Adresses e-mail. La valeur de substitution garde un prénom cohérent, pour qu'une formule comme « Bonjour X » soit bien rétablie.",
     },
     phone: {
       label: "Téléphone",
@@ -95,12 +95,12 @@ export const redactionCatalog = {
         "Masque l'adresse entière (domaine, chemin et paramètres), pas seulement son contenu. Éteinte, les URL restent lisibles et rien à l'intérieur n'est masqué par erreur (noms de fichiers, jetons de cache d'une page), mais les clés qu'elles contiennent restent masquées. Activée au niveau Strict, pour l'analyse de documents.",
     },
     secret: {
-      label: "Clés & secrets",
+      label: "Mots de passe et codes secrets",
       detail:
         "Clés d'accès (OpenAI, AWS, Stripe, GitHub, Slack…), jetons de connexion, clés privées, mots de passe, codes OTP/PIN, portefeuilles crypto.",
     },
     apikey: {
-      label: "Chaînes type clé (générique)",
+      label: "Autres codes qui ressemblent à un mot de passe",
       detail:
         "Règle large : masque toute chaîne qui ressemble à une clé (long mélange de lettres et de chiffres). Active à tous les niveaux de protection, car une clé manquée serait envoyée non masquée. Elle peut aussi attraper des références produit inoffensives.",
     },
@@ -136,8 +136,8 @@ export const redactionCatalog = {
     ip: "Adresses IP",
     number: "Nombres",
     path: "Chemins de fichiers",
-    secret: "Clés & secrets",
-    apikey: "Chaînes de type clé",
+    secret: "Mots de passe et codes secrets",
+    apikey: "Codes qui ressemblent à un mot de passe",
   },
   lockedByOrg: "Imposée par votre organisation",
   modified: "modifié",

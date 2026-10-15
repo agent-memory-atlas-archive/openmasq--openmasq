@@ -139,7 +139,11 @@
 .ob-tune:hover {
   background: var(--surface-sunken);
 }
-.ob-skip {
+.ob-skip,
+.ob-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   height: 44px;
   padding: 0 16px;
   border-radius: var(--radius-md);

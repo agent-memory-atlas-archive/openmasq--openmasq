@@ -13,6 +13,7 @@ import { McpModals } from "./McpModals";
 import { levelOf } from "../../../privacy/privacyLevel";
 import { withConnectorLevel } from "../../../privacy/connectorMasking";
 
+import { BRAND } from "@openmasq/branding";
 import { useT } from "../../../i18n";
 import { mcpCategoryLabel } from "../../../help/catalogCopy";
 /* MCP servers tab — a searchable 2-column card grid grouped by category. The cards
@@ -29,7 +30,7 @@ export function McpTab({
   /** Deep-link: preselect (open the modal of) this connector — used by the chat's
    *  suggested-integration cards. The `n` nonce re-applies even for the same id. */
   requestedConnector?: { id: string; n: number };
-  /** The settings draft — the agent-browser hardening (« Ce que l'agent peut faire »)
+  /** The settings draft — the agent-browser hardening (« Ce que l'assistant peut faire »)
    *  writes `browserReadOnly` / `browserAllowedDomains` through it. Absent (a caller
    *  with no settings) ⇒ that section is not drawn. */
   draft?: Settings;
@@ -127,16 +128,6 @@ export function McpTab({
               placeholder={t.mcpTab.search}
             />
           </label>
-          {canAddCustom && (
-            <button
-              type="button"
-              className="mcp-btn subtle mcp-add-btn"
-              onClick={() => setAdding(true)}
-              title={t.mcpTab.addTip}
-            >
-              <PlusIcon size={14} /> {t.mcpTab.add}
-            </button>
-          )}
         </div>
 
         {remoteToOffer.length > 0 && (
@@ -160,19 +151,20 @@ export function McpTab({
           </div>
         )}
 
-        {groups.map((group) => (
-          <div key={group.id} className="mcp-group">
-            <div className="cv-eyebrow mcp-cat-eyebrow">{mcpCategoryLabel(group.id, t)}</div>
-            {grid(group.items)}
-          </div>
-        ))}
-
+        {/* The folders of this computer lead: the everyday connector that needs no account. */}
         {localItems.length > 0 && (
           <div className="mcp-group">
             <div className="cv-eyebrow mcp-cat-eyebrow">{t.mcpTab.localServers}</div>
             {grid(localItems)}
           </div>
         )}
+
+        {groups.map((group) => (
+          <div key={group.id} className="mcp-group">
+            <div className="cv-eyebrow mcp-cat-eyebrow">{mcpCategoryLabel(group.id, t)}</div>
+            {grid(group.items)}
+          </div>
+        ))}
 
         {/* User-added servers keep their own section: they are not audited connectors and
           must not read as one, sitting inside a category next to the vetted ones. */}
@@ -184,6 +176,24 @@ export function McpTab({
         )}
 
         {nothing && <p className="mcp-empty">{t.mcpTab.noMatch(query)}</p>}
+
+        {/* A server the app has not vetted is an ADVANCED gesture: folded at the end of the
+            list, never a button beside the search. Offered only where main can vet the
+            endpoint (it mints the id and runs the SSRF guard). */}
+        {canAddCustom && (
+          <details className="mcp-group mcp-manual-fold">
+            <summary>{t.mcpTab.manualFold}</summary>
+            <p>{t.mcpTab.manualFoldBody(BRAND.name)}</p>
+            <button
+              type="button"
+              className="mcp-btn subtle mcp-add-btn"
+              onClick={() => setAdding(true)}
+              title={t.mcpTab.addTip}
+            >
+              <PlusIcon size={14} /> {t.mcpTab.add}
+            </button>
+          </details>
+        )}
 
         {/* The SAME stack as elsewhere in the app (`ConnectorModalHost`) — a single
           implementation of the connect/disconnect wiring, not two copies (rule 9). */}

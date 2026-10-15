@@ -25,6 +25,8 @@ export function McpDirectBody({
   onConnectDirect: () => void;
 }) {
   const t = useT();
+  const comingSoon = mcpAuthShape(connector).variant === "comingSoon";
+  const adds = connector.byoAdds ?? t.connectorCatalog.auth.thisAccess;
   return (
     <>
       {hasCreds && <p className="mcp-modal-note">{t.mcpTab.credsSaved}</p>}
@@ -35,14 +37,26 @@ export function McpDirectBody({
         // rather than an integration project.
         <p className="mcp-modal-note">{t.mcpTab.adminConsent(BRAND.name)}</p>
       )}
-      {mcpAuthShape(connector).variant === "comingSoon" && (
+      {comingSoon && (
         // The chip says « Bientôt disponible »; the modal says what to do meanwhile.
         <p className="mcp-modal-note">{t.mcpTab.comingSoonNote(BRAND.name)}</p>
+      )}
+      {connector.byoAdds && !connector.byoOnly && (
+        // What « accès partiel » leaves out, said where it is read — not only in a tooltip.
+        <p className="mcp-modal-note">{t.mcpTab.connectLimitedNote(BRAND.name, adds)}</p>
       )}
       <div className="mcp-modal-actions">
         {connector.byoOnly ? (
           <Btn
-            label={busy ? t.mcpTab.connecting : hasCreds ? t.mcpTab.reconnect : t.mcpTab.myKeys}
+            label={
+              busy
+                ? t.mcpTab.connecting
+                : hasCreds
+                  ? t.mcpTab.reconnect
+                  : comingSoon
+                    ? t.mcpTab.myKeysGoogle
+                    : t.mcpTab.myKeys
+            }
             onClick={onByo}
             disabled={busy}
             loading={busy}
@@ -65,10 +79,7 @@ export function McpDirectBody({
               disabled={busy}
               loading={busy}
               subtle
-              title={t.mcpTab.connectLimitedTip(
-                BRAND.name,
-                connector.byoAdds ?? t.connectorCatalog.auth.thisAccess,
-              )}
+              title={t.mcpTab.connectLimitedTip(BRAND.name, adds)}
             />
             <Btn label={t.mcpTab.myKeys} onClick={onByo} disabled={busy} />
           </>

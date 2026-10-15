@@ -162,7 +162,7 @@ export function RedactionRulesContent({
                       >
                         <span className="rrm-dot" />
                         <span className="rrm-cat-label">{copy.label}</span>
-                        {cat.ai && <span className="rrm-tag ai">BETA</span>}
+                        {cat.ai && <span className="rrm-tag ai">{t.accountTab.beta}</span>}
                         {locked && (
                           <span className="rrm-tag lock">
                             <LockIcon size={11} />

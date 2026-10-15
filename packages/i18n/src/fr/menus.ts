@@ -45,6 +45,13 @@ export const menus = {
   markKeep: {
     uncertain: (brand) => `Détection à faible confiance par ${brand}. À vérifier.`,
   },
+  composerHints: {
+    placeholder: (brand) => `Écrivez à ${brand}, déposez un fichier, ou tapez « / » pour vos compétences…`,
+    countTip:
+      "Ces valeurs seront remplacées par des faux avant l'envoi. Cliquez pour les voir et choisir lesquelles envoyer en clair. Pour masquer un autre mot, sélectionnez-le dans votre texte.",
+    skillShortcut: "Astuce : tapez « / » dans la zone de saisie pour ouvrir vos compétences.",
+    sendQueued: "Envoi dès que la recherche des données à masquer est terminée…",
+  },
   page: {
     moreActions: "Plus d'actions",
     exportMemory: "Exporter (diagnostic)",
@@ -62,7 +69,7 @@ export const downloads = {
 export const docViews = {
   image: "Image",
   pdfRedacted: "Pages masquées",
-  pdfRedactedHint: "Les pages, avec les substituts à la place des valeurs réelles",
+  pdfRedactedHint: "Les pages, avec des valeurs de substitution à la place des vraies",
   sheet: "Feuille",
   presentation: "Présentation",
   document: "Document",

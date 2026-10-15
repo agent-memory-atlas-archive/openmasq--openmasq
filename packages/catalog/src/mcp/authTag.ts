@@ -108,8 +108,8 @@ export function mcpAuthTag(
       // and a developer can connect with their own Google keys meanwhile.
       return {
         kind: "direct",
-        label: "Bientôt disponible",
-        title: `La connexion en un clic arrive : Google vérifie encore ${BRAND.name}. En attendant, vous pouvez la connecter avec vos propres clés Google. ${BYO_SAFE}`,
+        label: "Option avancée",
+        title: `La connexion en un clic arrive : Google vérifie encore ${BRAND.name}. En attendant, une option avancée permet de le connecter avec vos propres clés Google. Elle demande un compte Google Cloud. ${BYO_SAFE}`,
       };
     }
     if (c.byoOnly) {
@@ -124,25 +124,25 @@ export function mcpAuthTag(
     if (c.byoAdds) {
       return {
         kind: "direct",
-        label: "1-clic limité",
+        label: "1 clic (partiel)",
         title: `Connexion en un clic, rien à créer. Pour ${what}, vos propres clés seront nécessaires — ${byoReasonText(c)}.`,
       };
     }
     return {
       kind: "direct",
-      label: c.directAuth === "device" ? "Appareil" : "1-clic",
+      label: c.directAuth === "device" ? "Code à coller" : "1-clic",
       title:
         c.directAuth === "device"
-          ? "Un code à saisir sur le site du service, et c'est fini. Aucune clé à créer."
+          ? "Un code s'affiche et se copie tout seul. Collez-le sur le site du service, puis autorisez l'accès. Aucune clé à créer."
           : DIRECT_FULL,
     };
   }
   if (c.transport === "stdio") {
     return {
       kind: "local",
-      label: "Local",
+      label: "Sur cet ordinateur",
       title:
-        "Cet outil tourne sur votre machine : vos dossiers et vos identifiants restent chez vous, et ne sont jamais envoyés au modèle.",
+        "Cet outil tourne sur votre ordinateur, sans compte en ligne. Ce qu'il lit dans vos dossiers est masqué avant d'être envoyé au modèle, comme vos messages.",
     };
   }
   if (c.transport === "broker") {
@@ -157,7 +157,7 @@ export function mcpAuthTag(
       kind: "apikey",
       label: "Clé requise",
       title:
-        "Ce service demande une clé, à récupérer sur son site puis à coller ici. Il n'y a pas de page de connexion.",
+        "Ce service demande une clé d'accès, à récupérer sur son site puis à coller ici. Il n'y a pas de page de connexion.",
     };
   }
   return {

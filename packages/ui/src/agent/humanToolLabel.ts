@@ -146,3 +146,11 @@ export function humanToolLabel(server: string, tool: string, t: Messages): strin
   // name when stripping left nothing (a tool named only after its own connector).
   return (kept.length ? kept : all).map((w) => noun(w, t)).join(" ");
 }
+
+/** A tool ARGUMENT's name in words (`recipient_email` → « Recipient email ») — what an
+ *  exfil flag names on the confirmation card, where `<code>recipient_email</code>` read
+ *  as developer vocabulary. The words are the server's own, only un-snake-cased. */
+export function humanParamLabel(param: string): string {
+  const w = words(param).join(" ");
+  return w ? w.charAt(0).toUpperCase() + w.slice(1) : param;
+}

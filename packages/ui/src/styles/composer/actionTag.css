@@ -140,6 +140,17 @@
   min-width: 0;
   overflow: hidden;
 }
+/* The count is also the way to the chips (click → unfold + focus): a button that keeps
+   the pill's look. */
+.protected-pill.is-button {
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+.protected-pill.is-button:focus-visible {
+  outline: 2px solid var(--focus-ring, var(--brand));
+  outline-offset: 2px;
+}
 /* Token counter — floated into the composer-wrap's existing bottom padding
    (bottom-right), so it adds NO vertical row (precious on a split pane). */
 .composer-note {

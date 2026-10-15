@@ -2,6 +2,7 @@ import { useState, type Dispatch, type SetStateAction } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Switch, UsersIcon, LogOutIcon, DownloadIcon, ExternalIcon } from "../../components/brand";
 import { OrgSection } from "./OrgSection";
+import { ConfirmDialog } from "../../components/feedback/ConfirmDialog";
 import { captureEvent } from "../../analytics";
 import { useAuth } from "../../state/auth/useAuth";
 import type { Conversation, Settings } from "../../types";
@@ -34,6 +35,7 @@ export function AccountTab({
   onImportConversations?: (convs: Conversation[]) => { added: number; skipped: number };
 }) {
   const [importOpen, setImportOpen] = useState(false);
+  const [signOutAsk, setSignOutAsk] = useState(false);
   const t = useT();
   // The signed-in account (email + sign-out). Absent in the browser preview
   // (no host.auth) → the account section is skipped.
@@ -54,7 +56,7 @@ export function AccountTab({
               <div className="account-email">{user.email ?? t.accountTab.signedInFallback}</div>
               <div className="account-hint">{t.accountTab.signedInHint(BRAND.name)}</div>
             </div>
-            <button type="button" className="account-signout" onClick={() => void signOut()}>
+            <button type="button" className="account-signout" onClick={() => setSignOutAsk(true)}>
               <LogOutIcon size={15} />
               {t.accountTab.signOut}
             </button>
@@ -204,6 +206,20 @@ export function AccountTab({
       </section>
 
       <AnimatePresence>
+        {signOutAsk && (
+          <ConfirmDialog
+            title={t.accountTab.signOutConfirmTitle}
+            message={t.accountTab.signOutConfirmBody}
+            confirmLabel={t.accountTab.signOut}
+            danger={false}
+            icon={<LogOutIcon size={19} />}
+            onConfirm={() => {
+              setSignOutAsk(false);
+              void signOut();
+            }}
+            onCancel={() => setSignOutAsk(false)}
+          />
+        )}
         {importOpen && onImportConversations && (
           <ImportModal
             defaultModelId={draft.defaultModelId || DEFAULT_MODEL_ID}

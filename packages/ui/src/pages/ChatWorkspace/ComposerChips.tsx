@@ -1,6 +1,7 @@
-import { useState, type KeyboardEvent, type RefObject } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent, type RefObject } from "react";
 import { useT } from "../../i18n";
-import { FileIcon, RefreshIcon, ShieldIcon, XIcon } from "../../components/brand";
+import { EyeIcon, FileIcon, ShieldIcon } from "../../components/brand";
+import { kindLabel } from "../../components/message/kindLabel";
 import type { Item } from "./composerDetection";
 import type { longTextStats } from "./composerDetection";
 
@@ -17,21 +18,33 @@ const CHIP_COLLAPSE_LIMIT = 8;
  * modal editor). Pure render — every decision stays with the caller.
  */
 
-/** One chip per detected value: click toggles « Laisser en clair · cet envoi ».
+/** One chip per detected value: click toggles « envoyer en clair · ce message ».
  *  The same gesture exists directly ON the highlighted word (`MarkKeepMenu`) —
- *  this row stays the overview + the way BACK (re-mask a kept value). The verbs come
- *  from `conversation.mark`, THE lexicon every reveal surface shares. */
+ *  this row stays the overview + the way BACK (re-mask a kept value).
+ *  The glyphs say the STATE, never « dismiss »: a masked chip wears the shield and an
+ *  eye (= « montrer au modèle »); a kept one wears the eye, a painted « en clair » and the
+ *  shield to mask it again. The category is in the tooltip AND the accessible name, never
+ *  only in the hue. `focusSignal` (the « N à masquer » pill) unfolds the row and focuses it. */
 export function DetectChips({
   items,
   keepSet,
   onToggle,
+  focusSignal = 0,
 }: {
   items: Item[];
   keepSet: Set<string>;
   onToggle: (value: string) => void;
+  focusSignal?: number;
 }) {
   const t = useT();
+  const mark = t.conversation.mark;
   const [expanded, setExpanded] = useState(false);
+  const rowRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!focusSignal) return;
+    setExpanded(true);
+    rowRef.current?.querySelector<HTMLButtonElement>(".detect-chip")?.focus();
+  }, [focusSignal]);
   // Kept (un-redacted) values are NEVER folded away: that decision must stay
   // visible and revertable. The fold only hides still-redacted chips.
   const shown = expanded
@@ -41,31 +54,36 @@ export function DetectChips({
       );
   const hidden = items.length - shown.length;
   return (
-    <div className="detect-chips">
-      {shown.map(({ value, hue, uncertain }) => {
+    <div className="detect-chips" ref={rowRef}>
+      {shown.map(({ value, hue, kind, uncertain }) => {
         const kept = keepSet.has(value);
         // « À vérifier »: single-source detection and weak signal (see
         // `Detection.uncertain`). The chip SHOWS it — the value stays redacted
         // as long as the user doesn't keep it in clear (fail closed).
         const doubt = uncertain && !kept;
+        const category = kindLabel(kind, t);
+        const tip = kept
+          ? mark.chipClear(category)
+          : doubt
+            ? `${category} · ${t.composer.detect.uncertain}`
+            : mark.chipMasked(category);
         return (
           <button
             key={value}
             type="button"
             className={`detect-chip hl-${hue} ${kept ? "kept" : ""}${doubt ? " doubt" : ""}`}
-            title={
-              kept
-                ? t.conversation.mark.reMask(t.conversation.mark.scopeSend)
-                : doubt
-                  ? t.composer.detect.uncertain
-                  : t.conversation.mark.leaveClear(t.conversation.mark.scopeSend)
-            }
+            title={tip}
+            aria-label={`${value} · ${tip}`}
+            aria-pressed={kept}
             onClick={() => onToggle(value)}
           >
-            <ShieldIcon size={11} />
+            {kept ? <EyeIcon size={11} /> : <ShieldIcon size={11} />}
             <span className="detect-chip-val">{value}</span>
+            {kept && <span className="detect-clear-badge">{mark.clearBadge}</span>}
             {doubt && <span className="detect-chip-doubt">{t.composer.detect.toVerify}</span>}
-            <span className="detect-chip-x">{kept ? <RefreshIcon size={10} /> : <XIcon size={10} />}</span>
+            <span className="detect-chip-x" aria-hidden="true">
+              {kept ? <ShieldIcon size={10} /> : <EyeIcon size={10} />}
+            </span>
           </button>
         );
       })}

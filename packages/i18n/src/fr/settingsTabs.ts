@@ -10,6 +10,9 @@ export const accountTab = {
   signedInFallback: "Compte connecté",
   signedInHint: (brand) => `Connecté à ${brand} sur cet appareil.`,
   signOut: "Se déconnecter",
+  signOutConfirmTitle: "Se déconnecter de ce compte ?",
+  signOutConfirmBody:
+    "Vous reviendrez à l'écran de connexion. Rien n'est supprimé : vous retrouverez vos conversations en vous reconnectant avec ce compte.",
   createOrgTip: "Créer une organisation dans l'app web",
   createOrg: "Créer une organisation",
   createOrgHint:
@@ -35,6 +38,8 @@ export const accountTab = {
   linkPreviewsHint: "Une vignette sous les liens. Activer révèle votre adresse IP au site lié.",
   backToChats: "Retour aux conversations",
   advanced: "Avancé",
+  advancedShow: "Afficher les réglages moins courants (usage, versions…)",
+  advancedHide: "Replier les réglages moins courants",
 } satisfies Messages["accountTab"];
 
 export const privacyTab = {
@@ -48,36 +53,36 @@ export const privacyTab = {
   activeCount: (active, total) => `${active}/${total} actives`,
   managedByOrg: (n) => ` · ${n} gérée(s) par votre organisation`,
   advancedTitle: "Options avancées",
-  advancedSub: "Journal technique, affichage des marqueurs, ce que le modèle reçoit.",
-  debugLogTitle: "Journal de débogage",
+  advancedSub: "Journal technique pour le support, et la forme des valeurs masquées.",
+  debugLogTitle: "Journal technique (pour le support)",
   debugLogHint:
-    "Ajoute « Journal de débogage » au menu ⋯ de chaque conversation. Conservé sur cet appareil uniquement.",
-  tokenDisplayTitle: "Afficher des marqueurs plutôt que des substituts",
+    "Garde la trace exacte de ce qui part et revient, pour aider le support à comprendre un problème. Ajoute « Journal technique » au menu ⋯ de chaque conversation. Reste sur cet appareil.",
+  tokenDisplayTitle: "Afficher « Personne 1 » au lieu d'un faux nom",
   tokenDisplayHint:
-    "Une valeur masquée s'affiche « [PERSON1] » au lieu d'un nom de substitution. Ne change que l'affichage : ce que reçoit le modèle dépend du réglage ci-dessous.",
-  wireTokensTitle: "Le modèle ne voit que des marqueurs",
+    "Vous voyez un repère, par exemple « [PERSON1] », là où un faux nom aurait été écrit. Ne change que ce que vous voyez : ce que reçoit le modèle dépend du réglage ci-dessous.",
+  wireTokensTitle: "Envoyer « Personne 1 » au modèle au lieu d'un faux nom",
   wireTokensHint:
-    "Le modèle reçoit « [PERSON1] » au lieu d'un nom de substitution réaliste. Aucun nom n'est inventé, mais le modèle rédige et raisonne moins bien. S'applique aux nouvelles conversations.",
+    "Le modèle reçoit un repère, par exemple « [PERSON1] », au lieu d'un faux nom réaliste. Aucun nom n'est inventé, mais le modèle rédige et raisonne moins bien. S'applique aux nouvelles conversations.",
   memoryEyebrow: "Mémoire",
   memoryAutoTitle: "Extraction automatique de la mémoire",
   memoryAutoHint: (brand) =>
     `${brand} enregistre de lui-même les faits durables d'une conversation, dans « À revoir ». Rien de plus n'est envoyé hors de votre appareil. « Retiens que… » fonctionne, que ce réglage soit activé ou non.`,
   memoryExportTitle: "Exporter la mémoire (diagnostic)",
   memoryExportHint:
-    "Les fiches et leurs liens sémantiques, en texte, dans un fichier local. Contient des données réelles. Utile pour comprendre un regroupement ou un doublon.",
+    "Les fiches et les liens entre elles, en texte, dans un fichier local. Contient des données réelles. Utile pour comprendre un regroupement ou un doublon.",
   reportEyebrow: "Ce qui a été masqué",
   reportEmpty: (brand) =>
     `Rien n'a encore été envoyé. Après votre premier message, vous verrez ici ce que ${brand} a masqué, et de quel type.`,
   reportMessagesSub: (n) => `saisies dans vos messages · ${n} conversation${n === 1 ? "" : "s"}`,
   reportAllSub: "tout ce qui a été masqué · messages, outils et documents",
-  reportDetail: "Voir le journal détaillé",
+  reportDetail: "Voir l'historique détaillé",
   reportByType: "Par type",
   reportByTypeTip: "Voir la répartition par type",
   reportMessagesTitle: "Vos messages · par type",
   reportAllTitle: "Tout ce qui a été masqué · par type",
   protectedValues: (n) =>
     `${n.toLocaleString("fr-FR")} valeur${n === 1 ? "" : "s"} masquée${n === 1 ? "" : "s"}`,
-  auditAria: "Journal",
+  auditAria: "Historique de confidentialité",
   auditRedaction: "Masquage",
   auditNetwork: "Réseau",
   auditCount: (n) =>
@@ -85,7 +90,8 @@ export const privacyTab = {
   auditSub: "Masqués avant d'atteindre un modèle · le modèle ne voit jamais les valeurs réelles.",
   auditExportTip: "Exporter la sélection en CSV",
   auditExport: "Exporter",
-  auditEmpty: "Aucun masquage enregistré pour l'instant.",
+  auditEmpty:
+    "Rien n'a encore été masqué. Écrivez un message contenant un nom, un e-mail ou un IBAN : chaque valeur masquée avant l'envoi s'affichera ici.",
   auditSearch: "Rechercher une valeur ou une conversation…",
   auditAll: (total) => `Tout · ${total}`,
   auditOpenConv: (title) => `Ouvrir · ${title}`,
@@ -140,9 +146,9 @@ export const browserTab = {
 
 export const modelsTab = {
   sourcesEyebrow: "D'où viennent vos modèles",
-  keysGroupTitle: "Avec une clé API",
-  keysGroupSub: "Vous payez le fournisseur au token.",
-  agentsGroupTitle: "Via un agent installé",
+  keysGroupTitle: "Avec votre compte OpenAI, Mistral, Anthropic…",
+  keysGroupSub: "Une clé d'accès de ce service ; facturé à l'usage par ce service.",
+  agentsGroupTitle: "Avec votre abonnement (application installée)",
   agentsGroupSub: "Votre abonnement existant, aucune clé.",
   recommended: "conseillé",
   agentTip: (a) => `${a} : votre abonnement existant, aucune clé à coller.`,
@@ -157,7 +163,7 @@ export const modelsTab = {
   orgProvidesModels: (org) => `${org} fournit les modèles.`,
   yourOrg: "Votre organisation",
   orgKeysBlocked:
-    "Les clés API personnelles sont désactivées sur ce compte. Les modèles ouverts par votre organisation fonctionnent sans rien renseigner. Aucun autre n'est utilisable, même avec votre propre clé. Votre administrateur choisit la liste.",
+    "Les clés d'accès personnelles sont désactivées sur ce compte. Les modèles ouverts par votre organisation fonctionnent sans rien renseigner. Aucun autre n'est utilisable, même avec votre propre clé. Votre administrateur choisit la liste.",
   editKey: (provider) => `Modifier la clé ${provider}`,
   addKeyFor: (provider) => `Renseigner une clé ${provider}`,
   keySaved: "Clé enregistrée",
@@ -175,14 +181,14 @@ export const modelsTab = {
   searchAria: "Rechercher un modèle",
   clearSearch: "Effacer la recherche",
   all: "Tous",
-  priceAria: "Filtrer par prix de token",
+  priceAria: "Filtrer par prix",
   price: "Prix",
-  priceTiers: { free: "Gratuit", eco: "Éco", standard: "Standard", premium: "Premium" },
+  priceTiers: { free: "Gratuit", eco: "Économique", standard: "Standard", premium: "Haut de gamme" },
   priceTierTips: {
     free: "0 $, gratuit avec votre compte",
-    eco: "≤ 3 $ / M tokens en sortie",
-    standard: "3 à 20 $ / M tokens en sortie",
-    premium: "> 20 $ / M tokens en sortie",
+    eco: "Moins de 3 $ pour environ 750 000 mots de réponse",
+    standard: "De 3 à 20 $ pour environ 750 000 mots de réponse",
+    premium: "Plus de 20 $ pour environ 750 000 mots de réponse",
   },
   priceTierFreeUnserved: "0 $ avec une clé OpenRouter",
   defaultFix: (reason) => `${reason} · Ajouter`,
@@ -210,19 +216,19 @@ export const modelsTab = {
   localAddress: "Adresse du modèle",
   claude: {
     title: "Votre abonnement Claude",
-    note: "Si vous avez un abonnement Claude et la CLI Claude Code installée, vos conversations peuvent passer par elle, sans clé API. Le masquage s'applique de la même façon.",
-    row: "Utiliser ma CLI Claude Code",
+    note: "Si vous avez un abonnement Claude et l'application Claude Code installée sur cet ordinateur, vos conversations peuvent passer par elle, sans clé d'accès. Le masquage s'applique de la même façon.",
+    row: "Utiliser mon abonnement Claude (application Claude Code installée)",
     on: "Ajoute « Claude Code » à la liste des modèles. Chaque message est décompté de votre abonnement Claude personnel.",
     missing:
-      "CLI introuvable sur cette machine : installez Claude Code et connectez-le à votre compte Claude, puis revenez ici.",
+      "Claude Code n'est pas installé sur cet ordinateur. Installez-le et connectez-le à votre compte Claude, puis revenez ici.",
   },
   codex: {
     title: "Votre abonnement ChatGPT",
-    note: "Si vous avez un abonnement ChatGPT et la CLI Codex installée, vos conversations peuvent passer par elle, sans clé API. Le masquage s'applique de la même façon.",
-    row: "Utiliser ma CLI Codex",
+    note: "Si vous avez un abonnement ChatGPT et l'application Codex installée sur cet ordinateur, vos conversations peuvent passer par elle, sans clé d'accès. Le masquage s'applique de la même façon.",
+    row: "Utiliser mon abonnement ChatGPT (application Codex installée)",
     on: "Ajoute « GPT Codex » à la liste des modèles. Chaque message est décompté de votre abonnement ChatGPT personnel.",
     missing:
-      "CLI introuvable sur cette machine : installez-la (npm i -g @openai/codex), connectez-la avec « codex login », puis revenez ici.",
+      "Codex n'est pas installé sur cet ordinateur. Installez-le et connectez-le à votre compte ChatGPT, puis revenez ici.",
   },
   detail: {
     barAria: (label, value) => `${label} ${value}/5`,
@@ -230,11 +236,11 @@ export const modelsTab = {
     hosted: "Hébergé",
     context: (size) => `Contexte ${size}`,
     vision: "Vision",
-    priceEyebrow: "Tarif indicatif par million de tokens (environ 750 000 mots)",
+    priceEyebrow: "Tarif indicatif pour environ 750 000 mots (un million de « tokens »)",
     free: "Gratuit",
     priceIn: "Ce que vous envoyez",
     priceOut: "La réponse du modèle",
-    priceUnit: "Prix public du fournisseur, en dollars. Ce n'est pas votre facture.",
+    priceUnit: "Prix public du service, en dollars. Ce n'est pas votre facture.",
     profileEyebrow: "Profil (indicatif)",
     reasoning: "Raisonnement",
     coding: "Code",

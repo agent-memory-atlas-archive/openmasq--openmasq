@@ -2,7 +2,7 @@ import { toggleFavoriteModel } from "../../../../components/ModelSelector/simple
 import { factorySimpleIds } from "../../../../prompt/defaultModel";
 import { AUTO_MODEL_ID } from "../../../../send/autoRoute";
 import { Composer } from "../../Composer";
-import { ConversationTokens } from "../../ConversationTokens";
+import { markTransparencySeen } from "../../../../privacy/transparency";
 import { inactiveCategoryLabels } from "../../docCategoryNotice";
 import { DocumentWeightNotice } from "../../DocumentWeightNotice";
 import { MemoryProposalCard } from "../../MemoryProposalCard";
@@ -29,10 +29,12 @@ export function ComposerBlock({ m }: { m: ChatViewModel }) {
           count={view.transparencyCount}
           modelName={view.currentModelLabel}
           onOpen={() => {
-            patch({ transparencySeen: true });
+            if (conversation) patch({ transparencySeenIn: markTransparencySeen(settings?.transparencySeenIn, conversation.id) });
             view.setShowComparison(true);
           }}
-          onDismiss={() => patch({ transparencySeen: true })}
+          onDismiss={() =>
+            conversation && patch({ transparencySeenIn: markTransparencySeen(settings?.transparencySeenIn, conversation.id) })
+          }
         />
       )}
       {view.showRedactionIntro && canWrite && (
@@ -96,6 +98,7 @@ export function ComposerBlock({ m }: { m: ChatViewModel }) {
           settings?.redactCategories,
           conversation?.redactCategories,
           orgProfile?.forcedCategories,
+          m.t,
         )}
         conversation={conversation}
         isStreaming={view.activeStreaming}
@@ -127,11 +130,6 @@ export function ComposerBlock({ m }: { m: ChatViewModel }) {
         redactPolicy={redactPolicy}
         redactLevel={redactLevel}
       />
-      {conversation && (
-        <div className="composer-note">
-          <ConversationTokens convId={conversation.id} />
-        </div>
-      )}
     </div>
   );
 }

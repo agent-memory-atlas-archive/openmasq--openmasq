@@ -211,7 +211,7 @@ export function ImportSkillsModal({
           onClick={submit}
           disabled={chosen.length === 0}
         >
-          <CheckIcon size={15} /> Importer {chosen.length > 0 ? chosen.length : ""}
+          <CheckIcon size={15} /> {t.modals.importSkills.submit(chosen.length)}
         </button>
       </div>
     </ModalShell>

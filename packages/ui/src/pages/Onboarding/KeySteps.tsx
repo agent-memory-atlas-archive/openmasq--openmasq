@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useT } from "../../i18n";
-import { PROVIDERS, type ProviderId } from "@openmasq/llm";
+import { type ProviderId } from "@openmasq/llm";
 import { CheckIcon } from "../../components/brand";
 import { providerKeyHelp, providerKeyIssue } from "../../containers/modals/providerKeyHelp";
+import { providerLabel } from "../../help/providerLabel";
 
 /**
  * "Où trouver votre clé", then the field to paste it in — the manual half of the first-launch
@@ -44,7 +45,7 @@ export function KeySteps({
   const [done, setDone] = useState<Set<number>>(() => new Set());
 
   const help = providerKeyHelp(provider, t);
-  const label = PROVIDERS[provider].label;
+  const label = providerLabel(provider, t);
   const issue = providerKeyIssue(provider, value, t);
 
   const toggleStep = (i: number) =>

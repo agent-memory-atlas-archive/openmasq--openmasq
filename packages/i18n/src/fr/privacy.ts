@@ -30,7 +30,7 @@ export const privacyLevels = {
     desc: "Pour analyser des documents.",
     short: (brand) => `La totalité de ce que ${brand} sait détecter, sans exception.`,
     tradeoff:
-      "Le modèle travaille sur des substituts : les calculs et les réponses sur le monde réel peuvent être faux.",
+      "Le modèle travaille sur des valeurs de substitution : les calculs et les réponses sur le monde réel peuvent être faux.",
   },
 } satisfies Messages["privacyLevels"];
 
@@ -48,7 +48,7 @@ export const redactTypes = {
   ip: "Adresse IP",
   path: "Chemin de fichier",
   dob: "Date de naissance",
-  secret: "Secret / clé",
+  secret: "Mots de passe et codes secrets",
 } satisfies Messages["redactTypes"];
 
 export const webNav = {

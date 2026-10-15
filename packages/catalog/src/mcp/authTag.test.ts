@@ -21,12 +21,12 @@ describe("mcpAuthTag — what the app's own client can actually do", () => {
     }
   });
 
-  it("Google : « Bientôt disponible », clés seulement, tant que Google vérifie l'app", () => {
+  it("Google : « Option avancée » (vos clés) seulement, tant que Google vérifie l'app", () => {
     for (const id of ["gmail", "google-drive", "google-calendar", "google-docs", "google-sheets", "google-tasks", "google-analytics"]) {
       const c = findConnector(id)!;
       expect(c.byoOnly, id).toBe(true);
       expect(mcpAuthShape(c).variant, id).toBe("comingSoon");
-      expect(mcpAuthTag(c).label, id).toBe("Bientôt disponible");
+      expect(mcpAuthTag(c).label, id).toBe("Option avancée");
       expect(c.scopes?.byo?.length, `${id} keeps its BYO scopes`).toBeGreaterThan(0);
     }
     // Restricted scopes = CASA; the rest = brand verification. Both are ours to clear.

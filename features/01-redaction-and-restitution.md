@@ -6,7 +6,8 @@ real values put back in place.
 
 ### Redaction on send
 **Access**: automatic, on every send. Visible in the send button (« Masquage » →
-« Masqué »), in the composer's highlights, and in the « N à masquer » pill.
+« Masqué »), in the composer's highlights, and in the « N à masquer » pill (a click unfolds
+and focuses the chips; its tooltip says what it means and that selecting a word masks it).
 
 **What it makes possible.** Writing to a model with your real information — the client's
 name, their IBAN, the site address, the medical file — without any of those values leaving
@@ -90,14 +91,23 @@ holds, it is not merely displayed.
 - [x] A category mandated by the organization can be neither disabled nor revealed
 - [x] The composer's preview obeys the same rules as the send
 - [x] A keystroke or a new paste **cancels** the preview's running detection, down to the offline NER worker: a stale run never competes with the next one or with the send — `apps/desktop/src/main/ner/cancelRuns.ts`
-- [x] Reveal a detected value one at a time (and re-mask it)
+- [x] Reveal a detected value one at a time (and re-mask it): each chip names its CATEGORY in
+      its tooltip, wears a shield + an eye (never a ✕ that reads as « dismiss »), and a kept one
+      paints « en clair » with the shield to mask it again — `packages/ui/src/pages/ChatWorkspace/ComposerChips.tsx`;
+      clicking a highlighted word names the category and « remplacé par un faux avant l'envoi »
+      (no substitute exists before the send, none is invented) — `packages/ui/src/pages/ChatWorkspace/MarkKeepMenu.tsx`
+- [x] The hover card on a mark offers three DISTINCT actions, each saying its consequence:
+      « Ne plus masquer ce terme dans cette conversation » (a bubble) / « Envoyer ce terme en clair
+      avec ce message » (document preview), « Ne plus masquer les « <catégorie> » de ce message »,
+      and — document preview only — « Ce n'est pas une donnée sensible » (definitive) —
+      `packages/ui/src/components/message/RedactionInlineReveal.tsx`
 - [x] An uncertain detection is marked « **à vérifier** » (dotted) in the preview — masked by default, kept in the clear with one click if it is a false positive — `packages/ui/src/pages/ChatWorkspace/composerDetection.ts`
 - [x] Notoriety follows the level: Allégé/Renforcé spare big brands, MCP integrations and public figures; **Strict** masks them too — `packages/ui/src/privacy/privacyLevel.ts`
 - [x] Every category and every level also state what masking can DISTORT (not only what it covers) — `packages/ui/src/components/PrivacyLevelPicker.tsx`
 
 ### Seeing what the model saw
 **Access**: under a reply → « Voir ce que le modèle a vu » (`TransparencyModal`), or
-Réglages → Confidentialité → « Options avancées » → « **Journal de débogage** ».
+Réglages → Confidentialité → « Options avancées » → « **Journal technique (pour le support)** ».
 
 **What it makes possible.** Comparing, message by message, what you wrote and what actually
 left. The comparison is not a copy taken aside: it replays the same substitution as the
@@ -118,12 +128,18 @@ opens in one click from any reply.
 - [x] A long text (a 200k-character paste) opens at once: each pair shows its first 8,000
       characters, « Afficher la suite » adds 40,000 more, never the whole text in one go; the
       shown part is the exact start of the comparison — `packages/ui/src/containers/modals/TransparencyModal/sliceSegments.ts`
-- [x] Under each sent message, ONE short, stable mention — « **N protégés · voir** » — opens
+- [x] Under each reply of a turn that masked something, a PERMANENT « Voir ce que le modèle a
+      vu » in the action row opens the same comparison — `packages/ui/src/components/message/MessageActions.tsx`,
+      `packages/ui/src/pages/ChatWorkspace/ChatView/redactedTurns.ts`
+- [x] The transparency card (« N éléments masqués dans cet échange ») offers itself ONCE PER
+      CONVERSATION, on its first masked reply, dismissible (`Settings.transparencySeenIn`) —
+      `packages/ui/src/privacy/transparency.ts`
+- [x] Under each sent message, ONE short, stable mention — « **N masqués · voir** » — opens
       that same comparison; the per-category detail lives there, never in the caption —
       `packages/ui/src/components/message/MessageBubble.tsx`
 - [x] **« Comprendre mon masquage »** — a small container under the first replies opens the guide's redaction chapter (public figures left in the clear, a zero counter on a conversation with no personal data, Coffre for code names); « Fermer pour toujours » (`Settings.redactionIntroSeen`), the chapter staying in Aide; never stacked with the transparency card — `packages/ui/src/privacy/redactionIntro.ts`, `packages/ui/src/pages/ChatWorkspace/RedactionIntroCard.tsx`
 - [x] Global audit log, filterable and searchable — Réglages → **Journal** (the per-conversation log, an impoverished view of the same vault, was removed)
-- [x] Technical **debug log**, turn by turn, **persistent** (⋯ → « Journal de débogage », visible when « Journal de débogage » is on) — `packages/ui/src/containers/modals/DebugLogModal/`
+- [x] Technical **debug log**, turn by turn, **persistent** (⋯ → « Journal technique », visible when « Journal technique (pour le support) » is on) — `packages/ui/src/containers/modals/DebugLogModal/`
 - [x] Copy an exchange **without** the mapping table (the text that left, alone)
 - [x] **Send the log to the developers** — the debug log opens « Votre feedback » pre-filled, the mapping-free export attached and re-readable before sending — `packages/ui/src/feedback/feedback.ts` (`debugLogDraft`)
 - [x] **Report from the reply itself** — a feedback icon in the action bar (next to Copy / Regenerate / Fork) opens « Votre feedback » with this conversation's log already attached; it catches the eye once per reply, then goes quiet — `packages/ui/src/feedback/feedback.ts` (`messageFeedbackDraft`)

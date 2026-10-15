@@ -107,7 +107,7 @@ describe("runMcpAgentLoop — redaction, stuck guards, result budget", () => {
     expect(handled).toBe(true);
     expect(callTool).toHaveBeenCalledTimes(4); // all four ran — NOT hard-stopped at 3
     expect(shown.at(-1)).toBe("Aucun n'est client.");
-    expect(shown.join("\n")).not.toContain("Boucle d'outils interrompue");
+    expect(shown.join("\n")).not.toContain("le modèle tournait en rond");
   });
 
   it("STILL hard-stops a genuine dead-end loop (same 'no matching operation' to every guess)", async () => {
@@ -131,7 +131,7 @@ describe("runMcpAgentLoop — redaction, stuck guards, result budget", () => {
     });
     expect(handled).toBe(true);
     expect(callTool).toHaveBeenCalledTimes(3); // hard-stopped at STUCK_STOP = 3
-    expect(shown.join("\n")).toContain("Boucle d'outils interrompue");
+    expect(shown.join("\n")).toContain("le modèle tournait en rond");
   });
 
   it("hard-stops a ONE-tool hammer whose args differ every time (each call 'productive')", async () => {
@@ -169,7 +169,7 @@ describe("runMcpAgentLoop — redaction, stuck guards, result budget", () => {
     // Dispatched AT the cap, not the whole turn budget. The 9th call is REFUSED with
     // the conclude-now note (soft degrade); the model insists on response 10 → hard stop.
     expect(callTool).toHaveBeenCalledTimes(8); // MAX_SAME_TOOL
-    expect(shown.join("\n")).toContain("8 appels à **Exécution** (PostHog)");
+    expect(shown.join("\n")).toContain("**Exécution** (PostHog) a été utilisé 8 fois");
   });
 
   it("un BATCH de lectures distinctes au-delà du cap ne tue PAS le tour (refus doux, puis réponse)", async () => {

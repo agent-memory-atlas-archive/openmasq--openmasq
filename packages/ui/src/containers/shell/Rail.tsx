@@ -118,6 +118,17 @@ export function Rail({
         aria-label={t.chrome.privacyReport}
       >
         <ShieldIcon size={18} />
+        {/* The count was tooltip-only: drawn on the shield once something was masked.
+            The hue goes through `.hl-mint` → `--mk` / `--mk-ink`, the pair that holds in both
+            themes (rule 12); the ring is the rail's own ground. */}
+        {protectedN > 0 && (
+          <span
+            className="hl-mint absolute top-0.5 right-0 min-w-4 h-4 px-1 rounded-full bg-[var(--mk)] text-[color:var(--mk-ink)] text-[9.5px] font-bold leading-4 text-center tabular-nums shadow-[0_0_0_2px_var(--surface-app,var(--surface-card))]"
+            aria-hidden="true"
+          >
+            {t.chrome.privacyBadge(protectedN)}
+          </span>
+        )}
       </button>
       <button
         className="rail-avatar"

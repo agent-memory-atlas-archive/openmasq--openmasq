@@ -24,7 +24,8 @@ const TIMEOUT_MS = 5 * 60 * 1000;
 /** The single, environment-independent auth-only relay that serves /slack/*. */
 function authBase(): string {
   const u = process.env.OPENMASQ_AUTH_URL;
-  if (!u) throw new Error("OPENMASQ_AUTH_URL non configuré (connecteur Slack)");
+  // A build without the relay: say it in the user's words (the env name means nothing to them).
+  if (!u) throw new Error(mainMessages().desktopMain.mcp.oneClickNotConfigured);
   return u.replace(/\/$/, "");
 }
 

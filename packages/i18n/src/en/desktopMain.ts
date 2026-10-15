@@ -19,11 +19,11 @@ export const desktopMain = {
     titleLeaveStrict: "Stop confirming every action?",
     noParams: "(no details)",
     paramsUnreadable: "(details can't be displayed)",
-    allowLead: "The assistant wants to run this action with",
+    allowLead: "The assistant wants to run the action",
     allowTail: ". It can create, change or delete data on your connected account.",
     technicalDetails: "Technical details",
-    scopeLead: "“Always for this tool” allows only",
-    scopeTail: ", until you quit the app.",
+    scopeLead: "“Always for this tool”: the action",
+    scopeTail: " won't be asked again, in any of your conversations, until you quit the app.",
     disableGateLead: "Write actions (email, creating or changing data on a connected account) will run",
     disableGateStrong: "without asking you",
     disableGateTail: " until the next restart. Only do this if you are watching the assistant.",
@@ -102,20 +102,20 @@ export const desktopMain = {
     allFiles: "All files",
   },
   python: {
-    downloading: (pct) => `Downloading the Python environment…${pct != null ? ` ${pct}%` : ""}`,
-    extracting: "Unpacking the Python environment…",
-    installing: "Installing Python libraries…",
-    ready: "Python environment ready.",
-    running: "Running code…",
+    downloading: (pct) => `Setting up the calculation tool (one time only, about 1 min)…${pct != null ? ` ${pct}%` : ""}`,
+    extracting: "Setting up the calculation tool (one time only)…",
+    installing: "Installing calculation modules (one time only)…",
+    ready: "Calculation tool ready.",
+    running: "Calculating on your computer…",
   },
   subscription: {
     notEnabled: (label) => `${label} is not turned on (Settings → Models).`,
     missingClaude:
-      "The Claude Code CLI is not installed on this computer. Install it and sign in with your Claude subscription, or choose another model.",
+      "Claude Code is not installed on this computer. Settings → Models walks you through installing it and signing in with your Claude subscription. You can also choose another model.",
     missingCodex:
-      "The Codex CLI is not installed on this computer. Install it (`npm i -g @openai/codex`), sign in with your ChatGPT account (`codex login`), or choose another model.",
+      "The Codex app is not installed on this computer. Settings → Models walks you through installing it and signing in with your ChatGPT account. You can also choose another model. (For experts: `npm i -g @openai/codex`, then `codex login`.)",
     missingAntigravity:
-      "The Antigravity CLI (`agy`) is not installed on this computer. Install Antigravity, sign in with your Google account, or choose another model.",
+      "Antigravity is not installed on this computer. Settings → Models walks you through installing it and signing in with your Google account. You can also choose another model.",
   },
   oauth: {
     pageTitle: (brand) => `${brand}: connected`,
@@ -135,7 +135,7 @@ export const desktopMain = {
     microsoftRefused: (detail) => `Microsoft sign-in refused${detail ? `: ${detail}` : ""}.`,
     microsoftAdminConsent: (brand) =>
       `Your organization requires an administrator's approval to connect ${brand}. Send them the link below. One approval covers every account in the organization, and you can then connect in one click.`,
-    tokenExchangeFailed: (provider, status) => `The ${provider} sign-in did not complete (${status}).`,
+    tokenExchangeFailed: (provider, status) => `The ${provider} sign-in did not complete (code ${status}).`,
   },
   mcp: {
     folderNotAllowed: (label) => `${label}: folder not allowed. Choose it with the button.`,
@@ -146,11 +146,14 @@ export const desktopMain = {
     urlRefused: (reason) => `URL refused (internal or private host): ${reason}`,
     apiKeyRefused: "API key refused",
     noDynamicRegistration:
-      "This server does not accept automatic OAuth registration, so one-click sign-in is not available. Use its token-based option in “Local servers”.",
+      "This service does not offer one-click sign-in. If it gives you an access key, add it with “Manual connection” at the bottom of the connector list. Otherwise, it is not supported yet.",
     accountAlreadyConnected: "This account is already connected.",
-    missingClientId: "Client ID missing (“My keys” mode).",
-    builtinKeysMissing: "Built-in keys are not set up for this connector. Use “My keys” or try again later.",
-    missingGoogleSecret: "Google client secret missing.",
+    missingClientId: "The client ID is missing (“My keys” option).",
+    builtinKeysMissing:
+      "One-click sign-in is not available for this connector in this version of the app. Use the “My keys” option, or try again after an update.",
+    oneClickNotConfigured:
+      "One-click sign-in to this service is not available in this version of the app. Try again after an update; if it keeps happening, report it.",
+    missingGoogleSecret: "The Google client secret is missing.",
     byoRequired: "This connector needs your own keys (“My keys”).",
     unknownConnector: (id) => `Unknown connector: ${id}`,
   },
@@ -159,7 +162,7 @@ export const desktopMain = {
     onedriveNotProvisioned:
       "This Microsoft account has no OneDrive space yet. Open OneDrive once with this account (onedrive.com), or check that it has a OneDrive license, then try again.",
     folderNotListed: "This folder could not be listed.",
-    filesystemNotConnected: "The Filesystem connector is not connected.",
+    filesystemNotConnected: "The “Your folders” connector is not connected.",
   },
   byoKeysBlocked:
     "Your organization has turned off personal API keys. The models it has enabled work without a key. Your administrator manages the list.",

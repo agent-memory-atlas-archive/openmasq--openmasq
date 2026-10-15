@@ -50,6 +50,24 @@ kept in the French they were sent in, for the reason given above.
 
 ---
 
+## 0.17.0 — 2026-10-15
+> Every screen now says what it does, in plain words.
+
+### What's new
+- **See what the model saw, on every reply** — one click under any masked answer opens the side-by-side view.
+- **Undo in the Coffre** — a removed term stays masked for a few seconds, with « Annuler ».
+- **Report a blocked send** — when a message is held back, one button tells us why.
+
+### Improvements & fixes
+- Clearer chips while you type: an eye shows what goes out in clear.
+- Connectors are easier to choose, with plain descriptions and everyday tools first.
+- Settings are easier to find: the privacy history and billing are no longer hidden.
+- The model picker shows where each model runs.
+- Plain, actionable messages when something goes wrong.
+- Clearer wording throughout the app.
+
+---
+
 ## 0.16.0 — 2026-10-14
 > A first run that ends ready to answer, and quicker replies to simple messages.
 

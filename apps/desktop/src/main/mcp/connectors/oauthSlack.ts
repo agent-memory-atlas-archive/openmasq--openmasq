@@ -1,24 +1,31 @@
 import { newVerifier, challengeOf } from "./pkce";
 import { openAuthExternal } from "./authOpen";
+import { startLoopback } from "../oauthLoopback";
+import { focusMainWindow } from "../focusApp";
 import { mainMessages } from "../../i18n";
 
 /**
  * Slack OAuth — desktop-direct, but Slack can't do PKCE and needs an HTTPS
  * redirect, so the single, environment-independent AUTH-ONLY relay
  * holds the app's own Slack secret and provides the callback. The Slack DATA never
- * transits the relay — only the token exchange. Handoff (token never in a URL):
- *   1. generate a `verifier`; `challenge = SHA256(verifier)` becomes the `state`;
+ * transits the relay — only the token exchange. The contract (token never in a URL):
+ *   1. start a 127.0.0.1 loopback; generate a `verifier`;
+ *      `state = l1.<port>.<loopState>.<SHA256(verifier)>`;
  *   2. open Slack authorize (redirect → `<auth>/slack/callback`);
- *   3. the relay exchanges the code (its secret), stores the token single-use
- *      keyed by `challenge`;
- *   4. we POLL `<auth>/slack/token` with the `verifier` → the relay derives
- *      the same `challenge`, returns + deletes the token.
+ *   3. the relay sends the browser back to our loopback with an opaque one-shot
+ *      `code=<handle>` and `state=<loopState>`;
+ *   4. the loopback settles ONLY on its own `loopState`, then we redeem the handle
+ *      WITH the `verifier` at `<auth>/slack/token`.
+ *
+ * The property held: the token the app installs is the one consented to in THIS
+ * machine's browser, for THIS attempt. Knowing the authorize URL is not enough — the
+ * handle must come back through our loopback, and redeeming it needs the verifier,
+ * which never leaves main (`oauthSlack.test.ts`).
  */
 // Slack's AUTHORIZE endpoint has NO `/api/` prefix (that's only for API methods
 // like `oauth.v2.access`). Using `/api/oauth/v2/authorize` yields Slack's generic
 // "something went wrong" page.
 const AUTHORIZE = "https://slack.com/oauth/v2/authorize";
-const POLL_INTERVAL_MS = 2000;
 const TIMEOUT_MS = 5 * 60 * 1000;
 
 /** The single, environment-independent auth-only relay that serves /slack/*. */
@@ -29,36 +36,18 @@ function authBase(): string {
   return u.replace(/\/$/, "");
 }
 
-const sleep = (ms: number): Promise<void> => new Promise((r) => setTimeout(r, ms));
-
-/** Poll the auth relay's single-use, verifier-gated retrieval until the token lands. */
-async function pollToken(base: string, verifier: string, deadline: number): Promise<string> {
-  // The LAST failure encountered while waiting: a relay 500, a broken TLS, and a
-  // consent still pending all produced the same flat "expired" after the
-  // full timeout (audit 13/08 — the pattern to copy was oauthMicrosoft, which keeps its
-  // cause). Never content: a status or a network error message.
-  let lastFailure = "";
-  while (Date.now() < deadline) {
-    await sleep(POLL_INTERVAL_MS);
-    const res = await fetch(`${base}/slack/token`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ verifier }),
-    }).catch((e: unknown) => {
-      lastFailure = e instanceof Error ? e.message : String(e);
-      return null;
-    });
-    if (res?.ok) {
-      const data = (await res.json().catch(() => ({}))) as { token?: string; pending?: boolean };
-      if (data.token) return data.token;
-      if (data.pending) lastFailure = "consentement en attente";
-    } else if (res) {
-      lastFailure = `relais HTTP ${res.status}`;
-    }
-    // pending / transient network blip → keep polling until the deadline
+/** Redeem the handle the loopback received — one shot, the relay deletes it. */
+async function redeem(base: string, handle: string, verifier: string): Promise<string> {
+  const res = await fetch(`${base}/slack/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ handle, verifier }),
+  });
+  const data = (await res.json().catch(() => ({}))) as { token?: string };
+  if (!res.ok || !data.token) {
+    throw new Error(mainMessages().desktopMain.oauth.tokenExchangeFailed("Slack", res.status));
   }
-  const expired = mainMessages().desktopMain.oauth.slackExpired;
-  throw new Error(`${expired}${lastFailure ? ` (${lastFailure})` : ""}`);
+  return data.token;
 }
 
 /** Run the interactive Slack login and resolve the user access token. */
@@ -68,18 +57,30 @@ export async function slackLogin(opts: {
   serverName: string;
 }): Promise<string> {
   const base = authBase();
-  const verifier = newVerifier();
-  const url = new URL(AUTHORIZE);
-  url.searchParams.set("client_id", opts.clientId);
-  // USER scopes (comma-separated) — the token lands under `authed_user`.
-  url.searchParams.set("user_scope", opts.scopes.join(","));
-  url.searchParams.set("redirect_uri", `${base}/slack/callback`);
-  url.searchParams.set("state", challengeOf(verifier));
+  const loop = await startLoopback(undefined, focusMainWindow);
+  try {
+    const verifier = newVerifier();
+    const url = new URL(AUTHORIZE);
+    url.searchParams.set("client_id", opts.clientId);
+    // USER scopes (comma-separated) — the token lands under `authed_user`.
+    url.searchParams.set("user_scope", opts.scopes.join(","));
+    url.searchParams.set("redirect_uri", `${base}/slack/callback`);
+    url.searchParams.set("state", `l1.${loop.port}.${loop.state}.${challengeOf(verifier)}`);
 
-  // Open Slack authorize in the SYSTEM BROWSER, not an embedded window: a Slack
-  // workspace using Google SSO would hit Google's `disallowed_useragent` webview
-  // block. The relay + polling is browser-agnostic — the browser redirects to the
-  // relay, and we poll `<auth>/slack/token` for the single-use token regardless.
-  await openAuthExternal(url.toString());
-  return pollToken(base, verifier, Date.now() + TIMEOUT_MS);
+    // Open Slack authorize in the SYSTEM BROWSER, not an embedded window: a Slack
+    // workspace using Google SSO would hit Google's `disallowed_useragent` webview
+    // block. The relay then sends that same browser to our loopback.
+    await openAuthExternal(url.toString());
+    // A refusal on Slack's page comes back as the loopback's own error (`access_denied`);
+    // only the timeout reads as "expired".
+    const handle = await loop.waitForCode(TIMEOUT_MS).catch((e: unknown) => {
+      if (e instanceof Error && /not completed in time/.test(e.message)) {
+        throw new Error(mainMessages().desktopMain.oauth.slackExpired);
+      }
+      throw e;
+    });
+    return await redeem(base, handle, verifier);
+  } finally {
+    loop.close();
+  }
 }

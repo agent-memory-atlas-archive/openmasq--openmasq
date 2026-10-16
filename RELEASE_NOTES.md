@@ -50,6 +50,13 @@ kept in the French they were sent in, for the reason given above.
 
 ---
 
+## 0.17.1 — 2026-10-16
+> Connecting Slack now ends in the app, in one step.
+
+### Improvements & fixes
+- Slack connects through the app's own sign-in page, like Google.
+- Better reliability when connecting your accounts.
+
 ## 0.17.0 — 2026-10-15
 > Every screen now says what it does, in plain words.
 

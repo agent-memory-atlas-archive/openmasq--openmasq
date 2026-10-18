@@ -40,6 +40,9 @@ vi.mock("../runtime/errorReport", () => ({ reportMainError: vi.fn() }));
 vi.mock("@openmasq/redact", () => ({ extractTimeoutMs: (pages: number) => 6 * 60_000 + pages * 60_000 }));
 vi.mock("./extractStream", () => ({ checkStreamMessage: () => null }));
 vi.mock("../runtime/quitState", () => ({ isAppQuitting: () => false }));
+// the system's jail (`extractSandbox.ts`): absent here, unless a test hands one over
+let sandboxed: (() => unknown) | null = null;
+vi.mock("./extractSandbox", () => ({ SandboxUnbornError: class SandboxUnbornError extends Error {}, sandboxedWorker: () => sandboxed?.() ?? null }));
 
 const req = { kind: "bytes" as const, data: "", name: "x.xlsx", locale: "fr" };
 const fileOk = { name: "x.xlsx", kind: "xlsx", text: "ok", chars: 2 };
@@ -52,6 +55,7 @@ async function client() {
 beforeEach(() => {
   children.length = 0;
   onFork = () => {};
+  sandboxed = null;
 });
 afterEach(() => vi.useRealTimers());
 
@@ -115,5 +119,44 @@ describe("a job past its deadline is killed with its worker", () => {
     expect(children[0]!.killed).toBe(true);
     void runInWorker(req).catch(() => {});
     expect(children).toHaveLength(2);
+  });
+});
+
+describe("a worker the system's jail cannot start", () => {
+  it("is tried once, then the job runs on the utilityProcess, for the rest of the session", async () => {
+    const { runInWorker, extractIsolation } = await client();
+    let jailed = 0;
+    sandboxed = () => {
+      jailed++;
+      const c = new FakeChild();
+      queueMicrotask(() => c.emit("exit", 1));
+      return c;
+    };
+    onFork = (c) => {
+      queueMicrotask(() => {
+        c.emit("message", { ready: true });
+        c.emit("message", { id: 2, ok: true, file: fileOk });
+      });
+    };
+    await expect(runInWorker(req)).resolves.toEqual(fileOk);
+    expect(jailed).toBe(1);
+    expect(children).toHaveLength(1);
+    expect(extractIsolation().isolation).toBe("process");
+    expect(extractIsolation().sandboxFailed).toMatch(/code 1/);
+  });
+
+  it("runs the job shut in when it starts", async () => {
+    const { runInWorker, extractIsolation } = await client();
+    sandboxed = () => {
+      const c = new FakeChild();
+      queueMicrotask(() => {
+        c.emit("message", { ready: true });
+        c.emit("message", { id: 1, ok: true, file: fileOk });
+      });
+      return c;
+    };
+    await expect(runInWorker(req)).resolves.toEqual(fileOk);
+    expect(children).toHaveLength(0);
+    expect(extractIsolation().isolation).toBe("system");
   });
 });

@@ -15,6 +15,7 @@ import { pathToFileURL } from "node:url";
 import { extractText, extractBytes, type ExtractedFile, type ExtractStream, type PageEvent } from "@openmasq/redact/documents";
 import { DEFAULT_LOCALE, getMessages, isLocale } from "@openmasq/i18n";
 import { scrubInPlace } from "./inplaceScrub";
+import { workerPort } from "./workerPort";
 
 // ⚠️ pdf.js (legacy) under utilityProcess: since `process.versions.electron` is set, it does
 // NOT believe it's in Node and REQUIRES `GlobalWorkerOptions.workerSrc` instead of auto-loading
@@ -36,6 +37,8 @@ async function pinPdfjsWorkerSrc(): Promise<void> {
       pinFailure = "pdf.js n'expose pas GlobalWorkerOptions";
       return;
     }
+    // the sandboxed bundle hands pdf.js its worker module itself (`extractSandboxEntry.ts`)
+    if ((globalThis as { pdfjsWorker?: unknown }).pdfjsWorker) return;
     if (!opts.workerSrc) {
       opts.workerSrc = pathToFileURL(requireHere.resolve("pdfjs-dist/legacy/build/pdf.worker.mjs")).href;
     }
@@ -52,10 +55,6 @@ async function pinPdfjsWorkerSrc(): Promise<void> {
 }
 const pdfjsReady = pinPdfjsWorkerSrc();
 
-interface ParentPort {
-  on(ev: "message", cb: (e: { data: Req }) => void): void;
-  postMessage(msg: Res): void;
-}
 type Req =
   | { id: number; kind: "inplace"; data: string; name: string; mime: string; vault: Record<string, string>; disabledKinds?: string[]; kinds: Record<string, string> }
   | { id: number; kind: "path"; path: string; locale?: string; stream?: boolean }
@@ -67,7 +66,8 @@ type Res =
   | { id: number; thumb: { n: number; total: number; png: string } }
   | { id: number; ok: true; file: ExtractedFile | InplaceReply }
   | { id: number; ok: false; error: string };
-const parentPort = (process as unknown as { parentPort: ParentPort }).parentPort;
+// the utilityProcess's port, or frames on stdio inside a jail (`workerPort.ts`)
+const parentPort = workerPort<Req, Res>();
 
 /** The in-place scrub's answer: the scrubbed bytes travel as base64, like the request's. */
 interface InplaceReply {

@@ -222,6 +222,8 @@ jobs:
       # this one tests the EFFECT, and so also catches the causes nobody has met yet.
       # Not a Playwright spec: `--inspect` is fused OFF on a packaged binary, so nothing can
       # attach to it. The app prints `[window] renderer loaded` and the script waits for it.
+      # `--readers`: then the extraction worker reads a PDF, and the step fails unless it ran
+      # inside the AppContainer jail (`src/main/ocr/extractSandbox.ts`).
       - name: Boot smoke on the PACKAGED app
         working-directory: apps/desktop
         run: |
@@ -229,7 +231,7 @@ jobs:
           # Resolved by NODE, not by the shell: these steps run under Git Bash, whose
           # `$PWD` is `/d/a/openmasq/…` — a path Node cannot open on Windows.
           EXE=$(node -p "const c=require('./electron-builder.cjs'); const o=typeof c==='function'?c():c; require('node:path').resolve('release/win-unpacked', o.productName + '.exe')")
-          pnpm run smoke:packaged "$EXE"
+          pnpm run smoke:packaged "$EXE" --readers
 
       # The number that will settle the "embed the Python runtime or not" tradeoff: it
       # weighs ~500 MB for a feature `sandbox.ts` refuses to run here.

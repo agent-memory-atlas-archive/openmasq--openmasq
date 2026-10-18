@@ -56,6 +56,7 @@ const CAPABILITY = new Set([
 /** Grants nothing: build-time identity, a path the app itself set, or a TIGHTENING. */
 const BENIGN: Record<string, string> = {
   OPENMASQ_AUTH_URL: "build-time service address, not a capability",
+  OPENMASQ_OFFLINE: "a TIGHTENING: cuts the network and child processes in the extraction worker",
   OPENMASQ_GITHUB_CLIENT_ID: "public OAuth client id baked at build",
   OPENMASQ_GOOGLE_CLIENT_ID: "public OAuth client id baked at build",
   OPENMASQ_GOOGLE_CLIENT_SECRET: "desktop-app OAuth client, non-confidential by design",

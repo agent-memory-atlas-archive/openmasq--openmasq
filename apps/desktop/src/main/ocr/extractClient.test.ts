@@ -2,9 +2,10 @@ import { EventEmitter } from "node:events";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * Main parses a file in process ONLY when the worker cannot be born. A job the FILE made
- * fail (crash, OOM, stall) leaves that file in error and the worker path in place; a stalled
- * job is killed, so the next file gets a fresh worker instead of queueing behind it.
+ * Main never parses a file: a worker that cannot be born refuses the document (fail closed).
+ * A job the FILE made fail (crash, OOM, stall) leaves that file in error and the worker path
+ * in place; a stalled job is killed, so the next file gets a fresh worker instead of queueing
+ * behind it.
  */
 
 class FakeChild extends EventEmitter {
@@ -54,50 +55,51 @@ beforeEach(() => {
 });
 afterEach(() => vi.useRealTimers());
 
-describe("in-process fallback only for a worker that cannot be born", () => {
-  it("a worker that dies DURING a job (after ready) fails the file — main never parses it", async () => {
-    const { runInWorker, workerOrInProcess } = await client();
+describe("documents are parsed in the worker only", () => {
+  it("a worker that dies DURING a job (after ready) fails the file, and the next file gets a new worker", async () => {
+    const { runInWorker, inWorkerOnly } = await client();
     onFork = (c) => {
       queueMicrotask(() => {
         c.emit("message", { ready: true });
         c.emit("exit", 9); // the file crashed it
       });
     };
-    const inProcess = vi.fn(async () => fileOk as never);
-    await expect(workerOrInProcess(() => runInWorker(req), inProcess)).rejects.toThrow(/arrêté/);
-    expect(inProcess).not.toHaveBeenCalled();
-    // The next file still goes to a (new) worker.
+    await expect(inWorkerOnly(() => runInWorker(req), "indisponible")).rejects.toThrow(/arrêté/);
     onFork = (c) => {
       queueMicrotask(() => {
         c.emit("message", { ready: true });
         c.emit("message", { id: 2, ok: true, file: fileOk });
       });
     };
-    await expect(workerOrInProcess(() => runInWorker(req), inProcess)).resolves.toEqual(fileOk);
-    expect(inProcess).not.toHaveBeenCalled();
+    await expect(inWorkerOnly(() => runInWorker(req), "indisponible")).resolves.toEqual(fileOk);
     expect(children).toHaveLength(2);
   });
 
-  it("a job that answers an error is the file's error, not a fallback", async () => {
-    const { runInWorker, workerOrInProcess } = await client();
+  it("a job that answers an error is the file's error", async () => {
+    const { runInWorker, inWorkerOnly } = await client();
     onFork = (c) => {
       queueMicrotask(() => {
         c.emit("message", { ready: true });
         c.emit("message", { id: 1, ok: false, error: "out of memory" });
       });
     };
-    const inProcess = vi.fn(async () => fileOk as never);
-    await expect(workerOrInProcess(() => runInWorker(req), inProcess)).rejects.toThrow(/out of memory/);
-    expect(inProcess).not.toHaveBeenCalled();
+    await expect(inWorkerOnly(() => runInWorker(req), "indisponible")).rejects.toThrow(/out of memory/);
   });
 
-  it("a child that exits BEFORE ready was never born: in process, for the session", async () => {
-    const { runInWorker, workerOrInProcess, WorkerUnbornError } = await client();
+  it("a child that exits BEFORE ready refuses the document: main never reads it instead", async () => {
+    const { runInWorker, inWorkerOnly } = await client();
     onFork = (c) => queueMicrotask(() => c.emit("exit", 1));
-    const inProcess = vi.fn(async () => fileOk as never);
-    await expect(workerOrInProcess(() => runInWorker(req), inProcess)).resolves.toEqual(fileOk);
-    expect(inProcess).toHaveBeenCalledTimes(1);
-    expect(new WorkerUnbornError("x")).toBeInstanceOf(Error);
+    await expect(inWorkerOnly(() => runInWorker(req), "lecteur indisponible")).rejects.toThrow("lecteur indisponible");
+    // and again for the next file: no session-wide switch to another route
+    await expect(inWorkerOnly(() => runInWorker(req), "lecteur indisponible")).rejects.toThrow("lecteur indisponible");
+    expect(children).toHaveLength(2);
+  });
+
+  it("main does not load the document parsers at all", async () => {
+    const { readFileSync } = await vi.importActual<typeof import("node:fs")>("node:fs");
+    const jobs = readFileSync(new URL("./extractJobs.ts", import.meta.url), "utf8");
+    expect(jobs).not.toMatch(/import\s*\{[^}]*\bextract(Text|Bytes)\b[^}]*\}\s*from\s*"@openmasq\/redact\/documents"/);
+    expect(jobs).not.toMatch(/import\s*\{[^}]*\bscrubInPlace\b[^}]*\}\s*from\s*"\.\/inplaceScrub"/);
   });
 });
 

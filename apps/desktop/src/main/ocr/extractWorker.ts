@@ -7,7 +7,9 @@
 // fuse), MINIMAL env (only the OCR asset paths — never a secret), and
 // **never a log of the extracted text** (that's REAL PII) — the only outgoing messages
 // are progress (numbers), the preview stream when asked (pages, thumbnails) and the
-// structured result, all handed back to the parent.
+// structured result, all handed back to the parent. In a packaged app the network and other
+// programs are cut before any parser loads (`../security/offline.ts`, imported FIRST).
+import "../security/offline";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { extractText, extractBytes, type ExtractedFile, type ExtractStream, type PageEvent } from "@openmasq/redact/documents";
@@ -136,5 +138,5 @@ parentPort.on("message", (e) => {
 });
 
 // Every module above has loaded: from here on, a death is a JOB's, never a failed birth
-// (`extractClient.ts` falls back in-process only before this message).
+// (before this message, `extractClient.ts` refuses the document: the reader could not start).
 parentPort.postMessage({ ready: true });

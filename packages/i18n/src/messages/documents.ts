@@ -35,6 +35,8 @@ export interface DocumentsMessages {
   pdfPagesUnread: (pages: number, cause: string) => string;
   /** An image whose OCR failed for an unknown cause. */
   imageOcrFailed: string;
+  /** The document reader could not start: the file is refused, never read elsewhere. */
+  readerUnavailable: string;
   /** `ext` with its dot (« .xyz »), or "" when the file has none. */
   unsupportedType: (ext: string) => string;
   /** Written INTO the extracted text, where OCR skipped pages. */

@@ -16,16 +16,15 @@ import { checkStreamMessage } from "./extractStream";
  * `{id, progress|result}` relay, idle eviction (tesseract WASM + docTR onnxruntime
  * sessions = a RAM floor we give back), an unexpected death reported NAMED.
  *
- * ⚠️ IN-PROCESS FALLBACK, and it is INTENDED — but ONLY for a worker that cannot be BORN:
- * the bundle is missing, the fork throws, or the child dies/stalls before its `ready`
- * message (sent once its modules have loaded, i.e. before it can have read any file). Then
- * extraction falls back to main — same code, same privileges; we just get back the old
- * latency. A job that fails AFTER `ready` (timeout, crash, OOM) failed because of its FILE:
- * that file is in error, the worker path stays, and main never parses those bytes.
- * (Nothing to do with NER, where the equivalent fallback would be a redaction FAIL-OPEN.)
+ * ⛔ NO IN-PROCESS FALLBACK. Main never parses a document: a crafted file meets the parsers
+ * (pdf.js, the office readers, the image decoders) only in the worker. A worker that cannot
+ * be BORN (the bundle is missing, the fork throws, or the child dies/stalls before its
+ * `ready`) fails CLOSED: the document is refused with a sentence saying the reader is
+ * unavailable (`inWorkerOnly`). A job that fails AFTER `ready` (timeout, crash, OOM) failed
+ * because of its FILE: that file is in error, and the next one gets a fresh worker.
  */
 
-/** The worker could not be born (see the header) — the only error that falls back. */
+/** The worker could not be born (see the header): the document is refused, never read in main. */
 export class WorkerUnbornError extends Error {
   constructor(cause: string) {
     super(`worker d'extraction indisponible (${cause})`);
@@ -67,8 +66,8 @@ let child: UtilityProcess | null = null;
 let seq = 0;
 let inflight = 0;
 let idleTimer: NodeJS.Timeout | null = null;
-/** The worker could not be born once ⇒ in-process for the session (reported ONCE). */
-let workerBroken = false;
+/** The worker could not be born: reported ONCE per session. */
+let unbornReported = false;
 /** Children that sent `ready`: their modules loaded, so any later death is a job's. */
 const readyChildren = new WeakSet<UtilityProcess>();
 const pending = new Map<number, Pending>();
@@ -157,11 +156,15 @@ function forkWorker(worker: string): UtilityProcess {
     // MINIMAL env: only the OCR asset paths/pins that `runtime/ocrAssets.ts` set
     // on process.env at whenReady — NEVER the whole env (secrets). Absent (dev without
     // a bake) ⇒ the worker follows the same fallbacks as main (dev CDN / Tesseract-only).
-    env: Object.fromEntries(
-      ["OPENMASQ_TESSERACT_LANG_PATH", "OPENMASQ_DOCTR_MODEL_PATH", "OPENMASQ_DOCTR_INTEGRITY", "OPENMASQ_DOCTR_REQUIRE_PIN"]
-        .filter((k) => process.env[k])
-        .map((k) => [k, process.env[k] as string]),
-    ),
+    env: {
+      ...Object.fromEntries(
+        ["OPENMASQ_TESSERACT_LANG_PATH", "OPENMASQ_DOCTR_MODEL_PATH", "OPENMASQ_DOCTR_INTEGRITY", "OPENMASQ_DOCTR_REQUIRE_PIN"]
+          .filter((k) => process.env[k])
+          .map((k) => [k, process.env[k] as string]),
+      ),
+      // packaged: its OCR assets are baked, so it never needs the network (`../security/offline.ts`)
+      ...(app.isPackaged ? { OPENMASQ_OFFLINE: "1" } : {}),
+    },
     // Same contract as the NER worker: the worker NEVER writes the extracted text to
     // stdout/stderr — the bounded ring is only read back in the report of an abnormal death.
     stdio: app.isPackaged ? "pipe" : "inherit",
@@ -250,22 +253,15 @@ export async function runJob<T>(
   }
 }
 
-/** The worker path, or the in-process fallback for the session — ONLY when the worker
- *  cannot be born (`WorkerUnbornError`, see the header). Any other failure is the job's:
- *  rethrown, so that file is in error and main never parses it. A CANCELLED job never
- *  falls back either. */
-export async function workerOrInProcess<T>(
-  viaWorker: () => Promise<T>,
-  inProcess: () => Promise<T>,
-  signal?: AbortSignal,
-): Promise<T> {
-  if (workerBroken) return inProcess();
+/** The worker path, and only it: a worker that cannot be born refuses the document with
+ *  `unavailable` (fail closed, see the header); any other failure is the job's, rethrown. */
+export async function inWorkerOnly<T>(viaWorker: () => Promise<T>, unavailable: string): Promise<T> {
   try {
     return await viaWorker();
   } catch (e) {
-    if (signal?.aborted || !(e instanceof WorkerUnbornError)) throw e;
-    workerBroken = true;
-    reportMainError("ocr", "worker-fallback-inprocess", e);
-    return inProcess();
+    if (!(e instanceof WorkerUnbornError)) throw e;
+    if (!unbornReported) reportMainError("ocr", "worker-unborn", e);
+    unbornReported = true;
+    throw new Error(unavailable);
   }
 }

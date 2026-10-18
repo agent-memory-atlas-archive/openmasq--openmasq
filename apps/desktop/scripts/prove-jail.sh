@@ -63,3 +63,16 @@ case "$got" in
   READ-DENIED:*) echo "  ✓ le témoin est hors d'atteinte" ;;
   *) echo "::error::le témoin a été LU — l'AppContainer ne confine rien"; exit 1 ;;
 esac
+
+# The app does not hand the run this shell's environment: only the system's folder variables
+# (`src/main/python/jailEnv.ts`, read here so the list has one home) and its temp dirs. A launcher
+# that starts with the CI's full environment but not with the app's (CreateProcessW → 203,
+# ERROR_ENVVAR_NOT_FOUND) is a jail that never runs anything in the app.
+echo "→ contrôle ENVIRONNEMENT : le run démarre avec le seul environnement que l'app lui donne"
+mapfile -t APP_ENV < <(npx tsx -e 'import { windowsSystemEnv } from "./src/main/python/jailEnv.ts"; for (const [k, v] of Object.entries(windowsSystemEnv("win32", process.env))) console.log(`${k}=${v}`);')
+got=$(env -i "${APP_ENV[@]}" HOME="$SCRATCH" TMP="$SCRATCH" TEMP="$SCRATCH" TMPDIR="$SCRATCH" "$JAIL" --allow-read "$RT" --allow-write "$SCRATCH" -- "$PY_EXE" "$SCRATCH\\probe.py" "$SCRATCH\\ok.txt")
+echo "  $got"
+case "$got" in
+  READ-OK:*) echo "  ✓ le run démarre avec l'environnement de l'app" ;;
+  *) echo "::error::avec l'environnement de l'app, le run ne démarre pas"; exit 1 ;;
+esac

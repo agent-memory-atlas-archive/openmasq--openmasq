@@ -141,6 +141,11 @@ module.exports = {
     // `require()`s the WASM core beside it.
     "**/tesseract2.js/**",
     "**/tesseract.js-core/**",
+    // The extraction worker's self-contained bundle, run by the Node beside the app inside a jail
+    // (`src/main/ocr/extractSandbox.ts`): a plain Node cannot read inside the asar. Out of the
+    // seal, so its SHA-256 sits INSIDE it (`out/main/extractSandbox.sha256`) and main refuses a
+    // bundle that does not match (`scripts/build-extract-sandbox.mjs`).
+    "out/sandboxed/**",
   ],
 
   // Bundled Python runtime + local models, baked by `scripts/bake-*.ts` (`pnpm bake`;
@@ -170,7 +175,11 @@ module.exports = {
   mac: {
     // `${arch}` is expanded PER BUILT ARCH, so each .app receives the runtime for ITS
     // processor.
-    extraResources: [{ from: "build/python-runtime/darwin-${arch}", to: "python-runtime" }],
+    extraResources: [
+      { from: "build/python-runtime/darwin-${arch}", to: "python-runtime" },
+      // the Node the extraction worker runs on inside its jail (`scripts/bake-node.ts`)
+      { from: "build/node/darwin-${arch}", to: "node" },
+    ],
     // ⛔⛔ NO `files:` HERE, NOR UNDER `win:`. A platform `files` becomes a SEPARATE matcher
     // that electron-builder prefixes with `**/*`, so it rakes ALL of `apps/desktop/` on top
     // of the root allowlist — green build, app that starts, whole working directory inside.
@@ -249,6 +258,8 @@ module.exports = {
     extraFiles: [{ from: "build/win-vcruntime", to: ".", filter: ["*.dll"] }],
     extraResources: [
       { from: "build/python-runtime/win32-x64", to: "python-runtime" },
+      // the Node the extraction worker runs on inside its jail (`scripts/bake-node.ts`)
+      { from: "build/node/win32-x64", to: "node" },
       // `<slug>-jail.exe`, built from `native/win-jail/` by `bake:jail`. Absent ⇒
       // `jailAvailability()` reports "none" and the interpreter refuses to run.
       { from: "build/win-jail", to: "win-jail" },

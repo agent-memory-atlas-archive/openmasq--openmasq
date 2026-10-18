@@ -144,6 +144,13 @@ test.describe("Documents multiples — redaction local, jugé sans modèle", () 
       );
       expect(failed, `pastilles en erreur : ${failed.join(" | ")}`).toEqual([]);
 
+      // The workbook's preview: SheetJS runs in the sheet worker, never in this page
+      // (`@openmasq/ui` `parseOffThread.ts`); the grid still fills, then the viewer closes.
+      await page.locator(".attach-chip", { hasText: "payroll.xlsx" }).first().click();
+      await expect(page.locator(".fv-grid td").first()).toBeVisible({ timeout: 30_000 });
+      await page.keyboard.press("Escape");
+      await expect(page.locator(".fv-grid")).toHaveCount(0, { timeout: 10_000 });
+
       // The composer refuses to submit while detection runs: retry until the field empties.
       const input = page.locator(".composer-input");
       await input.click();

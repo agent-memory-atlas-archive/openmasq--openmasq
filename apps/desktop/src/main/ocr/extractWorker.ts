@@ -7,12 +7,15 @@
 // fuse), MINIMAL env (only the OCR asset paths — never a secret), and
 // **never a log of the extracted text** (that's REAL PII) — the only outgoing messages
 // are progress (numbers), the preview stream when asked (pages, thumbnails) and the
-// structured result, all handed back to the parent.
+// structured result, all handed back to the parent. In a packaged app the network and other
+// programs are cut before any parser loads (`../security/offline.ts`, imported FIRST).
+import "../security/offline";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { extractText, extractBytes, type ExtractedFile, type ExtractStream, type PageEvent } from "@openmasq/redact/documents";
 import { DEFAULT_LOCALE, getMessages, isLocale } from "@openmasq/i18n";
 import { scrubInPlace } from "./inplaceScrub";
+import { workerPort } from "./workerPort";
 
 // ⚠️ pdf.js (legacy) under utilityProcess: since `process.versions.electron` is set, it does
 // NOT believe it's in Node and REQUIRES `GlobalWorkerOptions.workerSrc` instead of auto-loading
@@ -34,6 +37,8 @@ async function pinPdfjsWorkerSrc(): Promise<void> {
       pinFailure = "pdf.js n'expose pas GlobalWorkerOptions";
       return;
     }
+    // the sandboxed bundle hands pdf.js its worker module itself (`extractSandboxEntry.ts`)
+    if ((globalThis as { pdfjsWorker?: unknown }).pdfjsWorker) return;
     if (!opts.workerSrc) {
       opts.workerSrc = pathToFileURL(requireHere.resolve("pdfjs-dist/legacy/build/pdf.worker.mjs")).href;
     }
@@ -50,10 +55,6 @@ async function pinPdfjsWorkerSrc(): Promise<void> {
 }
 const pdfjsReady = pinPdfjsWorkerSrc();
 
-interface ParentPort {
-  on(ev: "message", cb: (e: { data: Req }) => void): void;
-  postMessage(msg: Res): void;
-}
 type Req =
   | { id: number; kind: "inplace"; data: string; name: string; mime: string; vault: Record<string, string>; disabledKinds?: string[]; kinds: Record<string, string> }
   | { id: number; kind: "path"; path: string; locale?: string; stream?: boolean }
@@ -65,7 +66,8 @@ type Res =
   | { id: number; thumb: { n: number; total: number; png: string } }
   | { id: number; ok: true; file: ExtractedFile | InplaceReply }
   | { id: number; ok: false; error: string };
-const parentPort = (process as unknown as { parentPort: ParentPort }).parentPort;
+// the utilityProcess's port, or frames on stdio inside a jail (`workerPort.ts`)
+const parentPort = workerPort<Req, Res>();
 
 /** The in-place scrub's answer: the scrubbed bytes travel as base64, like the request's. */
 interface InplaceReply {
@@ -136,5 +138,5 @@ parentPort.on("message", (e) => {
 });
 
 // Every module above has loaded: from here on, a death is a JOB's, never a failed birth
-// (`extractClient.ts` falls back in-process only before this message).
+// (before this message, `extractClient.ts` refuses the document: the reader could not start).
 parentPort.postMessage({ ready: true });

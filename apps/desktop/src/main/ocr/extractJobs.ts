@@ -1,23 +1,21 @@
-import {
-  extractText as extractTextInProcess,
-  extractBytes as extractBytesInProcess,
-  type ExtractedFile,
-  type ExtractStreamEvent,
-} from "@openmasq/redact/documents";
+import { open } from "node:fs/promises";
+import { basename } from "node:path";
+import { MAX_FILE_BYTES } from "@openmasq/redact";
+import type { ExtractedFile, ExtractStreamEvent } from "@openmasq/redact/documents";
 import { mainLocale, mainMessages } from "../i18n";
-import { runInWorker, runJob, workerOrInProcess } from "./extractClient";
-import { scrubInPlace, type InplaceRequest, type InplaceResult } from "./inplaceScrub";
+import { inWorkerOnly, runInWorker, runJob } from "./extractClient";
+import type { InplaceRequest, InplaceResult } from "./inplaceScrub";
 import { createExtractQueue } from "./extractQueue";
 import { localizeExtracted } from "./localizeExtracted";
 
 /**
  * The extraction ENTRY POINTS: one queue (`extractQueue.ts`) in front of the worker client
- * (`extractClient.ts`) and its in-process fallback. Both paths come back with their failure
+ * (`extractClient.ts`), the ONLY place a document is parsed: main never reads one, even when
+ * the worker cannot start (the document is then refused, `inWorkerOnly`). A failure comes back
  * worded in the user's language (`localizeExtracted.ts`).
  *
  * `signal` = the user removed the file (`extractCancel.ts`): a waiting job leaves the line, a
- * running worker job is killed. The in-process fallback cannot be interrupted — its caller is
- * answered at once and the result is dropped, the queue slot frees when it really ends.
+ * running worker job is killed.
  */
 
 /** Optional per-call hooks, the same for both routes. */
@@ -25,38 +23,50 @@ export interface ExtractCallbacks {
   onOcrProgress?: (done: number, pages: number) => void;
   /** While queued: how many files are ahead (re-told as the line moves). */
   onWaiting?: (ahead: number) => void;
-  /** The preview stream (pages, thumbnails) — worker path only: the in-process fallback
-   *  streams nothing, and the preview then keeps its plain loader. */
+  /** The preview stream (pages, thumbnails). */
   onStream?: (ev: ExtractStreamEvent) => void;
   signal?: AbortSignal;
 }
 
-/** ONE document at a time, worker and in-process fallback alike (why: `extractQueue.ts`).
- *  The worker timeout is armed inside `runInWorker`, so it counts from the job's START. */
+/** ONE document at a time (why: `extractQueue.ts`). The worker timeout is armed inside
+ *  `runInWorker`, so it counts from the job's START. */
 const queue = createExtractQueue(1);
 
-async function withFallback(
-  viaWorker: () => Promise<ExtractedFile>,
-  inProcess: () => Promise<ExtractedFile>,
-  signal?: AbortSignal,
-): Promise<ExtractedFile> {
-  const file = await workerOrInProcess(viaWorker, inProcess, signal);
-  return localizeExtracted(file, mainMessages().documents);
+async function inWorker(viaWorker: () => Promise<ExtractedFile>): Promise<ExtractedFile> {
+  const t = mainMessages().documents;
+  return localizeExtracted(await inWorkerOnly(viaWorker, t.readerUnavailable), t);
 }
 
-/** Extraction of a file on disk — worker first, in-process as session fallback. */
+/**
+ * A file's bytes, read HERE: the worker is never handed a path, so a worker shut in by the system
+ * reads none of the user's files (`extractSandbox.ts`). The size gate runs on the open handle's
+ * stat before a byte is read, as the engine's own path entry does; past it, the engine's refusal.
+ */
+async function fileBytes(filePath: string): Promise<Uint8Array | ExtractedFile> {
+  const fh = await open(filePath, "r");
+  try {
+    if ((await fh.stat()).size > MAX_FILE_BYTES) {
+      const mb = Math.round(MAX_FILE_BYTES / 1024 / 1024);
+      return { name: basename(filePath), kind: "file", text: "", chars: 0, error: `File too large (${mb} MB max)`, errorCode: "file_too_large", errorParams: { mb }, blocked: true };
+    }
+    return new Uint8Array(await fh.readFile());
+  } finally {
+    await fh.close();
+  }
+}
+
+/** Extraction of a file on disk, in the worker: its bytes, never its path. */
 export function extractTextInWorker(filePath: string, cb: ExtractCallbacks = {}): Promise<ExtractedFile> {
   // The markers OCR writes into the text speak the user's language: the worker gets the
-  // locale (it rebuilds them from the catalogue), the in-process path the markers.
+  // locale and rebuilds them from the catalogue.
   const locale = mainLocale();
-  const markers = mainMessages().documents.markers;
   return queue.run(
-    (signal) =>
-      withFallback(
-        () => runInWorker({ kind: "path", path: filePath, locale }, cb.onOcrProgress, cb.onStream, signal),
-        () => extractTextInProcess(filePath, cb.onOcrProgress, markers),
-        signal,
-      ),
+    async (signal) => {
+      const bytes = await fileBytes(filePath);
+      if (!(bytes instanceof Uint8Array)) return localizeExtracted(bytes, mainMessages().documents);
+      const data = Buffer.from(bytes).toString("base64");
+      return inWorker(() => runInWorker({ kind: "bytes", data, name: basename(filePath), locale }, cb.onOcrProgress, cb.onStream, signal));
+    },
     cb.onWaiting,
     cb.signal,
   );
@@ -70,15 +80,10 @@ export function extractBytesInWorker(
   cb: ExtractCallbacks = {},
 ): Promise<ExtractedFile> {
   const locale = mainLocale();
-  const markers = mainMessages().documents.markers;
   return queue.run(
     (signal) => {
       const data = Buffer.from(bytes).toString("base64");
-      return withFallback(
-        () => runInWorker({ kind: "bytes", data, name, mime, locale }, cb.onOcrProgress, cb.onStream, signal),
-        () => extractBytesInProcess(bytes, name, mime, cb.onOcrProgress, markers),
-        signal,
-      );
+      return inWorker(() => runInWorker({ kind: "bytes", data, name, mime, locale }, cb.onOcrProgress, cb.onStream, signal));
     },
     cb.onWaiting,
     cb.signal,
@@ -88,8 +93,8 @@ export function extractBytesInWorker(
 /**
  * The format-preserving scrub of `files:redact-and-save` (`inplaceScrub.ts`) — on the worker,
  * NOT in the queue: it is a parse and a rewrite, never minutes of OCR, and a saved copy must
- * not wait behind the files still being read. In main only when the worker cannot be born.
- * A failed job (timeout, crash) stores the original alone: `scrubbed: null`, fail closed.
+ * not wait behind the files still being read. Never in main: a failed job (timeout, crash,
+ * a worker that cannot start) stores the original alone: `scrubbed: null`, fail closed.
  */
 export async function scrubInPlaceInWorker(req: InplaceRequest): Promise<InplaceResult> {
   const viaWorker = async (): Promise<InplaceResult> => {
@@ -102,7 +107,7 @@ export async function scrubInPlaceInWorker(req: InplaceRequest): Promise<Inplace
     return { ...r, scrubbed: r.scrubbed == null ? null : new Uint8Array(Buffer.from(r.scrubbed, "base64")) };
   };
   try {
-    return await workerOrInProcess(viaWorker, async () => scrubInPlace(req));
+    return await viaWorker();
   } catch {
     return { scrubbed: null, vault: { ...req.vault }, kinds: {}, spans: [] };
   }

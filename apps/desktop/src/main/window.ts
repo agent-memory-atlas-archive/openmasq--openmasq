@@ -17,6 +17,7 @@ import { devOnly } from "./security/devOnly";
 import { markWindowShown } from "./store/safeStore";
 import { markRendererListening, RENDERER_LISTEN_MS } from "./runtime/errorReport";
 import { loadWindowTone } from "./windowTone";
+import { smokeExtraction } from "./ocr/extractSmoke";
 
 export function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -131,6 +132,7 @@ export function createWindow(): void {
     // of 13/09 kept the process alive for as long as you cared to wait.
     mainWindow.webContents.once("did-finish-load", () => {
       console.log(`[window] renderer loaded — ${indexHtml}`);
+      if (process.env.OPENMASQ_SMOKE_READERS === "1") void smokeExtraction();
     });
     mainWindow.loadFile(indexHtml);
   }

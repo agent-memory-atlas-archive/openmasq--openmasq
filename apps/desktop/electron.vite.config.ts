@@ -177,6 +177,9 @@ export default defineConfig({
         input: { index: resolve(__dirname, "src/renderer/index.html") },
       },
     },
+    // Module workers (`?worker`): the spreadsheet preview's worker lazy-loads SheetJS, which
+    // the default IIFE format cannot split (`@openmasq/ui` `parseOffThread.ts`).
+    worker: { format: "es" },
     plugins: [
       workspaceSrcInDev(),
       react(),

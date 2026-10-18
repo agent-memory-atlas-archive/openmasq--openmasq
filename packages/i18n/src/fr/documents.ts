@@ -34,6 +34,8 @@ export const documents = {
       : `Ce PDF n'est pas joint : ses ${pages} pages en image n'ont pas pu être lues. ${cause}`,
   imageOcrFailed:
     "Le texte de l'image n'a pas pu être lu. Réessayez avec une image plus nette. Si cela continue, signalez-le depuis « Votre avis ».",
+  readerUnavailable:
+    "Le lecteur de documents n'a pas pu démarrer : le fichier n'est pas lu. Redémarrez l'application ; si cela continue, réinstallez-la.",
   unsupportedType: (ext) =>
     ext ? `Type de fichier non pris en charge : ${ext}` : "Type de fichier non pris en charge (aucune extension).",
   markers: {

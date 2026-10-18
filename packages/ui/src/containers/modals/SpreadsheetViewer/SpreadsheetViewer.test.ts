@@ -1,9 +1,13 @@
 // @vitest-environment jsdom
-import { describe, expect, it, beforeAll } from "vitest";
+import { describe, expect, it, beforeAll, vi } from "vitest";
 import * as React from "react";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { SpreadsheetViewer } from "./SpreadsheetViewer";
+
+// jsdom has no Worker: the workbook is read by the worker's own function, on this thread,
+// only here in the test (`parseOffThread.test.ts` pins that the page itself never does).
+vi.mock("./parseOffThread", async () => ({ parseOffThread: (await import("./workbook")).parseWorkbook }));
 
 /**
  * Regression: the virtualised grid tags the <table> with a modifier so it can switch

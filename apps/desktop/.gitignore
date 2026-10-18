@@ -27,6 +27,8 @@ build/doctr-models/
 build/embed-models/
 # Baked document font (Inter + OFL) — sha256-verified by `scripts/bake-document-fonts.ts`; never source.
 build/document-fonts/
+# Baked Node of the jailed extraction worker — sha256-verified by `scripts/bake-node.ts`; never source.
+build/node/
 
 # The journey driver : captures, journal, wire, appels d'outils, profil jetable.
 # Contient de la PII de test et des chemins de machine — jamais commité.

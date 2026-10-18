@@ -56,6 +56,9 @@ const CAPABILITY = new Set([
 /** Grants nothing: build-time identity, a path the app itself set, or a TIGHTENING. */
 const BENIGN: Record<string, string> = {
   OPENMASQ_AUTH_URL: "build-time service address, not a capability",
+  OPENMASQ_OFFLINE: "a TIGHTENING: cuts the network and child processes in the extraction worker",
+  OPENMASQ_WORKER_STDIO: "the transport only: frames on stdio inside a jail, set by main for the worker it starts",
+  OPENMASQ_SMOKE_READERS: "the packaged smoke test: reads a built-in one-page PDF and prints how the worker ran; grants nothing",
   OPENMASQ_GITHUB_CLIENT_ID: "public OAuth client id baked at build",
   OPENMASQ_GOOGLE_CLIENT_ID: "public OAuth client id baked at build",
   OPENMASQ_GOOGLE_CLIENT_SECRET: "desktop-app OAuth client, non-confidential by design",
@@ -133,6 +136,10 @@ const BENIGN: Record<string, string> = {
 const DYNAMIC: Record<string, string> = {
   "apps/desktop/src/main/ocr/extractClient.ts":
     "forwards a LITERAL list of four OCR-asset names (all classified above) into the worker's minimal env",
+  "apps/desktop/src/main/ocr/extractSandbox.ts":
+    "forwards the same LITERAL list of four OCR-asset names into the jailed worker's minimal env",
+  "apps/desktop/src/main/python/jailEnv.ts":
+    "forwards a LITERAL list of Windows system folder variables (SystemRoot, USERPROFILE…) to a jailed child: folder names, no capability",
 };
 
 function walk(dir: string, out: string[] = []): string[] {

@@ -34,7 +34,8 @@
       "entry": [
         "e2e/**/*.ts",
         "scripts/**/*.ts",
-        "scripts/*.cjs"
+        "scripts/*.cjs",
+        "src/main/ocr/extractSandboxEntry.ts"
       ],
       "ignoreDependencies": [
         "ort-native",

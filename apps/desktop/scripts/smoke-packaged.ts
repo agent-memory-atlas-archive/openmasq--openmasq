@@ -29,7 +29,13 @@ import { FATAL_MAIN } from "./fatalMainStderr";
 const MARKER = "[window] renderer loaded";
 const TIMEOUT_MS = Number(process.env.SMOKE_PACKAGED_TIMEOUT_MS ?? 120_000);
 
-const [exe, ...extraArgs] = process.argv.slice(2);
+// `--readers`: also wait for the extraction worker to read a PDF INSIDE the system's jail
+// (`src/main/ocr/extractSmoke.ts`), and fail when it ran anywhere else
+const readers = process.argv.includes("--readers");
+const [exe, ...extraArgs] = process.argv.slice(2).filter((a) => a !== "--readers");
+const READERS = /^\[smoke\] extraction (\S+) (.*)$/m;
+let loaded = false;
+let stdoutText = "";
 if (!exe) {
   console.error("usage: tsx scripts/smoke-packaged.ts <path to the packaged executable> [args…]");
   process.exit(2);
@@ -49,6 +55,7 @@ const child = spawn(exe, extraArgs, {
     OPENMASQ_USER_DATA_DIR: profile,
     OPENMASQ_DISABLE_DB: "1",
     OPENMASQ_E2E: "1",
+    ...(readers ? { OPENMASQ_SMOKE_READERS: "1" } : {}),
   },
 });
 
@@ -98,7 +105,14 @@ function finish(code: number, why: string): void {
 child.stdout.on("data", (b: Buffer) => {
   const text = b.toString();
   process.stdout.write(text);
-  if (text.includes(MARKER)) finish(0, `the packaged app loaded its renderer — ${exe}`);
+  stdoutText += text;
+  if (stdoutText.includes(MARKER)) loaded = true;
+  if (loaded && !readers) finish(0, `the packaged app loaded its renderer — ${exe}`);
+  const read = READERS.exec(stdoutText);
+  if (loaded && read) {
+    if (read[1] === "system" && read[2].startsWith("ok")) finish(0, `the packaged app loaded its renderer, and read a PDF inside the system's jail — ${exe}`);
+    else finish(1, `the extraction worker did not read inside the system's jail: ${read[1]} ${read[2]}`);
+  }
 });
 
 child.stderr.on("data", (b: Buffer) => {

@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { FileSkeleton } from "../viewers/FileSkeleton";
 import type { PdfReplacement } from "../viewers/pdf/pdfReplacements";
-import { parse, makeMatcher, segmentsOf, MAX_ROWS, MAX_COLS, type Sheet } from "./parse";
+import { makeMatcher, segmentsOf, MAX_ROWS, MAX_COLS, type Sheet } from "./parse";
+import { parseOffThread } from "./parseOffThread";
 
 import { useT } from "../../../i18n";
 // Faithful spreadsheet preview: renders the parsed workbook as a real grid (column
@@ -63,7 +64,7 @@ export function SpreadsheetViewer({
   useEffect(() => {
     let alive = true;
     setSheets(null);
-    parse(bytes, csv)
+    parseOffThread(bytes, csv)
       .then((s) => alive && setSheets(s.length ? s : "error"))
       .catch(() => alive && setSheets("error"));
     return () => {

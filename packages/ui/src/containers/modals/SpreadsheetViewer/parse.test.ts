@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { makeMatcher, mergeLayout, parse, segmentsOf } from "./parse";
+import { makeMatcher, segmentsOf } from "./parse";
+import { mergeLayout, parseWorkbook as parse } from "./workbook";
 
 const reps = [{ real: "Julien Sabourdin", fake: "Jade Savel", tone: "coral" }];
 

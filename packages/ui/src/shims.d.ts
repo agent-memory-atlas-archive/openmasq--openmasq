@@ -4,3 +4,9 @@ declare module "*?url" {
   const src: string;
   export default src;
 }
+
+// Vite module-worker imports: the default export constructs the worker.
+declare module "*?worker" {
+  const WorkerFactory: new () => Worker;
+  export default WorkerFactory;
+}

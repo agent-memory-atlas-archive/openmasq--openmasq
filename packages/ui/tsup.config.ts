@@ -3,7 +3,9 @@ import { defineConfig } from "tsup";
 export default defineConfig({
   // Named so the emitted file matches the export subpath (`./tooltip` → `dist/tooltip.js`),
   // which a bare path would not: tsup names an output after its source file.
-  entry: { index: "src/index.ts", tooltip: "src/components/brand/tooltipPlacement.ts" },
+  // `sheetWorker`: the spreadsheet preview's Web Worker, emitted beside `index.js` so the
+  // consumer's bundler finds the `./sheetWorker?worker` import `index.js` keeps verbatim.
+  entry: { index: "src/index.ts", tooltip: "src/components/brand/tooltipPlacement.ts", sheetWorker: "src/containers/modals/SpreadsheetViewer/sheetWorker.ts" },
   format: ["esm"],
   dts: true,
   clean: true,
@@ -29,6 +31,8 @@ export default defineConfig({
     // Office-doc renderers (spreadsheet + docx + pptx viewers). Heavy + lazy-
     // imported at view time; external so the consumer's bundler code-splits them.
     "xlsx",
+    // a Vite module worker (`parseOffThread.ts`): the consumer's bundler builds it
+    /\?worker$/,
     /^mammoth/,
     "fflate",
   ],

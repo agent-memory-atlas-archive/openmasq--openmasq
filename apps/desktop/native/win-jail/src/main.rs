@@ -93,8 +93,11 @@ fn wide(s: &str) -> Vec<u16> {
 }
 
 fn die(msg: &str) -> ! {
+    // The system's own reason, read FIRST (writing to stderr may reset it): « access denied »,
+    // « file not found » and « environment variable not found » call for different fixes.
+    let os = std::io::Error::last_os_error();
     // stderr, never stdout: stdout is the RUN's output and is parsed by the caller.
-    eprintln!("[{}-jail] {msg}", env!("BRAND_SLUG"));
+    eprintln!("[{}-jail] {msg} — {os}", env!("BRAND_SLUG"));
     std::process::exit(127);
 }
 

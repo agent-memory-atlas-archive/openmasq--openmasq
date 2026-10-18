@@ -8,6 +8,7 @@ import { startEgressProxy } from "./egressProxy";
 import { ALLOW_HOSTS, buildScript } from "./wheels";
 import { mplConfigDir, sandboxFontDir } from "./runtime";
 import { winJailCmd, winJailExe } from "./winJail";
+import { jailBaseEnv } from "./jailEnv";
 import { ambientSecretDirs, ambientSecretFiles } from "../security/ambientSecrets"; import { BRAND } from "@openmasq/branding";
 import { devOnly } from "../security/devOnly";
 
@@ -148,11 +149,7 @@ export function seatbeltProfile(scratch: string, proxyPort: number): string {
   ].join("\n");
 }
 
-/** Every temp-dir env a jailed run needs, pointed INSIDE the scratch: the jail denies the
- *  system temp dirs. `SQLITE_TMPDIR` is read ahead of `TMPDIR`; set at SPAWN. */
-export function sandboxTempEnv(tmpDir: string): Record<string, string> {
-  return { TMPDIR: tmpDir, TMP: tmpDir, TEMP: tmpDir, SQLITE_TMPDIR: tmpDir };
-}
+export { sandboxTempEnv } from "./jailEnv";
 
 /** Build the argv that runs `pythonBin main.py` under the platform jail. Exported for the
  *  same reason as {@link seatbeltProfile}: a jail IS its argv (`winJail.test.ts`). */
@@ -388,7 +385,7 @@ export async function runPython(
   const env: NodeJS.ProcessEnv = {
     PATH: process.env.PATH ?? "",
     HOME: scratch,
-    ...sandboxTempEnv(tmpDir),
+    ...jailBaseEnv(tmpDir), // temp dirs in the scratch; on Windows the system's folder variables
     OPENMASQ_FIG_DIR: figDir,
     OPENMASQ_FONT_DIR: sandboxFontDir(),
     MPLBACKEND: "Agg",
